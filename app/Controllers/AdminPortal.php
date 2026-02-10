@@ -3,20 +3,67 @@
 namespace App\Controllers;
 
 use App\Models\ApplicationModel;
+use App\Models\AdminModel;
 
 class AdminPortal extends BaseController
 {
     protected $applicationModel;
+    protected $adminModel;
 
     public function __construct()
     {
         $this->applicationModel = new ApplicationModel();
+        $this->adminModel       = new AdminModel();
     }
 
     public function login()
     {
         return view('layout/header')
             . view('admin/login')
+            . view('layout/footer');
+    }
+
+    public function register()
+    {
+        // Admin registration (for creating admin accounts)
+        if ($this->request->getPost('mobile') !== null) {
+            $name     = (string) $this->request->getPost('name');
+            $mobile   = (string) $this->request->getPost('mobile');
+            $email    = (string) $this->request->getPost('email');
+            $password = (string) $this->request->getPost('password');
+
+            if ($mobile === '' || $password === '') {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Mobile and password are required.');
+            }
+
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+
+            $data = [
+                'name'          => $name,
+                'mobile'        => $mobile,
+                'email'         => $email,
+                'password_hash' => $hash,
+                'role'          => 'admin',
+            ];
+
+            $ok = $this->adminModel->insert($data);
+            if (! $ok) {
+                $dbError  = $this->adminModel->db->error();
+                $errorMsg = $dbError['message'] ?? 'Failed to register admin.';
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $errorMsg);
+            }
+
+            return redirect()->to('/admin/login')
+                ->with('success', 'Admin registered successfully. You can now login.');
+        }
+
+        return view('layout/header')
+            . view('admin/register')
             . view('layout/footer');
     }
 

@@ -1,33 +1,43 @@
 <div class="container mx-auto px-4 py-12 max-w-md">
     <div class="bg-white shadow-lg rounded-lg p-8">
         <h1 class="text-3xl font-bold mb-6 text-center" style="color: #0F1F3F;">
-            Applicant Login
+            <?= esc(lang('App.loginTitle')) ?>
         </h1>
 
-        <form id="login-form" class="space-y-4">
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="mb-4 p-3 rounded-md text-sm" style="background-color: #FEE2E2; color: #DC2626;">
+                <?= esc(session()->getFlashdata('error')) ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="mb-4 p-3 rounded-md text-sm" style="background-color: #D1FAE5; color: #059669;">
+                <?= esc(session()->getFlashdata('success')) ?>
+            </div>
+        <?php endif; ?>
+
+        <form id="login-form" action="<?= site_url('auth/login') ?>" method="POST" class="space-y-4">
             <div>
-                <label for="login-mobile" class="block text-sm font-medium mb-1">Mobile / Email</label>
+                <label for="login-mobile" class="block text-sm font-medium mb-1"><?= esc(lang('App.loginMobileLabel')) ?></label>
                 <input id="login-mobile" name="mobile" type="text" required
-                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                       value="<?= esc(old('mobile', '')) ?>"
+                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                       placeholder="<?= esc(lang('App.loginMobilePlaceholder')) ?>">
             </div>
             <div>
-                <label for="login-password" class="block text-sm font-medium mb-1">Password</label>
+                <label for="login-password" class="block text-sm font-medium mb-1"><?= esc(lang('App.loginPasswordLabel')) ?></label>
                 <input id="login-password" name="password" type="password" required
-                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                       placeholder="<?= esc(lang('App.loginPasswordPlaceholder')) ?>">
             </div>
             <button type="submit"
                     class="w-full px-4 py-2 rounded-md font-semibold text-white"
                     style="background-color: #0747A6;">
-                Login
-            </button>
-            <button type="button" id="login-bypass"
-                    class="w-full mt-2 px-4 py-2 rounded-md font-semibold border"
-                    style="border-color: #0747A6; color: #0747A6;">
-                Skip (Bypass Demo)
+                <?= esc(lang('App.loginButton')) ?>
             </button>
             <p class="text-center text-sm mt-4" style="color: #4B5563;">
-                Don't have an account?
-                <a href="/auth/register" class="text-blue-600 hover:underline">Register</a>
+                <?= esc(lang('App.loginNoAccount')) ?>
+                <a href="<?= site_url('auth/register') ?>" class="text-blue-600 hover:underline"><?= esc(lang('App.loginRegisterLink')) ?></a>
             </p>
         </form>
     </div>
@@ -35,51 +45,8 @@
 
 <script>
     (function () {
-        function generateMockUser() {
-            return {
-                id: Date.now().toString(),
-                name: "Demo User",
-                mobile: "9999999999"
-            };
-        }
-
-        function generateMockUserProfile(userId) {
-            return {
-                userId: userId,
-                email: "demo@example.com",
-                language: "en"
-            };
-        }
-
-        function setUserAuth(data) {
-            localStorage.setItem("user_auth", JSON.stringify(data));
-        }
-
-        function setUserProfile(profile) {
-            localStorage.setItem("user_profile", JSON.stringify(profile));
-        }
-
-        function handleLogin(e) {
-            if (e) {
-                e.preventDefault();
-            }
-            var mockUser = generateMockUser();
-            var mockProfile = generateMockUserProfile(mockUser.id);
-            setUserAuth({ user: mockUser, token: "mock_token" });
-            setUserProfile(mockProfile);
-            window.location.href = "/user/dashboard";
-        }
-
-        var form = document.getElementById("login-form");
-        var bypass = document.getElementById("login-bypass");
-        if (form) {
-            form.addEventListener("submit", handleLogin);
-        }
-        if (bypass) {
-            bypass.addEventListener("click", function () {
-                handleLogin(null);
-            });
-        }
+        // Form will submit normally to backend
+        // No JavaScript needed for form submission
     })();
 </script>
 

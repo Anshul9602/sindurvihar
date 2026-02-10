@@ -12,20 +12,26 @@ $routes->get('/', 'Portal::index');
 
 // Authentication routes (equivalent to /auth/login, /auth/register)
 $routes->group('auth', static function ($routes) {
-    $routes->get('login', 'AuthPortal::login');
-    $routes->get('register', 'AuthPortal::register');
+    $routes->match(['get', 'post'], 'login', 'AuthPortal::login');
+    $routes->match(['get', 'post'], 'register', 'AuthPortal::register');
+    $routes->get('logout', 'AuthPortal::logout');
 });
+
+// Language switch (for Hindi/English toggle)
+$routes->post('lang/switch', 'Lang::switch');
 
 // User portal routes (equivalent to /user/* pages)
 $routes->group('user', static function ($routes) {
     $routes->get('dashboard', 'UserPortal::dashboard');
-    $routes->get('eligibility', 'UserPortal::eligibility');
+    // Eligibility: allow GET (form) + POST (submit)
+    $routes->match(['get', 'post'], 'eligibility', 'UserPortal::eligibility');
     $routes->get('application', 'UserPortal::application');
     $routes->post('application/submit', 'UserPortal::submitApplication');
     $routes->get('application/status', 'UserPortal::applicationStatus');
-    $routes->get('documents', 'UserPortal::documents');
-    $routes->get('payment', 'UserPortal::payment');
-    $routes->get('profile', 'UserPortal::profile');
+    $routes->match(['get', 'post'], 'documents', 'UserPortal::documents');
+    // Payment: allow GET (summary) + POST (record payment)
+    $routes->match(['get', 'post'], 'payment', 'UserPortal::payment');
+    $routes->match(['get','post'], 'profile', 'UserPortal::profile');
     $routes->get('lottery-results', 'UserPortal::lotteryResults');
     $routes->get('allotment', 'UserPortal::allotment');
     $routes->get('refund-status', 'UserPortal::refundStatus');

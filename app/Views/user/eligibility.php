@@ -1,91 +1,82 @@
 <div class="container mx-auto px-4 py-8 max-w-3xl">
-    <h1 class="text-3xl font-bold mb-6 text-center" style="color: #0F1F3F;">
-        Eligibility Checker
+    <h1 class="text-3xl font-bold mb-4 text-center" style="color: #0F1F3F;">
+        <?= esc(lang('App.eligibilityTitle')) ?>
     </h1>
 
-    <form id="eligibility-form" class="bg-white shadow-md rounded-lg p-6 space-y-4">
+    <!-- Eligibility criteria summary (as per scheme booklet) -->
+    <div class="bg-white shadow-sm rounded-lg p-4 mb-6 border border-gray-200">
+        <h2 class="text-lg font-semibold mb-2" style="color:#0F1F3F;">
+            <?= esc(lang('App.eligibilityCriteriaHeading')) ?>
+        </h2>
+        <ul class="list-disc pl-5 space-y-1 text-sm" style="color:#4B5563;">
+            <li><?= esc(lang('App.eligibilityCriteria1')) ?></li>
+            <li><?= esc(lang('App.eligibilityCriteria2')) ?></li>
+            <li><?= esc(lang('App.eligibilityCriteria3')) ?></li>
+            <li><?= esc(lang('App.eligibilityCriteria4')) ?></li>
+        </ul>
+        <p class="mt-2 text-xs" style="color:#6B7280;">
+            <?= esc(lang('App.eligibilityCriteriaNote')) ?>
+        </p>
+    </div>
+
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="mb-4 p-3 rounded-md text-sm" style="background-color: #FEE2E2; color: #B91C1C;">
+            <?= esc(session()->getFlashdata('error')) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('success')): ?>
+        <div class="mb-4 p-3 rounded-md text-sm" style="background-color: #DCFCE7; color: #15803D;">
+            <?= esc(session()->getFlashdata('success')) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php $existing = $eligibility ?? null; ?>
+
+    <form action="<?= site_url('user/eligibility') ?>" method="POST"
+          class="bg-white shadow-md rounded-lg p-6 space-y-4">
         <div>
-            <label for="age" class="block text-sm font-medium mb-1">Age</label>
-            <input id="age" type="number" min="18" max="70" required
+            <label for="age" class="block text-sm font-medium mb-1"><?= esc(lang('App.eligibilityAgeLabel')) ?></label>
+            <input id="age" name="age" type="number" min="18" max="70" required
+                   value="<?= esc(old('age', $existing['age'] ?? '')) ?>"
+                   class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+            <p class="mt-1 text-xs" style="color: #6B7280;"></p>
+        </div>
+
+        <div>
+            <label for="income" class="block text-sm font-medium mb-1"><?= esc(lang('App.eligibilityIncomeLabel')) ?></label>
+            <input id="income" name="income" type="number" min="0" required
+                   value="<?= esc(old('income', $existing['income'] ?? '')) ?>"
                    class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
         </div>
+
         <div>
-            <label for="income" class="block text-sm font-medium mb-1">Annual Household Income (₹)</label>
-            <input id="income" type="number" min="0" required
-                   class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-        </div>
-        <div>
-            <label for="residency" class="block text-sm font-medium mb-1">Residency</label>
-            <select id="residency"
+            <label for="residency" class="block text-sm font-medium mb-1"><?= esc(lang('App.eligibilityResidencyLabel')) ?></label>
+            <select id="residency" name="residency"
                     class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-                <option value="state">Resident of the State</option>
-                <option value="outside">Outside State</option>
+                <?php $resVal = old('residency', $existing['residency'] ?? 'state'); ?>
+                <option value="state" <?= $resVal === 'state' ? 'selected' : '' ?>><?= esc(lang('App.eligibilityResidencyState')) ?></option>
+                <option value="outside" <?= $resVal === 'outside' ? 'selected' : '' ?>><?= esc(lang('App.eligibilityResidencyOutside')) ?></option>
             </select>
         </div>
+
         <div>
-            <label for="property" class="block text-sm font-medium mb-1">Existing Residential Property</label>
-            <select id="property"
+            <label for="property" class="block text-sm font-medium mb-1"><?= esc(lang('App.eligibilityPropertyLabel')) ?></label>
+            <select id="property" name="property"
                     class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-                <option value="none">No property in scheme area</option>
-                <option value="has">Already own property</option>
+                <?php $propVal = old('property', $existing['property_status'] ?? 'none'); ?>
+                <option value="none" <?= $propVal === 'none' ? 'selected' : '' ?>><?= esc(lang('App.eligibilityPropertyNone')) ?></option>
+                <option value="has" <?= $propVal === 'has' ? 'selected' : '' ?>><?= esc(lang('App.eligibilityPropertyHas')) ?></option>
             </select>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 mt-4">
+            <?php $hasExisting = !empty($existing); ?>
             <button type="submit"
                     class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold text-white"
                     style="background-color: #0747A6;">
-                Check Eligibility
-            </button>
-            <button type="button" id="eligibility-bypass"
-                    class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold border"
-                    style="border-color: #0747A6; color: #0747A6;">
-                Skip (Mark Eligible)
+                <?= esc(lang($hasExisting ? 'App.eligibilityUpdateButton' : 'App.eligibilityCheckButton')) ?>
             </button>
         </div>
-
-        <p id="eligibility-result" class="mt-4 text-sm" style="color: #4B5563;"></p>
     </form>
 </div>
-
-<script>
-    (function () {
-        function saveEligibility(data) {
-            localStorage.setItem("user_eligibility", JSON.stringify(data));
-        }
-
-        function handleResult(isEligible) {
-            var el = document.getElementById("eligibility-result");
-            if (!el) return;
-            if (isEligible) {
-                el.textContent = "You are eligible. Proceed to the application form.";
-                el.style.color = "#16A34A";
-                saveEligibility({ eligible: true });
-                setTimeout(function () {
-                    window.location.href = "/user/application";
-                }, 1000);
-            } else {
-                el.textContent = "You are not eligible based on the provided details.";
-                el.style.color = "#DC2626";
-                saveEligibility({ eligible: false });
-            }
-        }
-
-        var form = document.getElementById("eligibility-form");
-        if (form) {
-            form.addEventListener("submit", function (e) {
-                e.preventDefault();
-                handleResult(true);
-            });
-        }
-
-        var bypass = document.getElementById("eligibility-bypass");
-        if (bypass) {
-            bypass.addEventListener("click", function () {
-                handleResult(true);
-            });
-        }
-    })();
-</script>
-
-

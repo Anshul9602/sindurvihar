@@ -1,65 +1,88 @@
 <div class="container mx-auto px-4 py-8 max-w-3xl">
     <h1 class="text-3xl font-bold mb-6 text-center" style="color: #0F1F3F;">
-        Application Status
+        <?= esc(lang('App.statusTitle')) ?>
     </h1>
 
-    <div id="status-container" class="bg-white shadow-md rounded-lg p-6">
-        <p style="color: #4B5563;">Loading status...</p>
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <?php if (empty($application)): ?>
+            <p style="color:#4B5563;"><?= esc(lang('App.statusNone')) ?></p>
+        <?php else: ?>
+            <p class="mb-2" style="color:#4B5563;">
+                <?= esc(lang('App.statusApplicationId')) ?>
+                <strong><?= esc($application['id']) ?></strong>
+            </p>
+
+            <?php
+            $overallStatus = $overallStatus ?? 'pending';
+            switch ($overallStatus) {
+                case 'submitted':
+                    $statusLabel = lang('App.dashboardStatusSubmitted') ?? 'Submitted (all steps completed)';
+                    $statusBg    = '#DCFCE7';
+                    $statusColor = '#166534';
+                    break;
+                case 'pending':
+                    $statusLabel = lang('App.dashboardStatusPending') ?? 'Pending (some steps are still incomplete)';
+                    $statusBg    = '#FEF3C7';
+                    $statusColor = '#92400E';
+                    break;
+                default:
+                    $statusLabel = lang('App.statusDraft') ?? 'Draft';
+                    $statusBg    = '#E5E7EB';
+                    $statusColor = '#374151';
+                    break;
+            }
+            ?>
+
+            <p class="mb-4" style="color:#4B5563;">
+                <?= esc(lang('App.statusCurrentStatus')) ?>
+                <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold"
+                      style="background-color: <?= esc($statusBg) ?>; color: <?= esc($statusColor) ?>;">
+                    <?= esc($statusLabel) ?>
+                </span>
+            </p>
+
+            <p class="text-sm mb-4" style="color:#4B5563;">
+                <?= esc(lang('App.statusFooterText')) ?>
+            </p>
+
+            <?php
+            $eligibilityDone = $steps['eligibility']['completed'] ?? false;
+            $applicationDone = $steps['application']['completed'] ?? false;
+            $documentsDone   = $steps['documents']['completed'] ?? false;
+            $paymentDone     = $steps['payment']['completed'] ?? false;
+            ?>
+
+            <div class="border-t pt-4 mt-4">
+                <h2 class="text-lg font-semibold mb-3" style="color:#0F1F3F;">
+                    <?= esc(lang('App.dashboardFlowTitle')) ?>
+                </h2>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center justify-between">
+                        <span><?= esc(lang('App.dashboardStep1')) ?></span>
+                        <span class="font-semibold" style="color:<?= $eligibilityDone ? '#16A34A' : '#92400E' ?>;">
+                            <?= $eligibilityDone ? '✓ Completed' : 'Pending' ?>
+                        </span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                        <span><?= esc(lang('App.dashboardStep2')) ?></span>
+                        <span class="font-semibold" style="color:<?= $applicationDone ? '#16A34A' : '#92400E' ?>;">
+                            <?= $applicationDone ? '✓ Completed' : 'Pending' ?>
+                        </span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                        <span><?= esc(lang('App.dashboardStep3')) ?></span>
+                        <span class="font-semibold" style="color:<?= $documentsDone ? '#16A34A' : '#92400E' ?>;">
+                            <?= $documentsDone ? '✓ Completed' : 'Pending' ?>
+                        </span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                        <span><?= esc(lang('App.dashboardStep4')) ?></span>
+                        <span class="font-semibold" style="color:<?= $paymentDone ? '#16A34A' : '#92400E' ?>;">
+                            <?= $paymentDone ? '✓ Completed' : 'Pending' ?>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
-
-<script>
-    (function () {
-        function getApplication() {
-            try {
-                var raw = localStorage.getItem("user_application");
-                return raw ? JSON.parse(raw) : null;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        function statusLabel(status) {
-            switch (status) {
-                case "submitted":
-                    return "Submitted";
-                case "paid":
-                    return "Paid";
-                case "under_verification":
-                    return "Under Verification";
-                case "verified":
-                    return "Verified";
-                case "rejected":
-                    return "Rejected";
-                case "selected":
-                    return "Selected in Lottery";
-                case "allotted":
-                    return "Allotted";
-                case "possession":
-                    return "Possession Granted";
-                default:
-                    return "Draft";
-            }
-        }
-
-        var container = document.getElementById("status-container");
-        var app = getApplication();
-        if (!container) return;
-
-        if (!app) {
-            container.innerHTML =
-                '<p style="color:#4B5563;">No application found. Start a new application from your dashboard.</p>';
-            return;
-        }
-
-        var label = statusLabel(app.status);
-        container.innerHTML =
-            '<div>' +
-            '<p class="mb-2" style="color:#4B5563;">Application ID: <strong>' + app.id + '</strong></p>' +
-            '<p class="mb-2" style="color:#4B5563;">Current Status: <strong>' + label + '</strong></p>' +
-            '<p style="color:#4B5563;">You can track further updates from this page or the dashboard.</p>' +
-            '</div>';
-    })();
-</script>
-
-

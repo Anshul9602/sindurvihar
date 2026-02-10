@@ -20,11 +20,6 @@
                     style="background-color: #0747A6;">
                 Login
             </button>
-            <button type="button" id="admin-login-bypass"
-                    class="w-full mt-2 px-4 py-2 rounded-md font-semibold border"
-                    style="border-color: #0747A6; color: #0747A6;">
-                Skip (Auto Admin Login)
-            </button>
         </form>
     </div>
 </div>
@@ -51,14 +46,8 @@
         }
 
         var form = document.getElementById("admin-login-form");
-        var bypass = document.getElementById("admin-login-bypass");
         if (form) {
             form.addEventListener("submit", handleAdminLogin);
-        }
-        if (bypass) {
-            bypass.addEventListener("click", function () {
-                handleAdminLogin(null);
-            });
         }
     })();
 </script>

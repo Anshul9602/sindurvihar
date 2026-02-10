@@ -13,8 +13,22 @@ class ApplicationModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'user_id', 'scheme_id', 'status', 'full_name', 'aadhaar', 
-        'address', 'city', 'state', 'income', 'income_category'
+        'user_id',
+        'scheme_id',
+        'status',
+        'full_name',
+        'aadhaar',
+        'father_husband_name',
+        'age',
+        'mobile',
+        'address',
+        'tehsil',
+        'district',
+        'state',
+        'income',
+        'income_category',
+        'declaration_truth',
+        'declaration_cancellation',
     ];
 
     // Dates

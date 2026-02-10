@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= esc(service('request')->getLocale()) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sindur Vihar - Government Housing Lottery & Plot Allocation System</title>
+    <title><?= esc(lang('App.siteTitle')) ?></title>
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
@@ -29,92 +29,78 @@
                 >
             </a>
 
-            <!-- Desktop navigation -->
-            <div class="hidden md:flex items-center space-x-4">
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex items-center space-x-4">
                 <ul class="flex space-x-4">
                     <li>
-                        <a href="/"
+                        <a href="<?= site_url('/') ?>"
                            class="gov-hover font-medium text-xs md:text-sm px-3 py-1.5 rounded-lg"
                            style="color:#0747A6;"
                         >
-                            Home
+                            <?= esc(lang('App.navHome')) ?>
                         </a>
                     </li>
+                    <?php if (session()->has('user_id')): ?>
+                        <li>
+                            <a href="<?= site_url('user/dashboard') ?>"
+                               class="gov-hover font-medium text-xs md:text-sm px-3 py-1.5 rounded-lg hover:bg-gray-100"
+                               style="color:#0747A6;"
+                            >
+                                <?= esc(lang('App.navDashboard')) ?>
+                            </a>
+                        </li>
+                        <li>
+                            <span class="font-medium text-xs md:text-sm px-3 py-1.5" style="color:#4B5563;">
+                                <?= esc(session()->get('user_name')) ?>
+                            </span>
+                        </li>
+                        <li>
+                            <a href="<?= site_url('auth/logout') ?>"
+                               class="gov-hover font-medium text-xs md:text-sm px-3 py-1.5 rounded-lg hover:bg-gray-100"
+                               style="color:#DC2626;"
+                            >
+                                <?= esc(lang('App.navLogout')) ?>
+                            </a>
+                        </li>
+                    <?php else: ?>
+                        <li>
+                            <a href="<?= site_url('auth/login') ?>"
+                               class="gov-hover font-medium text-xs md:text-sm px-3 py-1.5 rounded-lg hover:bg-gray-100"
+                               style="color:#0747A6;"
+                            >
+                                <?= esc(lang('App.navUserPortal')) ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                     <li>
-                        <a href="/user/dashboard"
+                        <a href="<?= site_url('admin/login') ?>"
                            class="gov-hover font-medium text-xs md:text-sm px-3 py-1.5 rounded-lg hover:bg-gray-100"
                            style="color:#0747A6;"
                         >
-                            User Portal
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/login"
-                           class="gov-hover font-medium text-xs md:text-sm px-3 py-1.5 rounded-lg hover:bg-gray-100"
-                           style="color:#0747A6;"
-                        >
-                            Admin Portal
+                                <?= esc(lang('App.navAdminPortal')) ?>
                         </a>
                     </li>
                 </ul>
+                <!-- Language switcher -->
+                <form action="<?= site_url('lang/switch') ?>" method="POST" class="ml-4">
+                    <label for="lang-select" class="sr-only"><?= esc(lang('App.languageLabel')) ?></label>
+                    <select id="lang-select" name="language"
+                            class="border rounded px-2 py-1 text-xs md:text-sm"
+                            onchange="this.form.submit()">
+                        <?php $currentLang = session()->get('language') ?: service('request')->getLocale(); ?>
+                        <option value="en" <?= $currentLang === 'en' ? 'selected' : '' ?>>
+                            <?= esc(lang('App.languageEn')) ?>
+                        </option>
+                        <option value="hi" <?= $currentLang === 'hi' ? 'selected' : '' ?>>
+                            <?= esc(lang('App.languageHi')) ?>
+                        </option>
+                    </select>
+                </form>
             </div>
         </nav>
     </div>
 </header>
 
-<!-- Banner Swiper (simple slider) -->
-<section class="w-full relative mb-6 overflow-hidden">
-    <div class="relative w-full" style="height:50vh;">
-        <img id="banner-slide"
-             src="/assets/housing/banner1.jpeg"
-             alt="Rajasthan Government Banner"
-             class="absolute inset-0 w-full h-full object-cover fade-in-up">
-    </div>
-    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-        <button id="banner-dot-0" class="w-3 h-3 rounded-full" style="background-color:#FFFFFF;"></button>
-        <button id="banner-dot-1" class="w-3 h-3 rounded-full" style="background-color:rgba(255,255,255,0.5);"></button>
-    </div>
-</section>
-
-<script>
-    (function () {
-        var images = [
-            "/assets/housing/banner1.jpeg",
-            "/assets/housing/banner2.jpeg"
-        ];
-        var index = 0;
-        var img = document.getElementById("banner-slide");
-        var dot0 = document.getElementById("banner-dot-0");
-        var dot1 = document.getElementById("banner-dot-1");
-
-        function setActiveDot(i) {
-            if (!dot0 || !dot1) return;
-            dot0.style.backgroundColor = i === 0 ? "#FFFFFF" : "rgba(255,255,255,0.5)";
-            dot1.style.backgroundColor = i === 1 ? "#FFFFFF" : "rgba(255,255,255,0.5)";
-        }
-
-        function showSlide(i) {
-            index = i;
-            if (img) {
-                img.src = images[index];
-            }
-            setActiveDot(index);
-        }
-
-        if (dot0) {
-            dot0.addEventListener("click", function () { showSlide(0); });
-        }
-        if (dot1) {
-            dot1.addEventListener("click", function () { showSlide(1); });
-        }
-
-        setActiveDot(0);
-
-        setInterval(function () {
-            showSlide((index + 1) % images.length);
-        }, 4000);
-    })();
-</script>
 
 <main class="flex-grow">
 

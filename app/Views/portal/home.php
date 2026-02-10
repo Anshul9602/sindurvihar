@@ -1,3 +1,59 @@
+
+
+<!-- Banner Swiper (simple slider) -->
+<section class="w-full relative mb-6 overflow-hidden">
+    <div class="relative w-full" style="height:50vh;">
+        <img id="banner-slide"
+             src="/assets/housing/banner1.jpeg"
+             alt="Rajasthan Government Banner"
+             class="absolute inset-0 w-full h-full object-cover fade-in-up">
+    </div>
+    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+        <button id="banner-dot-0" class="w-3 h-3 rounded-full" style="background-color:#FFFFFF;"></button>
+        <button id="banner-dot-1" class="w-3 h-3 rounded-full" style="background-color:rgba(255,255,255,0.5);"></button>
+    </div>
+</section>
+
+<script>
+    (function () {
+        var images = [
+            "/assets/housing/banner1.jpeg",
+            "/assets/housing/banner2.jpeg"
+        ];
+        var index = 0;
+        var img = document.getElementById("banner-slide");
+        var dot0 = document.getElementById("banner-dot-0");
+        var dot1 = document.getElementById("banner-dot-1");
+
+        function setActiveDot(i) {
+            if (!dot0 || !dot1) return;
+            dot0.style.backgroundColor = i === 0 ? "#FFFFFF" : "rgba(255,255,255,0.5)";
+            dot1.style.backgroundColor = i === 1 ? "#FFFFFF" : "rgba(255,255,255,0.5)";
+        }
+
+        function showSlide(i) {
+            index = i;
+            if (img) {
+                img.src = images[index];
+            }
+            setActiveDot(index);
+        }
+
+        if (dot0) {
+            dot0.addEventListener("click", function () { showSlide(0); });
+        }
+        if (dot1) {
+            dot1.addEventListener("click", function () { showSlide(1); });
+        }
+
+        setActiveDot(0);
+
+        setInterval(function () {
+            showSlide((index + 1) % images.length);
+        }, 4000);
+    })();
+</script>
+
 <div class="w-full">
     <div class="container mx-auto px-4 py-6 md:py-8">
         <section class="mb-6 text-center">

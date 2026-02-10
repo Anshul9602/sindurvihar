@@ -5,14 +5,13 @@
 
     <div class="bg-white shadow-md rounded-lg p-6">
         <p class="mb-4" style="color: #4B5563;">
-            For demo purposes, use the Run Lottery button to randomly select one verified application
-            and create an allotment record.
+            Run the lottery to randomly select one verified application and create an allotment record.
         </p>
 
         <button id="run-lottery"
                 class="px-6 py-2 rounded-md font-semibold text-white"
                 style="background-color: #0747A6;">
-            Run Lottery (Demo)
+            Run Lottery
         </button>
 
         <p id="lottery-result" class="mt-4 text-sm" style="color: #4B5563;"></p>
@@ -42,7 +41,7 @@
                 id: "ALLOT-" + Date.now().toString(),
                 applicationId: app.id,
                 name: app.name,
-                plot: "Demo Plot A-101"
+                plot: "Plot A-101"
             };
             list.push(allotment);
             localStorage.setItem("admin_allotments", JSON.stringify(list));

@@ -8,6 +8,7 @@ use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Config\App as AppConfig;
 
 /**
  * Class BaseController
@@ -51,9 +52,28 @@ abstract class BaseController extends Controller
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
 
-        // Preload any models, libraries, etc, here.
+        // Start session
+        $session = session();
 
-        // E.g.: $this->session = \Config\Services::session();
+        // Determine current language:
+        // 1. From session (if user chose),
+        // 2. Else from logged-in user profile (if available in session),
+        // 3. Else default app locale.
+        $config     = new AppConfig();
+        $defaultLoc = $config->defaultLocale ?? 'en';
+
+        $lang = $session->get('language') ?: $defaultLoc;
+
+        // Normalize to supported locales
+        if (! in_array($lang, $config->supportedLocales, true)) {
+            $lang = $defaultLoc;
+        }
+
+        // Set locale for this request
+        service('request')->setLocale($lang);
+
+        // Make sure language is accessible in views
+        $session->set('language', $lang);
     }
 
 
