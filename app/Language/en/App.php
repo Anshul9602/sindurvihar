@@ -134,6 +134,16 @@ return [
     'paymentAmountLabel'         => 'Amount Payable',
     'paymentSubmitButton'        => 'Record Payment',
     'paymentUpdateButton'        => 'Update Payment',
+
+    // Admin registration
+    'adminRegisterTitle'   => 'Admin Registration',
+    'adminNameLabel'       => 'Full Name',
+    'adminMobileLabel'     => 'Mobile Number',
+    'adminEmailLabel'      => 'Email (optional)',
+    'adminPasswordLabel'   => 'Password',
+    'adminRegisterButton'  => 'Register Admin',
+    'adminHaveAccount'     => 'Already have an admin account?',
+    'adminLoginLink'       => 'Go to Admin Login',
 ];
 
 

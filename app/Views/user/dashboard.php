@@ -104,10 +104,10 @@
                             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                   style="background-color:#16A34A;">✓</span>
                             <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
-                            <button class="px-3 py-1 border rounded-md text-sm"
+                    <button class="px-3 py-1 border rounded-md text-sm"
                                     style="border-color:#16A34A; color:#16A34A;">
                                 Edit
-                            </button>
+                    </button>
                         </div>
                     <?php else: ?>
                         <button class="px-3 py-1 border rounded-md text-sm"
@@ -121,20 +121,20 @@
             <!-- Step 2: Application Form -->
             <div class="<?= $eligibilityDone ? '' : 'opacity-60 cursor-not-allowed' ?>">
                 <?php if ($eligibilityDone): ?>
-                    <a href="/user/application">
+            <a href="/user/application">
                 <?php endif; ?>
-                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                         <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep2')) ?></span>
                         <?php if ($applicationDone): ?>
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
                                 <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
-                                <button class="px-3 py-1 border rounded-md text-sm"
+                    <button class="px-3 py-1 border rounded-md text-sm"
                                         style="border-color:#16A34A; color:#16A34A;">
                                     Edit
-                                </button>
-                            </div>
+                    </button>
+                </div>
                         <?php else: ?>
                             <button class="px-3 py-1 border rounded-md text-sm"
                                     style="border-color:#0747A6; color:#0747A6;"
@@ -151,20 +151,20 @@
             <!-- Step 3: Documents -->
             <div class="<?= $applicationDone ? '' : 'opacity-60 cursor-not-allowed' ?>">
                 <?php if ($applicationDone): ?>
-                    <a href="/user/documents">
+            <a href="/user/documents">
                 <?php endif; ?>
-                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                         <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep3')) ?></span>
                         <?php if ($documentsDone): ?>
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
                                 <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
-                                <button class="px-3 py-1 border rounded-md text-sm"
+                    <button class="px-3 py-1 border rounded-md text-sm"
                                         style="border-color:#16A34A; color:#16A34A;">
                                     Edit
-                                </button>
-                            </div>
+                    </button>
+                </div>
                         <?php else: ?>
                             <button class="px-3 py-1 border rounded-md text-sm"
                                     style="border-color:#0747A6; color:#0747A6;"
@@ -181,20 +181,20 @@
             <!-- Step 4: Payment -->
             <div class="<?= $documentsDone ? '' : 'opacity-60 cursor-not-allowed' ?>">
                 <?php if ($documentsDone): ?>
-                    <a href="/user/payment">
+            <a href="/user/payment">
                 <?php endif; ?>
-                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                         <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep4')) ?></span>
                         <?php if ($paymentDone): ?>
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
                                 <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
-                                <button class="px-3 py-1 border rounded-md text-sm"
+                    <button class="px-3 py-1 border rounded-md text-sm"
                                         style="border-color:#16A34A; color:#16A34A;">
                                     Edit
-                                </button>
-                            </div>
+                    </button>
+                </div>
                         <?php else: ?>
                             <button class="px-3 py-1 border rounded-md text-sm"
                                     style="border-color:#0747A6; color:#0747A6;"

@@ -269,8 +269,6 @@ class UserPortal extends BaseController
 
     public function submitApplication()
     {
-        
-
         // Check if user is logged in
         if (!session()->has('user_id')) {
             if ($this->request->isAJAX()) {
@@ -297,6 +295,29 @@ class UserPortal extends BaseController
             'declaration_cancellation' => $this->request->getPost('declaration_cancellation') ? 1 : 0,
             'status'                   => 'submitted',
         ];
+
+        // Prevent multiple applications with same mobile or Aadhaar
+        $existing = $this->applicationModel
+            ->groupStart()
+                ->where('mobile', $data['mobile'])
+                ->orWhere('aadhaar', $data['aadhaar'])
+            ->groupEnd()
+            ->first();
+
+        if ($existing) {
+            $errorMsg = 'An application has already been submitted with this mobile number or Aadhaar number.';
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => $errorMsg,
+                ]);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $errorMsg);
+        }
 
         if ($this->applicationModel->insert($data)) {
             if ($this->request->isAJAX()) {

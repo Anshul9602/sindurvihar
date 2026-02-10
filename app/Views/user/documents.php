@@ -83,7 +83,7 @@
                 <label for="doc-notes" class="block text-sm font-medium mb-1"><?= esc(lang('App.docNotesLabel') ?? 'Other details / remarks') ?></label>
                 <textarea id="doc-notes" name="notes" rows="3"
                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"><?= esc($documents['notes'] ?? '') ?></textarea>
-            </div>
+        </div>
 
             <?php $hasDocs = !empty($documents); ?>
             <button type="submit"

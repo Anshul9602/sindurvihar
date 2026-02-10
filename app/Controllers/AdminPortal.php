@@ -4,16 +4,19 @@ namespace App\Controllers;
 
 use App\Models\ApplicationModel;
 use App\Models\AdminModel;
+use App\Models\ApplicationDocumentModel;
 
 class AdminPortal extends BaseController
 {
     protected $applicationModel;
     protected $adminModel;
+    protected $documentModel;
 
     public function __construct()
     {
         $this->applicationModel = new ApplicationModel();
         $this->adminModel       = new AdminModel();
+        $this->documentModel    = new ApplicationDocumentModel();
     }
 
     public function login()
@@ -90,11 +93,18 @@ class AdminPortal extends BaseController
     public function applicationDetail($id)
     {
         $data['application'] = $this->applicationModel->getApplicationWithUser($id);
-        
-        if (!$data['application']) {
+
+        if (! $data['application']) {
             return redirect()->to('/admin/applications')->with('error', 'Application not found');
         }
-        
+
+        // Load associated documents if they exist
+        $documents = $this->documentModel
+            ->where('application_id', $id)
+            ->first();
+
+        $data['documents'] = $documents;
+
         return view('layout/header')
             . view('admin/application_detail', $data)
             . view('layout/footer');
@@ -109,8 +119,25 @@ class AdminPortal extends BaseController
             return redirect()->to('/admin/applications');
         }
 
-        $id = $this->request->getPost('application_id');
-        $status = $this->request->getPost('status');
+        // Support both JSON (from AJAX) and normal form POST
+        if ($this->request->isAJAX()) {
+            $payload = (array) $this->request->getJSON(true);
+            $id      = $payload['application_id'] ?? null;
+            $status  = $payload['status'] ?? null;
+        } else {
+            $id     = $this->request->getPost('application_id');
+            $status = $this->request->getPost('status');
+        }
+
+        if (! $id || ! $status) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Missing application_id or status',
+                ]);
+            }
+            return redirect()->back()->with('error', 'Missing application ID or status.');
+        }
 
         if ($this->applicationModel->update($id, ['status' => $status])) {
             if ($this->request->isAJAX()) {

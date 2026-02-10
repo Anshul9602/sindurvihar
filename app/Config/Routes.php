@@ -39,7 +39,8 @@ $routes->group('user', static function ($routes) {
 
 // Admin portal routes (equivalent to /admin/* pages)
 $routes->group('admin', static function ($routes) {
-    $routes->get('login', 'AdminPortal::login');
+    $routes->match(['get', 'post'], 'login', 'AdminPortal::login');
+    $routes->match(['get', 'post'], 'register', 'AdminPortal::register');
     $routes->get('dashboard', 'AdminPortal::dashboard');
     $routes->get('applications', 'AdminPortal::applications');
     $routes->get('applications/(:segment)', 'AdminPortal::applicationDetail/$1');

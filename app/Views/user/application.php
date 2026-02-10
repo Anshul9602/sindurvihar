@@ -72,11 +72,11 @@
                            value="<?= esc(old('tehsil', $application['tehsil'] ?? '')) ?>"
                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
                 </div>
-                <div>
+        <div>
                     <label for="app-district" class="block text-sm font-medium mb-1"><?= esc(lang('App.appDistrictLabel')) ?></label>
                     <input id="app-district" name="district" type="text" required
                            value="<?= esc(old('district', $application['district'] ?? '')) ?>"
-                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                   class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
                 </div>
                 <div>
                     <label for="app-state" class="block text-sm font-medium mb-1"><?= esc(lang('App.appStateLabel')) ?></label>
@@ -206,7 +206,7 @@
                     url: imgBase + "BookLet Sindoor Vihar_page-0020.jpg"
                 });
                 return forms;
-            }
+        }
 
             // Divyang
             if (c === "Divyang (PwD)") {
@@ -224,7 +224,7 @@
 
         function renderForms(cat) {
             if (!box || !linksContainer) return;
-
+            
             var forms = getFormsForCategory(cat);
             linksContainer.innerHTML = "";
 

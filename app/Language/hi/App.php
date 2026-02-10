@@ -134,6 +134,16 @@ return [
     'paymentAmountLabel'         => 'देय राशि',
     'paymentSubmitButton'        => 'भुगतान दर्ज करें',
     'paymentUpdateButton'        => 'भुगतान अद्यतन करें',
+
+    // Admin registration
+    'adminRegisterTitle'   => 'एडमिन पंजीकरण',
+    'adminNameLabel'       => 'पूरा नाम',
+    'adminMobileLabel'     => 'मोबाइल नंबर',
+    'adminEmailLabel'      => 'ईमेल (वैकल्पिक)',
+    'adminPasswordLabel'   => 'पासवर्ड',
+    'adminRegisterButton'  => 'एडमिन पंजीकृत करें',
+    'adminHaveAccount'     => 'क्या आपका पहले से एडमिन खाता है?',
+    'adminLoginLink'       => 'एडमिन लॉगिन पर जाएँ',
 ];
 
 

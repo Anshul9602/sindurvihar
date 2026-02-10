@@ -73,6 +73,13 @@
             <div class="border-t pt-4 mt-4">
                 <h3 class="text-lg font-semibold mb-3" style="color: #0F1F3F;">Actions</h3>
                 <div class="flex flex-wrap gap-3">
+                    <?php if (!empty($documents)): ?>
+                        <button id="btn-view-docs"
+                                class="px-4 py-2 rounded-md font-semibold border"
+                                style="border-color:#0F1F3F; color:#0F1F3F;">
+                            View Documents
+                        </button>
+                    <?php endif; ?>
                     <?php if ($application['status'] === 'submitted' || $application['status'] === 'under_verification'): ?>
                         <button id="btn-verify" 
                                 class="px-4 py-2 rounded-md font-semibold text-white"
@@ -96,6 +103,151 @@
             </div>
         </div>
     <?php endif; ?>
+<?php
+    $identityFiles  = !empty($documents['identity_files'] ?? null) ? json_decode($documents['identity_files'], true) : [];
+    $incomeFiles    = !empty($documents['income_files'] ?? null) ? json_decode($documents['income_files'], true) : [];
+    $residenceFiles = !empty($documents['residence_files'] ?? null) ? json_decode($documents['residence_files'], true) : [];
+    $annexureFiles  = !empty($documents['annexure_files'] ?? null) ? json_decode($documents['annexure_files'], true) : [];
+?>
+
+<?php if (!empty($documents)): ?>
+    <!-- Documents modal -->
+    <div id="docs-modal"
+         class="fixed inset-0 z-40 hidden items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold" style="color:#0F1F3F;">Documents Submitted</h2>
+                <button id="btn-close-docs" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-4 text-sm">
+                <div>
+                    <p class="font-medium" style="color:#4B5563;">Identity Proof</p>
+                    <?php if (!empty($identityFiles)): ?>
+                        <ul class="space-y-1 text-blue-700">
+                            <?php foreach ($identityFiles as $path): ?>
+                                <?php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); ?>
+                                <li>
+                                    <a href="<?= base_url($path) ?>" target="_blank"
+                                       class="flex items-center space-x-2 hover:underline">
+                                        <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                            <img src="<?= base_url($path) ?>" alt="Document"
+                                                 style="width:50px;height:50px;object-fit:cover;border-radius:4px;">
+                                        <?php else: ?>
+                                            <div style="width:50px;height:50px;border-radius:4px;background:#E5E7EB;
+                                                        display:flex;align-items:center;justify-content:center;
+                                                        font-size:11px;color:#6B7280;">
+                                                <?= strtoupper($ext) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <span><?= esc(basename($path)) ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p style="color:#6B7280;">Not uploaded</p>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <p class="font-medium" style="color:#4B5563;">Income Proof</p>
+                    <?php if (!empty($incomeFiles)): ?>
+                        <ul class="space-y-1 text-blue-700">
+                            <?php foreach ($incomeFiles as $path): ?>
+                                <?php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); ?>
+                                <li>
+                                    <a href="<?= base_url($path) ?>" target="_blank"
+                                       class="flex items-center space-x-2 hover:underline">
+                                        <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                            <img src="<?= base_url($path) ?>" alt="Document"
+                                                 style="width:50px;height:50px;object-fit:cover;border-radius:4px;">
+                                        <?php else: ?>
+                                            <div style="width:50px;height:50px;border-radius:4px;background:#E5E7EB;
+                                                        display:flex;align-items:center;justify-content:center;
+                                                        font-size:11px;color:#6B7280;">
+                                                <?= strtoupper($ext) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <span><?= esc(basename($path)) ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p style="color:#6B7280;">Not uploaded</p>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <p class="font-medium" style="color:#4B5563;">Residence Proof</p>
+                    <?php if (!empty($residenceFiles)): ?>
+                        <ul class="space-y-1 text-blue-700">
+                            <?php foreach ($residenceFiles as $path): ?>
+                                <?php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); ?>
+                                <li>
+                                    <a href="<?= base_url($path) ?>" target="_blank"
+                                       class="flex items-center space-x-2 hover:underline">
+                                        <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                            <img src="<?= base_url($path) ?>" alt="Document"
+                                                 style="width:50px;height:50px;object-fit:cover;border-radius:4px;">
+                                        <?php else: ?>
+                                            <div style="width:50px;height:50px;border-radius:4px;background:#E5E7EB;
+                                                        display:flex;align-items:center;justify-content:center;
+                                                        font-size:11px;color:#6B7280;">
+                                                <?= strtoupper($ext) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <span><?= esc(basename($path)) ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p style="color:#6B7280;">Not uploaded</p>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <p class="font-medium" style="color:#4B5563;">Annexure Forms</p>
+                    <?php if (!empty($annexureFiles)): ?>
+                        <ul class="space-y-1 text-blue-700">
+                            <?php foreach ($annexureFiles as $path): ?>
+                                <?php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); ?>
+                                <li>
+                                    <a href="<?= base_url($path) ?>" target="_blank"
+                                       class="flex items-center space-x-2 hover:underline">
+                                        <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                            <img src="<?= base_url($path) ?>" alt="Document"
+                                                 style="width:50px;height:50px;object-fit:cover;border-radius:4px;">
+                                        <?php else: ?>
+                                            <div style="width:50px;height:50px;border-radius:4px;background:#E5E7EB;
+                                                        display:flex;align-items:center;justify-content:center;
+                                                        font-size:11px;color:#6B7280;">
+                                                <?= strtoupper($ext) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <span><?= esc(basename($path)) ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p style="color:#6B7280;">Not uploaded</p>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (!empty($documents['notes'])): ?>
+                    <div>
+                        <p class="font-medium" style="color:#4B5563;">Notes</p>
+                        <p style="color:#4B5563;"><?= nl2br(esc($documents['notes'])) ?></p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 </div>
 
 <script>
@@ -150,6 +302,34 @@
             btnReject.addEventListener("click", function() {
                 if (confirm("Are you sure you want to reject this application?")) {
                     updateStatus("rejected");
+                }
+            });
+        }
+
+        // Documents modal behaviour
+        var btnViewDocs = document.getElementById("btn-view-docs");
+        var docsModal   = document.getElementById("docs-modal");
+        var btnCloseDocs = document.getElementById("btn-close-docs");
+
+        if (btnViewDocs && docsModal) {
+            btnViewDocs.addEventListener("click", function () {
+                docsModal.classList.remove("hidden");
+                docsModal.classList.add("flex");
+            });
+        }
+
+        if (btnCloseDocs && docsModal) {
+            btnCloseDocs.addEventListener("click", function () {
+                docsModal.classList.add("hidden");
+                docsModal.classList.remove("flex");
+            });
+        }
+
+        if (docsModal) {
+            docsModal.addEventListener("click", function (e) {
+                if (e.target === docsModal) {
+                    docsModal.classList.add("hidden");
+                    docsModal.classList.remove("flex");
                 }
             });
         }
