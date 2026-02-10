@@ -1,0 +1,39 @@
+CRITICAL - 2025-07-08 07:25:56 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "board_of_directors.php"
+[Method: GET, Route: board-of-directors]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('board_of_directors.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('board_of_directors', [], true)
+ 3 APPPATH\Controllers\Home.php(22): view('board_of_directors')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->board_of_directors()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-08 07:26:07 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "board_of_directors.php"
+[Method: GET, Route: board-of-directors]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('board_of_directors.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('board_of_directors', [], true)
+ 3 APPPATH\Controllers\Home.php(22): view('board_of_directors')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->board_of_directors()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-08 12:32:00 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "events.php"
+[Method: GET, Route: events]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('events.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('events', [], true)
+ 3 APPPATH\Controllers\Home.php(59): view('events')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->events()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')

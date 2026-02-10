@@ -1,0 +1,104 @@
+CRITICAL - 2025-07-09 06:19:19 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "committees.php"
+[Method: GET, Route: committees]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('committees.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('committees', [], true)
+ 3 APPPATH\Controllers\Home.php(84): view('committees')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->committees()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 06:45:00 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "committees.php"
+[Method: GET, Route: committees]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('committees.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('committees', [], true)
+ 3 APPPATH\Controllers\Home.php(84): view('committees')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->committees()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 06:58:09 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "events.php"
+[Method: GET, Route: events]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('events.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('events', [], true)
+ 3 APPPATH\Controllers\Home.php(59): view('events')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->events()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 09:10:39 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "vigil_mechanism.php"
+[Method: GET, Route: vigil-mechanism]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('vigil_mechanism.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('vigil_mechanism', [], true)
+ 3 APPPATH\Controllers\Home.php(46): view('vigil_mechanism')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->vigil_mechanism()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 09:19:28 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "code_of_conduct.php"
+[Method: GET, Route: code-of-conduct]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('code_of_conduct.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('code_of_conduct', [], true)
+ 3 APPPATH\Controllers\Home.php(90): view('code_of_conduct')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->code_of_conduct()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 09:20:47 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "management.php"
+[Method: GET, Route: management]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('management.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('management', [], true)
+ 3 APPPATH\Controllers\Home.php(96): view('management')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->management()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 09:23:00 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "key_managerial_personnel.php"
+[Method: GET, Route: key-managerial-personnel]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('key_managerial_personnel.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('key_managerial_personnel', [], true)
+ 3 APPPATH\Controllers\Home.php(102): view('key_managerial_personnel')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->key_managerial_personnel()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-09 09:23:36 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "financial_results.php"
+[Method: GET, Route: financial-results]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('financial_results.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('financial_results', [], true)
+ 3 APPPATH\Controllers\Home.php(126): view('financial_results')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->financial_results()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')

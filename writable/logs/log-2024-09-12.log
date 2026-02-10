@@ -1,0 +1,39 @@
+CRITICAL - 2024-09-12 14:55:55 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "weserve.php"
+[Method: GET, Route: weserve]
+in SYSTEMPATH/Exceptions/FrameworkException.php on line 41.
+ 1 SYSTEMPATH/View/View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('weserve.php')
+ 2 SYSTEMPATH/Common.php(1169): CodeIgniter\View\View->render('weserve', [], true)
+ 3 APPPATH/Controllers/Weserve.php(10): view('weserve')
+ 4 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\Weserve->index()
+ 5 SYSTEMPATH/CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Weserve))
+ 6 SYSTEMPATH/CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH/Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH/index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH/rewrite.php(44): require_once('/Applications/XAMPP/xamppfiles/htdocs/JaguarSteel/public/index.php')
+CRITICAL - 2024-09-12 15:01:43 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "weserve.php"
+[Method: GET, Route: weserve]
+in SYSTEMPATH/Exceptions/FrameworkException.php on line 41.
+ 1 SYSTEMPATH/View/View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('weserve.php')
+ 2 SYSTEMPATH/Common.php(1169): CodeIgniter\View\View->render('weserve', [], true)
+ 3 APPPATH/Controllers/Weserve.php(10): view('weserve')
+ 4 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\Weserve->index()
+ 5 SYSTEMPATH/CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Weserve))
+ 6 SYSTEMPATH/CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH/Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH/index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH/rewrite.php(44): require_once('/Applications/XAMPP/xamppfiles/htdocs/JaguarSteel/public/index.php')
+CRITICAL - 2024-09-12 18:00:19 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "csr.php"
+[Method: GET, Route: weserve]
+in SYSTEMPATH/Exceptions/FrameworkException.php on line 41.
+ 1 SYSTEMPATH/View/View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('csr.php')
+ 2 SYSTEMPATH/Common.php(1169): CodeIgniter\View\View->render('csr', [], true)
+ 3 APPPATH/Controllers/Weserve.php(10): view('csr')
+ 4 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\Weserve->index()
+ 5 SYSTEMPATH/CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Weserve))
+ 6 SYSTEMPATH/CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH/Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH/index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH/rewrite.php(44): require_once('/Applications/XAMPP/xamppfiles/htdocs/JaguarSteel/public/index.php')

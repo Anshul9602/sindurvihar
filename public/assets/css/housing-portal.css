@@ -1,0 +1,45 @@
+body {
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
+}
+
+.zoom-in-zoom-out {
+    animation: zoom-in-zoom-out 3s ease-in-out infinite;
+}
+
+.fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+}
+
+.gov-hover {
+    transition: all 0.3s ease;
+}
+
+.gov-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes zoom-in-zoom-out {
+    0% {
+        transform: scale(1, 1);
+    }
+    50% {
+        transform: scale(1.05, 1.05);
+    }
+    100% {
+        transform: scale(1, 1);
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+

@@ -1,0 +1,169 @@
+CRITICAL - 2025-07-10 05:03:39 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "familiarisation_programme_for_independent_directors.php"
+[Method: GET, Route: familiarisation-programme-for-independent-directors]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('familiarisation_programme_for_independent_directors.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('familiarisation_programme_for_independent_directors', [], true)
+ 3 APPPATH\Controllers\Home.php(132): view('familiarisation_programme_for_independent_directors')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->familiarisation_programme_for_independent_directors()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:03:43 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "financial_results.php"
+[Method: GET, Route: financial-results]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('financial_results.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('financial_results', [], true)
+ 3 APPPATH\Controllers\Home.php(126): view('financial_results')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->financial_results()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:12:36 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "familiarisation_programme_for_independent_directors.php"
+[Method: GET, Route: familiarisation-programme-for-independent-directors]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('familiarisation_programme_for_independent_directors.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('familiarisation_programme_for_independent_directors', [], true)
+ 3 APPPATH\Controllers\Home.php(132): view('familiarisation_programme_for_independent_directors')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->familiarisation_programme_for_independent_directors()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:13:19 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "postal_ballot.php"
+[Method: GET, Route: postal-ballot]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('postal_ballot.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('postal_ballot', [], true)
+ 3 APPPATH\Controllers\Home.php(138): view('postal_ballot')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->postal_ballot()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:13:41 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "prospectus.php"
+[Method: GET, Route: prospectus]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('prospectus.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('prospectus', [], true)
+ 3 APPPATH\Controllers\Home.php(144): view('prospectus')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->prospectus()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:15:37 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "annual_return.php"
+[Method: GET, Route: annual-return]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('annual_return.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('annual_return', [], true)
+ 3 APPPATH\Controllers\Home.php(150): view('annual_return')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->annual_return()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:18:28 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "annual_report.php"
+[Method: GET, Route: annual-report]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('annual_report.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('annual_report', [], true)
+ 3 APPPATH\Controllers\Home.php(156): view('annual_report')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->annual_report()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:18:40 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "annual_report.php"
+[Method: GET, Route: annual-report]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('annual_report.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('annual_report', [], true)
+ 3 APPPATH\Controllers\Home.php(156): view('annual_report')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->annual_report()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:19:25 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "shareholding_pattern.php"
+[Method: GET, Route: shareholding-pattern]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('shareholding_pattern.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('shareholding_pattern', [], true)
+ 3 APPPATH\Controllers\Home.php(162): view('shareholding_pattern')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->shareholding_pattern()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:19:59 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "investor_grievances.php"
+[Method: GET, Route: investor-grievances]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('investor_grievances.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('investor_grievances', [], true)
+ 3 APPPATH\Controllers\Home.php(108): view('investor_grievances')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->investor_grievances()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:22:32 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "stock_exchange_intimations.php"
+[Method: GET, Route: stock-exchange-intimations]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('stock_exchange_intimations.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('stock_exchange_intimations', [], true)
+ 3 APPPATH\Controllers\Home.php(114): view('stock_exchange_intimations')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->stock_exchange_intimations()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:26:52 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "general_meeting.php"
+[Method: GET, Route: general-meeting]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('general_meeting.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('general_meeting', [], true)
+ 3 APPPATH\Controllers\Home.php(120): view('general_meeting')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->general_meeting()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
+CRITICAL - 2025-07-10 05:27:25 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "corporate_governance.php"
+[Method: GET, Route: corporate-governance]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 41.
+ 1 SYSTEMPATH\View\View.php(222): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('corporate_governance.php')
+ 2 SYSTEMPATH\Common.php(1169): CodeIgniter\View\View->render('corporate_governance', [], true)
+ 3 APPPATH\Controllers\Home.php(168): view('corporate_governance')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Home->corporate_governance()
+ 5 SYSTEMPATH\CodeIgniter.php(509): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 6 SYSTEMPATH\CodeIgniter.php(355): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(325): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\manishatexttiles\\public\\index.php')
