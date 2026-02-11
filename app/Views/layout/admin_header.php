@@ -13,12 +13,12 @@
     
     .admin-sidebar {
         background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
-        min-height: calc(100vh - 80px);
+        max-height: calc(100vh - 80px);
         width: 260px;
         position: fixed;
         left: 0;
         top: 80px;
-        overflow-y: auto;
+        overflow-y: scroll;
         z-index: 999;
     }
     .admin-main {
@@ -141,6 +141,10 @@
             <a href="/admin/allotments" class="admin-nav-item <?= $isActive('admin/allotments') ?>">
                 <span>🏠</span>
                 <span><?= esc(lang('App.adminAllotmentsTitle')) ?></span>
+            </a>
+            <a href="/admin/plots" class="admin-nav-item <?= $isActive('admin/plots') ?>">
+                <span>📍</span>
+                <span><?= esc(lang('App.adminPlotsTitle')) ?></span>
             </a>
         </div>
 

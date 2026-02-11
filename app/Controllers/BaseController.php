@@ -60,7 +60,7 @@ abstract class BaseController extends Controller
         // 2. Else from logged-in user profile (if available in session),
         // 3. Else default app locale.
         $config     = new AppConfig();
-        $defaultLoc = $config->defaultLocale ?? 'en';
+        $defaultLoc = $config->defaultLocale ?? 'hi';
 
         $lang = $session->get('language') ?: $defaultLoc;
 

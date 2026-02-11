@@ -6,11 +6,11 @@ class Lang extends BaseController
 {
     public function switch()
     {
-        $language = (string) ($this->request->getPost('language') ?? 'en');
+        $language = (string) ($this->request->getPost('language') ?? 'hi');
 
-        $supported = config('App')->supportedLocales ?? ['en'];
+        $supported = config('App')->supportedLocales ?? ['hi'];
         if (! in_array($language, $supported, true)) {
-            $language = config('App')->defaultLocale ?? 'en';
+            $language = config('App')->defaultLocale ?? 'hi';
         }
 
         // Store in session

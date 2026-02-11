@@ -72,6 +72,11 @@
         </div>
         <div class="text-2xl font-bold text-gray-900">₹<?= number_format($pendingAmount ?? 0, 2) ?></div>
         <div class="text-sm text-gray-500 mt-1"><?= esc(lang('App.adminAwaitingPayout')) ?></div>
+        <?php if (isset($pendingPaymentApplications) && $pendingPaymentApplications > 0): ?>
+        <div class="text-xs text-yellow-600 mt-2 font-medium">
+            <?= esc($pendingPaymentApplications) ?> <?= esc(lang('App.adminApplicationsPendingPayment')) ?>
+        </div>
+        <?php endif; ?>
     </div>
 
     <div class="metric-card">

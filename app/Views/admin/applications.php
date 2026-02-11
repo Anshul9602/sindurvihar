@@ -76,6 +76,7 @@
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color: #6B7280;"><?= esc(lang('App.adminApplicationMobile')) ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color: #6B7280;"><?= esc(lang('App.adminApplicationCategory')) ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color: #6B7280;"><?= esc(lang('App.adminApplicationStatus')) ?></th>
+                    <th class="px-4 py-3 font-semibold text-xs uppercase" style="color: #6B7280;"><?= esc(lang('App.adminPaymentStatus')) ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color: #6B7280;"><?= esc(lang('App.adminJoined')) ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color: #6B7280;"><?= esc(lang('App.adminActions')) ?></th>
                 </tr>
@@ -83,7 +84,7 @@
             <tbody id="applications-table-body">
                 <?php if (empty($applications)): ?>
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center" style="color: #9CA3AF;">
+                        <td colspan="8" class="px-4 py-8 text-center" style="color: #9CA3AF;">
                             <?= esc(lang('App.adminNoApplicationsFound')) ?>
                         </td>
                     </tr>
@@ -108,6 +109,34 @@
                             ?>
                             <span class="px-2 py-1 rounded text-xs font-semibold <?= $statusClass ?>">
                                 <?= esc(ucfirst(str_replace('_', ' ', $status))) ?>
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <?php 
+                            $paymentStatus = $app['payment_status'] ?? 'pending';
+                            $hasPayment = $app['has_payment'] ?? false;
+                            
+                            // If no payment record exists, show as pending
+                            if (!$hasPayment) {
+                                $paymentStatus = 'pending';
+                            }
+                            
+                            $paymentStatusClass = 'bg-gray-100 text-gray-800';
+                            $paymentStatusText = lang('App.adminPaymentPending');
+                            
+                            if ($paymentStatus === 'completed' || $paymentStatus === 'success') {
+                                $paymentStatusClass = 'bg-green-100 text-green-800';
+                                $paymentStatusText = lang('App.adminPaymentCompleted');
+                            } elseif ($paymentStatus === 'pending') {
+                                $paymentStatusClass = 'bg-yellow-100 text-yellow-800';
+                                $paymentStatusText = lang('App.adminPaymentPending');
+                            } elseif ($paymentStatus === 'failed') {
+                                $paymentStatusClass = 'bg-red-100 text-red-800';
+                                $paymentStatusText = lang('App.adminPaymentFailed');
+                            }
+                            ?>
+                            <span class="px-2 py-1 rounded text-xs font-semibold <?= $paymentStatusClass ?>">
+                                <?= esc($paymentStatusText) ?>
                             </span>
                         </td>
                         <td class="px-4 py-3 text-xs" style="color: #6B7280;">

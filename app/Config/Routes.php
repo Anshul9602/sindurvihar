@@ -43,6 +43,10 @@ $routes->group('admin', static function ($routes) {
     $routes->match(['get', 'post'], 'register', 'AdminPortal::register');
     $routes->get('dashboard', 'AdminPortal::dashboard');
     $routes->get('applications', 'AdminPortal::applications');
+    $routes->match(['get', 'post'], 'applications/(:segment)/edit', 'AdminPortal::editApplication/$1');
+    $routes->post('applications/(:segment)/update', 'AdminPortal::updateApplication/$1');
+    $routes->post('applications/(:segment)/reject', 'AdminPortal::rejectApplication/$1');
+    $routes->post('applications/(:segment)/verify', 'AdminPortal::verifyApplication/$1');
     $routes->get('applications/(:segment)', 'AdminPortal::applicationDetail/$1');
     $routes->post('applications/update-status', 'AdminPortal::updateApplicationStatus');
     $routes->get('verification', 'AdminPortal::verification');
@@ -51,4 +55,9 @@ $routes->group('admin', static function ($routes) {
     $routes->get('payments', 'AdminPortal::payments');
     $routes->get('schemes', 'AdminPortal::schemes');
     $routes->get('reports', 'AdminPortal::reports');
+    $routes->get('plots', 'AdminPortal::plots');
+    $routes->match(['get', 'post'], 'plots/add', 'AdminPortal::addPlot');
+    $routes->match(['get', 'post'], 'plots/(:segment)/edit', 'AdminPortal::editPlot/$1');
+    $routes->post('plots/(:segment)/update', 'AdminPortal::updatePlot/$1');
+    $routes->post('plots/(:segment)/delete', 'AdminPortal::deletePlot/$1');
 });

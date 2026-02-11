@@ -293,7 +293,7 @@ class UserPortal extends BaseController
             'income_category'          => (string) $this->request->getPost('income_category'),
             'declaration_truth'        => $this->request->getPost('declaration_truth') ? 1 : 0,
             'declaration_cancellation' => $this->request->getPost('declaration_cancellation') ? 1 : 0,
-            'status'                   => 'submitted',
+            'status'                   => 'draft',
         ];
 
         // Prevent multiple applications with same mobile or Aadhaar
