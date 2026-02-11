@@ -1,4 +1,13 @@
 <div class="container mx-auto px-4 py-8 max-w-3xl">
+    <div class="mb-4">
+        <a href="/user/application" 
+           class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <?= esc(lang('App.backButton')) ?>
+        </a>
+    </div>
     <h1 class="text-3xl font-bold mb-6 text-center" style="color: #0F1F3F;">
         <?= esc(lang('App.docTitle') ?? 'Document Details') ?>
     </h1>
@@ -16,7 +25,7 @@
                         <a href="<?= esc($form['url']) ?>" target="_blank"
                            class="text-sm font-semibold px-3 py-1 rounded-md"
                            style="background-color:#0747A6; color:#FFFFFF;">
-                            Download
+                            <?= esc(lang('App.docDownload')) ?>
                         </a>
                     </li>
                 <?php endforeach; ?>

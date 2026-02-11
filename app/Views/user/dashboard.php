@@ -3,7 +3,7 @@
         <?= esc(lang('App.dashboardWelcome')) ?> <?= esc($user['name'] ?? '') ?>
     </h1>
     <p class="mb-6 text-sm" style="color:#6B7280;">
-        Complete these steps to finish your Sindoor Vihar housing application.
+        <?= esc(lang('App.dashboardSubtitle')) ?>
     </p>
 
     <?php
@@ -103,10 +103,10 @@
                         <div class="flex items-center space-x-2">
                             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                   style="background-color:#16A34A;">✓</span>
-                            <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
+                            <span class="text-xs font-semibold" style="color:#16A34A;"><?= esc(lang('App.dashboardCompleted')) ?></span>
                     <button class="px-3 py-1 border rounded-md text-sm"
                                     style="border-color:#16A34A; color:#16A34A;">
-                                Edit
+                                <?= esc(lang('App.dashboardEdit')) ?>
                     </button>
                         </div>
                     <?php else: ?>
@@ -129,10 +129,10 @@
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
-                                <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
+                                <span class="text-xs font-semibold" style="color:#16A34A;"><?= esc(lang('App.dashboardCompleted')) ?></span>
                     <button class="px-3 py-1 border rounded-md text-sm"
                                         style="border-color:#16A34A; color:#16A34A;">
-                                    Edit
+                                    <?= esc(lang('App.dashboardEdit')) ?>
                     </button>
                 </div>
                         <?php else: ?>
@@ -159,10 +159,10 @@
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
-                                <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
+                                <span class="text-xs font-semibold" style="color:#16A34A;"><?= esc(lang('App.dashboardCompleted')) ?></span>
                     <button class="px-3 py-1 border rounded-md text-sm"
                                         style="border-color:#16A34A; color:#16A34A;">
-                                    Edit
+                                    <?= esc(lang('App.dashboardEdit')) ?>
                     </button>
                 </div>
                         <?php else: ?>
@@ -189,10 +189,10 @@
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
-                                <span class="text-xs font-semibold" style="color:#16A34A;">Completed</span>
+                                <span class="text-xs font-semibold" style="color:#16A34A;"><?= esc(lang('App.dashboardCompleted')) ?></span>
                     <button class="px-3 py-1 border rounded-md text-sm"
                                         style="border-color:#16A34A; color:#16A34A;">
-                                    Edit
+                                    <?= esc(lang('App.dashboardEdit')) ?>
                     </button>
                 </div>
                         <?php else: ?>

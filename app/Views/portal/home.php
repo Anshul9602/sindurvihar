@@ -1,7 +1,7 @@
 
 
 <!-- Banner Swiper (simple slider) -->
-<section class="w-full relative mb-6 overflow-hidden">
+<section class="w-full relative mb-6 overflow-hidden" style="padding: 0;margin-top:-10px;">
     <div class="relative w-full" style="height:50vh;">
         <img id="banner-slide"
              src="/assets/housing/banner1.jpeg"
@@ -65,30 +65,29 @@
                     <div class="flex-1" style="background-color: #138808;"></div>
                 </div>
                 <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                    Affordable Housing Lottery Portal
+                    <?= esc(lang('App.homeTitle')) ?>
                 </h1>
                 <p class="text-lg md:text-xl mb-6" style="color: #E5E7EB;">
-                    Apply for government housing schemes with a transparent, fully online process.
+                    <?= esc(lang('App.homeSubtitle')) ?>
                 </p>
                 <p class="text-base md:text-lg mb-8 max-w-2xl mx-auto" style="color: #D1D5DB;">
-                    Complete your registration, check eligibility, submit application, upload documents,
-                    make payment, and track lottery results in one unified portal.
+                    <?= esc(lang('App.homeDescription')) ?>
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
                     <a href="/auth/register"
                        class="px-6 py-3 rounded-md font-semibold"
                        style="background-color: #FFFFFF; color: #1E3A5F;">
-                        Apply Now
+                        <?= esc(lang('App.homeApplyNow')) ?>
                     </a>
                     <a href="/auth/login"
                        class="px-6 py-3 rounded-md font-semibold border"
                        style="border-color: #FFFFFF; color: #FFFFFF;">
-                        Login
+                        <?= esc(lang('App.homeLogin')) ?>
                     </a>
                     <a href="/user/eligibility"
                        class="px-6 py-3 rounded-md font-semibold border"
                        style="border-color: #FFFFFF; color: #FFFFFF;">
-                        Check Eligibility
+                        <?= esc(lang('App.homeCheckEligibility')) ?>
                     </a>
                 </div>
             </div>
@@ -96,7 +95,7 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Scheme Highlights
+                <?= esc(lang('App.homeSchemeHighlights')) ?>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
@@ -119,17 +118,17 @@
                                     style="width: 28px; height: auto;"
                                 >
                                 <h3 class="text-xl md:text-2xl font-semibold" style="color: #0747A6;">
-                                    About the Scheme
+                                    <?= esc(lang('App.homeAboutScheme')) ?>
                                 </h3>
                             </div>
                             <p class="text-sm md:text-base leading-relaxed mb-2" style="color: #4B5563;">
-                                Online housing lottery scheme for eligible citizens with transparent selection.
+                                <?= esc(lang('App.homeAboutSchemeText1')) ?>
                             </p>
                             <p class="text-sm md:text-base leading-relaxed mb-2" style="color: #4B5563;">
-                                Apply from anywhere, upload documents digitally, and track your status in real time.
+                                <?= esc(lang('App.homeAboutSchemeText2')) ?>
                             </p>
                             <p class="text-sm md:text-base leading-relaxed" style="color: #4B5563;">
-                                Designed to be citizen-friendly, secure, and fully paperless.
+                                <?= esc(lang('App.homeAboutSchemeText3')) ?>
                             </p>
                         </div>
                     </div>
@@ -137,27 +136,27 @@
 
                 <div class="bg-white shadow-sm rounded-xl p-6 md:p-8 border border-gray-200">
                     <h3 class="text-xl md:text-2xl font-semibold mb-4" style="color: #0747A6;">
-                        Important Dates & Fees
+                        <?= esc(lang('App.homeImportantDatesFees')) ?>
                     </h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Application Start Date</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeApplicationStartDate')) ?></span>
                             <strong style="color: #0F1F3F;">January 1, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Application End Date</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeApplicationEndDate')) ?></span>
                             <strong style="color: #0F1F3F;">March 31, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Verification Window</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeVerificationWindow')) ?></span>
                             <strong style="color: #0F1F3F;">April 1–30, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Lottery Date</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeLotteryDate')) ?></span>
                             <strong style="color: #0F1F3F;">May 15, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Application Fee</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeApplicationFee')) ?></span>
                             <strong style="color: #0F1F3F;">₹1,000</strong>
                         </div>
                         <div class="mt-4 flex justify-center">
@@ -174,35 +173,35 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Eligibility Criteria
+                <?= esc(lang('App.homeEligibilityCriteria')) ?>
             </h2>
             <div class="bg-white shadow-sm rounded-xl p-6 md:p-8 border border-gray-200">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;">Age Requirement</h4>
+                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;"><?= esc(lang('App.homeAgeRequirement')) ?></h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            Applicant must be at least 18 years of age at the time of application.
+                            <?= esc(lang('App.homeAgeRequirementText')) ?>
                         </p>
                     </div>
                     <div>
-                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;">Income Categories</h4>
+                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;"><?= esc(lang('App.homeIncomeCategories')) ?></h4>
                         <ul class="text-sm md:text-base space-y-1" style="color: #4B5563;">
-                            <li>EWS: Annual income up to ₹3 Lakhs</li>
-                            <li>LIG: Annual income ₹3–6 Lakhs</li>
-                            <li>MIG: Annual income ₹6–12 Lakhs</li>
-                            <li>HIG: Annual income above ₹12 Lakhs</li>
+                            <li><?= esc(lang('App.homeIncomeEWS')) ?></li>
+                            <li><?= esc(lang('App.homeIncomeLIG')) ?></li>
+                            <li><?= esc(lang('App.homeIncomeMIG')) ?></li>
+                            <li><?= esc(lang('App.homeIncomeHIG')) ?></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;">Property Ownership</h4>
+                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;"><?= esc(lang('App.homePropertyOwnership')) ?></h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            Applicant should not own any residential property in the scheme city/region.
+                            <?= esc(lang('App.homePropertyOwnershipText')) ?>
                         </p>
                     </div>
                     <div>
-                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;">Residency</h4>
+                        <h4 class="text-lg md:text-xl font-semibold mb-3" style="color: #0747A6;"><?= esc(lang('App.homeResidency')) ?></h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            Applicant must be a resident of the state where the scheme is being implemented.
+                            <?= esc(lang('App.homeResidencyText')) ?>
                         </p>
                     </div>
                 </div>
@@ -210,7 +209,7 @@
                     <a href="/user/eligibility"
                        class="px-6 py-3 rounded-md font-semibold"
                        style="background-color: #0747A6; color: #FFFFFF;">
-                        Check Eligibility Online
+                        <?= esc(lang('App.homeCheckEligibilityOnline')) ?>
                     </a>
                 </div>
             </div>
@@ -218,7 +217,7 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Application Process
+                <?= esc(lang('App.homeApplicationProcess')) ?>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -226,9 +225,9 @@
                          style="background-color: #0747A6;">
                         1
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Register</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep1Register')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Create your account with mobile number and password.
+                        <?= esc(lang('App.homeStep1RegisterText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -236,9 +235,9 @@
                          style="background-color: #0747A6;">
                         2
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Fill Application</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep2FillApplication')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Complete the online application form with all required details.
+                        <?= esc(lang('App.homeStep2FillApplicationText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -246,9 +245,9 @@
                          style="background-color: #0747A6;">
                         3
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Upload Documents</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep3UploadDocuments')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Upload required documents (Aadhaar, PAN, income certificates, etc.).
+                        <?= esc(lang('App.homeStep3UploadDocumentsText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -256,9 +255,9 @@
                          style="background-color: #0747A6;">
                         4
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Pay Fee</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep4PayFee')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Pay the application fee of ₹1,000 through secure payment gateway.
+                        <?= esc(lang('App.homeStep4PayFeeText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -266,9 +265,9 @@
                          style="background-color: #10B981;">
                         5
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Verification</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep5Verification')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Documents are verified by authorized officers.
+                        <?= esc(lang('App.homeStep5VerificationText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -276,9 +275,9 @@
                          style="background-color: #10B981;">
                         6
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Lottery</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep6Lottery')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Transparent lottery conducted for all eligible applications.
+                        <?= esc(lang('App.homeStep6LotteryText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -286,9 +285,9 @@
                          style="background-color: #10B981;">
                         7
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Allotment</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep7Allotment')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Selected applicants receive formal allotment letters.
+                        <?= esc(lang('App.homeStep7AllotmentText')) ?>
                     </p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
@@ -296,9 +295,9 @@
                          style="background-color: #10B981;">
                         8
                     </div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Possession</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeStep8Possession')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Complete payment and take possession of your allotted plot/house.
+                        <?= esc(lang('App.homeStep8PossessionText')) ?>
                     </p>
                 </div>
             </div>
@@ -306,28 +305,28 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Important Information
+                <?= esc(lang('App.homeImportantInformation')) ?>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 <div class="bg-white shadow-sm rounded-xl p-6 md:p-8 border border-gray-200">
                     <h3 class="text-xl md:text-2xl font-semibold mb-4" style="color: #0747A6;">
-                        Important Dates
+                        <?= esc(lang('App.homeImportantDates')) ?>
                     </h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Application Start Date</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeApplicationStartDate')) ?></span>
                             <strong style="color: #0F1F3F;">January 1, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Application End Date</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeApplicationEndDate')) ?></span>
                             <strong style="color: #0F1F3F;">March 31, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Verification Period</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeVerificationPeriod')) ?></span>
                             <strong style="color: #0F1F3F;">April 1–30, 2024</strong>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span style="color: #4B5563;">Lottery Date</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeLotteryDate')) ?></span>
                             <strong style="color: #0F1F3F;">May 15, 2024</strong>
                         </div>
                     </div>
@@ -335,24 +334,24 @@
 
                 <div class="bg-white shadow-sm rounded-xl p-6 md:p-8 border border-gray-200">
                     <h3 class="text-xl md:text-2xl font-semibold mb-4" style="color: #0747A6;">
-                        Application Fees
+                        <?= esc(lang('App.homeApplicationFees')) ?>
                     </h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Application Fee</span>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeApplicationFee')) ?></span>
                             <strong style="color: #0F1F3F;">₹1,000</strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Processing Fee</span>
-                            <strong style="color: #0F1F3F;">Included</strong>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeProcessingFee')) ?></span>
+                            <strong style="color: #0F1F3F;"><?= esc(lang('App.homeProcessingFeeIncluded')) ?></strong>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <span style="color: #4B5563;">Refund Policy</span>
-                            <strong style="color: #0F1F3F;">Full refund if rejected</strong>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homeRefundPolicy')) ?></span>
+                            <strong style="color: #0F1F3F;"><?= esc(lang('App.homeRefundPolicyText')) ?></strong>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span style="color: #4B5563;">Payment Methods</span>
-                            <strong style="color: #0F1F3F;">Card, UPI, Net Banking</strong>
+                            <span style="color: #4B5563;"><?= esc(lang('App.homePaymentMethods')) ?></span>
+                            <strong style="color: #0F1F3F;"><?= esc(lang('App.homePaymentMethodsText')) ?></strong>
                         </div>
                     </div>
                 </div>
@@ -361,46 +360,46 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Downloads & Resources
+                <?= esc(lang('App.homeDownloadsResources')) ?>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200 hover:shadow-md transition-shadow">
                     <div class="text-4xl mb-4">📄</div>
                     <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">
-                        Scheme Brochure
+                        <?= esc(lang('App.homeSchemeBrochure')) ?>
                     </h3>
                     <p class="mb-4 text-sm md:text-base" style="color: #4B5563;">
-                        Download detailed scheme information.
+                        <?= esc(lang('App.homeSchemeBrochureText')) ?>
                     </p>
                     <button class="px-4 py-2 border rounded-md text-sm"
                             style="border-color: #0747A6; color: #0747A6;">
-                        Download PDF
+                        <?= esc(lang('App.homeDownloadPDF')) ?>
                     </button>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200 hover:shadow-md transition-shadow">
                     <div class="text-4xl mb-4">📋</div>
                     <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">
-                        Application Guidelines
+                        <?= esc(lang('App.homeApplicationGuidelines')) ?>
                     </h3>
                     <p class="mb-4 text-sm md:text-base" style="color: #4B5563;">
-                        Step-by-step guide to complete the application.
+                        <?= esc(lang('App.homeApplicationGuidelinesText')) ?>
                     </p>
                     <button class="px-4 py-2 border rounded-md text-sm"
                             style="border-color: #0747A6; color: #0747A6;">
-                        Download PDF
+                        <?= esc(lang('App.homeDownloadPDF')) ?>
                     </button>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200 hover:shadow-md transition-shadow">
                     <div class="text-4xl mb-4">📑</div>
                     <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">
-                        Document Checklist
+                        <?= esc(lang('App.homeDocumentChecklist')) ?>
                     </h3>
                     <p class="mb-4 text-sm md:text-base" style="color: #4B5563;">
-                        List of documents required for application.
+                        <?= esc(lang('App.homeDocumentChecklistText')) ?>
                     </p>
                     <button class="px-4 py-2 border rounded-md text-sm"
                             style="border-color: #0747A6; color: #0747A6;">
-                        Download PDF
+                        <?= esc(lang('App.homeDownloadPDF')) ?>
                     </button>
                 </div>
             </div>
@@ -408,40 +407,40 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Frequently Asked Questions
+                <?= esc(lang('App.homeFAQ')) ?>
             </h2>
             <div class="bg-white shadow-sm rounded-xl p-6 md:p-8 border border-gray-200">
                 <div class="space-y-4">
                     <div>
                         <h4 class="text-base md:text-lg font-semibold mb-1" style="color: #0747A6;">
-                            How do I apply for the scheme?
+                            <?= esc(lang('App.homeFAQ1Question')) ?>
                         </h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            Register on the portal, complete the application form, upload documents, pay the fee, and track your status online.
+                            <?= esc(lang('App.homeFAQ1Answer')) ?>
                         </p>
                     </div>
                     <div>
                         <h4 class="text-base md:text-lg font-semibold mb-1" style="color: #0747A6;">
-                            How is the lottery conducted?
+                            <?= esc(lang('App.homeFAQ2Question')) ?>
                         </h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            The lottery is conducted using a transparent digital algorithm with a verifiable seed hash.
+                            <?= esc(lang('App.homeFAQ2Answer')) ?>
                         </p>
                     </div>
                     <div>
                         <h4 class="text-base md:text-lg font-semibold mb-1" style="color: #0747A6;">
-                            Will I get a refund if not selected?
+                            <?= esc(lang('App.homeFAQ3Question')) ?>
                         </h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            Yes, if your application is rejected during verification, you will receive a full refund of the application fee.
+                            <?= esc(lang('App.homeFAQ3Answer')) ?>
                         </p>
                     </div>
                     <div>
                         <h4 class="text-base md:text-lg font-semibold mb-1" style="color: #0747A6;">
-                            How can I track my application status?
+                            <?= esc(lang('App.homeFAQ4Question')) ?>
                         </h4>
                         <p class="text-sm md:text-base" style="color: #4B5563;">
-                            Login to your account and visit the Application Status page to see real-time updates.
+                            <?= esc(lang('App.homeFAQ4Answer')) ?>
                         </p>
                     </div>
                 </div>
@@ -450,28 +449,28 @@
 
         <section class="mb-6">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center" style="color: #0747A6;">
-                Contact & Support
+                <?= esc(lang('App.homeContactSupport')) ?>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
                     <div class="text-4xl mb-4">📞</div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Helpline</h3>
-                    <p class="text-sm md:text-base" style="color: #4B5563;">1800-XXX-XXXX</p>
-                    <p class="text-xs md:text-sm" style="color: #4B5563;">Mon–Sat, 8 AM – 6 PM</p>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeHelpline')) ?></h3>
+                    <p class="text-sm md:text-base" style="color: #4B5563;">01429-243637</p>
+                    <p class="text-xs md:text-sm" style="color: #4B5563;"><?= esc(lang('App.homeHelplineHours')) ?></p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
                     <div class="text-4xl mb-4">✉️</div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Email</h3>
-                    <p class="text-sm md:text-base" style="color: #4B5563;">support@housingportal.gov.in</p>
-                    <p class="text-xs md:text-sm" style="color: #4B5563;">Responses within 24 hours</p>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeEmail')) ?></h3>
+                    <p class="text-sm md:text-base" style="color: #4B5563;">chaksuulb.jaipur@gmail.com</p>
+                    <p class="text-xs md:text-sm" style="color: #4B5563;"><?= esc(lang('App.homeEmailResponse')) ?></p>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl p-6 text-center border border-gray-200">
                     <div class="text-4xl mb-4">📍</div>
-                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;">Office</h3>
+                    <h3 class="text-base md:text-lg font-semibold mb-2" style="color: #0747A6;"><?= esc(lang('App.homeOffice')) ?></h3>
                     <p class="text-sm md:text-base" style="color: #4B5563;">
-                        Housing Development Authority, Government Complex, State Capital
+                        <?= esc(lang('App.homeOfficeAddress')) ?>
                     </p>
-                    <p class="text-xs md:text-sm" style="color: #4B5563;">Visit during working hours</p>
+                    <p class="text-xs md:text-sm" style="color: #4B5563;"><?= esc(lang('App.homeOfficeHours')) ?></p>
                 </div>
             </div>
         </section>
@@ -480,21 +479,21 @@
             <div class="rounded-xl p-8 md:p-12 text-center"
                  style="background: linear-gradient(135deg, #0747A6 0%, #0F1F3F 100%); color: #FFFFFF;">
                 <h2 class="text-2xl md:text-3xl font-bold mb-4">
-                    Ready to begin your housing application?
+                    <?= esc(lang('App.homeReadyToBegin')) ?>
                 </h2>
                 <p class="text-base md:text-lg mb-8" style="color: #E5E7EB;">
-                    Start by creating your account or checking your eligibility.
+                    <?= esc(lang('App.homeReadyToBeginText')) ?>
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="/auth/register"
                        class="px-6 py-3 rounded-md font-semibold"
                        style="background-color: #FFFFFF; color: #0747A6;">
-                        Apply Now
+                        <?= esc(lang('App.homeApplyNow')) ?>
                     </a>
                     <a href="/user/eligibility"
                        class="px-6 py-3 rounded-md font-semibold border"
                        style="border-color: #FFFFFF; color: #FFFFFF;">
-                        Check Eligibility
+                        <?= esc(lang('App.homeCheckEligibility')) ?>
                     </a>
                 </div>
             </div>

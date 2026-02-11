@@ -4,19 +4,18 @@ namespace App\Controllers;
 
 use App\Models\ApplicationModel;
 use App\Models\AdminModel;
-use App\Models\ApplicationDocumentModel;
+use App\Models\UserModel;
+use App\Models\PaymentModel;
 
 class AdminPortal extends BaseController
 {
     protected $applicationModel;
     protected $adminModel;
-    protected $documentModel;
 
     public function __construct()
     {
         $this->applicationModel = new ApplicationModel();
         $this->adminModel       = new AdminModel();
-        $this->documentModel    = new ApplicationDocumentModel();
     }
 
     public function login()
@@ -72,42 +71,67 @@ class AdminPortal extends BaseController
 
     public function dashboard()
     {
+        $userModel = new UserModel();
+        $paymentModel = new PaymentModel();
+        
+        // User statistics
+        $data['totalUsers'] = $userModel->countAllResults();
+        $data['activeUsers'] = $userModel->countAllResults(); // Assuming all are active
+        
+        // Application statistics
         $data['totalApplications'] = $this->applicationModel->countAllResults();
         $data['pendingApplications'] = $this->applicationModel->where('status', 'submitted')->countAllResults();
         $data['verifiedApplications'] = $this->applicationModel->where('status', 'verified')->countAllResults();
         
-        return view('layout/header')
+        // Payment statistics
+        $data['totalPayments'] = $paymentModel->countAllResults();
+        $data['totalAmount'] = $paymentModel->selectSum('amount')->first()['amount'] ?? 0;
+        $data['pendingPayments'] = $paymentModel->where('status', 'pending')->countAllResults();
+        $data['pendingAmount'] = $paymentModel->selectSum('amount')->where('status', 'pending')->first()['amount'] ?? 0;
+        
+        // Today's statistics
+        $today = date('Y-m-d');
+        $data['todayPayments'] = $paymentModel->like('created_at', $today)->countAllResults();
+        $data['todayAmount'] = $paymentModel->selectSum('amount')->like('created_at', $today)->first()['amount'] ?? 0;
+        
+        return view('layout/admin_header')
             . view('admin/dashboard', $data)
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 
     public function applications()
     {
         $data['applications'] = $this->applicationModel->getApplicationsWithUsers();
         
-        return view('layout/header')
+        return view('layout/admin_header')
             . view('admin/applications', $data)
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 
     public function applicationDetail($id)
     {
         $data['application'] = $this->applicationModel->getApplicationWithUser($id);
-
-        if (! $data['application']) {
+        
+        if (!$data['application']) {
             return redirect()->to('/admin/applications')->with('error', 'Application not found');
         }
-
-        // Load associated documents if they exist
-        $documents = $this->documentModel
+        
+        // Fetch documents for this application
+        $documentModel = new \App\Models\ApplicationDocumentModel();
+        $data['documents'] = $documentModel
             ->where('application_id', $id)
             ->first();
-
-        $data['documents'] = $documents;
-
-        return view('layout/header')
+        
+        // Fetch payment details for this application
+        $paymentModel = new PaymentModel();
+        $data['payment'] = $paymentModel
+            ->where('application_id', $id)
+            ->orderBy('created_at', 'DESC')
+            ->first();
+        
+        return view('layout/admin_header')
             . view('admin/application_detail', $data)
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 
     public function updateApplicationStatus()
@@ -119,25 +143,8 @@ class AdminPortal extends BaseController
             return redirect()->to('/admin/applications');
         }
 
-        // Support both JSON (from AJAX) and normal form POST
-        if ($this->request->isAJAX()) {
-            $payload = (array) $this->request->getJSON(true);
-            $id      = $payload['application_id'] ?? null;
-            $status  = $payload['status'] ?? null;
-        } else {
-            $id     = $this->request->getPost('application_id');
-            $status = $this->request->getPost('status');
-        }
-
-        if (! $id || ! $status) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Missing application_id or status',
-                ]);
-            }
-            return redirect()->back()->with('error', 'Missing application ID or status.');
-        }
+        $id = $this->request->getPost('application_id');
+        $status = $this->request->getPost('status');
 
         if ($this->applicationModel->update($id, ['status' => $status])) {
             if ($this->request->isAJAX()) {
@@ -160,44 +167,52 @@ class AdminPortal extends BaseController
 
     public function verification()
     {
-        return view('layout/header')
-            . view('admin/verification')
-            . view('layout/footer');
+        $data['applications'] = $this->applicationModel
+            ->whereIn('status', ['submitted', 'under_verification'])
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+        
+        return view('layout/admin_header')
+            . view('admin/verification', $data)
+            . view('layout/admin_footer');
     }
 
     public function lottery()
     {
-        return view('layout/header')
+        return view('layout/admin_header')
             . view('admin/lottery')
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 
     public function allotments()
     {
-        return view('layout/header')
+        return view('layout/admin_header')
             . view('admin/allotments')
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 
     public function payments()
     {
-        return view('layout/header')
-            . view('admin/payments')
-            . view('layout/footer');
+        $paymentModel = new PaymentModel();
+        $data['payments'] = $paymentModel->orderBy('created_at', 'DESC')->findAll();
+        
+        return view('layout/admin_header')
+            . view('admin/payments', $data)
+            . view('layout/admin_footer');
     }
 
     public function schemes()
     {
-        return view('layout/header')
+        return view('layout/admin_header')
             . view('admin/schemes')
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 
     public function reports()
     {
-        return view('layout/header')
+        return view('layout/admin_header')
             . view('admin/reports')
-            . view('layout/footer');
+            . view('layout/admin_footer');
     }
 }
 

@@ -16,57 +16,56 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
                 <div>
                     <h3 class="text-lg font-semibold mb-4" style="color:#FFFFFF;">
-                        Quick Links
+                        <?= esc(lang('App.footerQuickLinks')) ?>
                     </h3>
                     <ul class="space-y-2 text-sm">
                         <li>
                             <a href="/" class="hover:underline" style="color:#E5E7EB;">
-                                Home
+                                <?= esc(lang('App.footerHome')) ?>
                             </a>
                         </li>
                         <li>
                             <a href="/user/eligibility" class="hover:underline" style="color:#E5E7EB;">
-                                Check Eligibility
+                                <?= esc(lang('App.footerCheckEligibility')) ?>
                             </a>
                         </li>
                         <li>
                             <a href="/user/application" class="hover:underline" style="color:#E5E7EB;">
-                                Apply Online
+                                <?= esc(lang('App.footerApplyOnline')) ?>
                             </a>
                         </li>
                         <li>
                             <a href="/user/lottery-results" class="hover:underline" style="color:#E5E7EB;">
-                                Lottery Results
+                                <?= esc(lang('App.footerLotteryResults')) ?>
                             </a>
                         </li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold mb-4" style="color:#FFFFFF;">
-                        Contact
+                        <?= esc(lang('App.footerContact')) ?>
                     </h3>
                     <ul class="space-y-2 text-sm" style="color:#E5E7EB;">
-                        <li>Helpline: 1800-XXX-XXXX</li>
-                        <li>Email: support@housingportal.gov.in</li>
-                        <li>Mon–Sat, 8 AM – 6 PM</li>
+                        <li><?= esc(lang('App.footerHelpline')) ?></li>
+                        <li><?= esc(lang('App.footerEmail')) ?></li>
+                        <li><?= esc(lang('App.footerWorkingHours')) ?></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold mb-4" style="color:#FFFFFF;">
-                        Government Portal
+                        <?= esc(lang('App.footerGovernmentPortal')) ?>
                     </h3>
                     <p class="text-sm" style="color:#E5E7EB;">
-                        Official website of the Housing Development Authority. Transparent, fair,
-                        and secure housing allocation system.
+                        <?= esc(lang('App.footerGovernmentPortalText')) ?>
                     </p>
                 </div>
             </div>
             <div class="border-t pt-6 text-center" style="border-top-color:rgba(255,255,255,0.3);">
                 <p class="text-sm" style="color:#E5E7EB;">
-                    © <?= date('Y') ?> Housing Development Authority. All rights reserved.
-                    <a href="#" class="hover:underline ml-2" style="color:#E5E7EB;">Privacy Policy</a>
+                    <?= str_replace('{year}', date('Y'), lang('App.footerCopyright')) ?>
+                    <a href="#" class="hover:underline ml-2" style="color:#E5E7EB;"><?= esc(lang('App.footerPrivacyPolicy')) ?></a>
                     |
-                    <a href="#" class="hover:underline ml-2" style="color:#E5E7EB;">Terms of Use</a>
+                    <a href="#" class="hover:underline ml-2" style="color:#E5E7EB;"><?= esc(lang('App.footerTermsOfUse')) ?></a>
                 </p>
             </div>
         </div>

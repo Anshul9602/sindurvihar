@@ -1,10 +1,10 @@
 <div class="container mx-auto px-4 py-8 max-w-3xl">
     <h1 class="text-3xl font-bold mb-6 text-center" style="color: #0F1F3F;">
-        Refund Status
+        <?= esc(lang('App.refundStatusTitle')) ?>
     </h1>
 
     <div id="refund-container" class="bg-white shadow-md rounded-lg p-6">
-        <p style="color: #4B5563;">No refund records found. This is a demo placeholder.</p>
+        <p style="color: #4B5563;"><?= esc(lang('App.refundStatusNoRecords')) ?> <?= esc(lang('App.refundStatusDemoPlaceholder')) ?></p>
     </div>
 </div>
 
@@ -24,7 +24,7 @@
         if (!container) return;
 
         if (!payments.length) {
-            container.innerHTML = '<p style="color:#4B5563;">No refund records found. This is a demo placeholder.</p>';
+            container.innerHTML = '<p style="color:#4B5563;"><?= esc(lang('App.refundStatusNoRecords')) ?> <?= esc(lang('App.refundStatusDemoPlaceholder')) ?></p>';
             return;
         }
 
@@ -32,8 +32,8 @@
         for (var i = 0; i < payments.length; i++) {
             var p = payments[i];
             html += '<li class="flex justify-between border-b pb-2">' +
-                '<span style="color:#4B5563;">Payment ID ' + p.id + '</span>' +
-                '<span style="color:#16A34A;">Status: ' + (p.status || "success") + '</span>' +
+                '<span style="color:#4B5563;"><?= esc(lang('App.refundStatusPaymentId')) ?> ' + p.id + '</span>' +
+                '<span style="color:#16A34A;"><?= esc(lang('App.refundStatusStatus')) ?> ' + (p.status || "success") + '</span>' +
                 '</li>';
         }
         html += '</ul>';

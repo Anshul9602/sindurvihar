@@ -60,7 +60,7 @@
                     <li class="flex items-center justify-between">
                         <span><?= esc(lang('App.dashboardStep1')) ?></span>
                         <span class="font-semibold" style="color:<?= $eligibilityDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $eligibilityDone ? '✓ Completed' : 'Pending' ?>
+                            <?= $eligibilityDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
                         </span>
                     </li>
                     <li class="flex items-center justify-between">

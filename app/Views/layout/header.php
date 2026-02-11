@@ -8,10 +8,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
     <link rel="stylesheet" href="/assets/css/housing-portal.css">
+<style>
+section{
+    padding: 40px 0;
+}
+
+/* Fixed Header */
+.fixed-header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    width: 100%;
+    background-color: #FFFFFF !important;
+}
+
+/* Add padding to main content to account for fixed header */
+main.flex-grow {
+    padding-top: 90px;
+}
+
+/* For admin pages, the header is already included, so we just need to ensure it's fixed */
+body > header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col" style="background-color:#FFFFFF; font-family:'Poppins', Arial, Helvetica, sans-serif;">
 
-<header class="border-b relative rounded-b-lg shadow-sm" style="background-color:#FFFFFF; color:#1F2937; border-bottom-color:#E5E7EB;">
+<header class="border-b relative rounded-b-lg shadow-sm fixed-header" style="background-color:#FFFFFF; color:#1F2937; border-bottom-color:#E5E7EB;">
     <!-- Tricolor accent -->
     <div class="absolute top-0 left-0 right-0 h-0.5 flex rounded-t-lg">
         <div class="flex-1" style="background-color:#FF9933;"></div>
