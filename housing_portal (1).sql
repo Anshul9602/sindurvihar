@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 11, 2026 at 08:34 AM
+-- Generation Time: Feb 11, 2026 at 12:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -173,6 +173,20 @@ INSERT INTO `eligibilities` (`id`, `user_id`, `age`, `income`, `residency`, `pro
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `forgot_otps`
+--
+
+CREATE TABLE `forgot_otps` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED NOT NULL,
+  `otp` varchar(10) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lotteries`
 --
 
@@ -286,7 +300,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `mobile`, `email`, `password_hash`, `name`, `language`, `created_at`, `updated_at`) VALUES
-(1, '9602964437', 'anshulkumar969602@gmail.com', '$2y$10$pCROr1T/TGC0rjdjJyFBBuzTLvY5/jBvXzzw1Cyf1jJMlQQJMh9eS', 'anshul kumar', 'en', '2026-02-10 07:41:57', '2026-02-10 07:50:15'),
+(1, '9602964437', 'anshulkumar969602@gmail.com', '$2y$10$KwbgeI0p8KCMnDXJ.Lj3.eUv.H/S257qwaQVvfsmvJE7xy4UQEn1C', 'anshul kumar', 'en', '2026-02-10 07:41:57', '2026-02-11 09:25:23'),
 (2, '8949465158', NULL, '$2y$10$0KCIzQBIFHocWU8bO.qcgOTZkNFNETQLydgFx4jVF1owEb0VUHywm', 'User 5158', 'en', '2026-02-11 05:49:55', '2026-02-11 05:49:55');
 
 --
@@ -338,6 +352,13 @@ ALTER TABLE `application_documents`
 ALTER TABLE `eligibilities`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_elig_user` (`user_id`);
+
+--
+-- Indexes for table `forgot_otps`
+--
+ALTER TABLE `forgot_otps`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `forgot_otps_user_id` (`user_id`);
 
 --
 -- Indexes for table `lotteries`
@@ -420,6 +441,12 @@ ALTER TABLE `application_documents`
 --
 ALTER TABLE `eligibilities`
   MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `forgot_otps`
+--
+ALTER TABLE `forgot_otps`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `lotteries`
