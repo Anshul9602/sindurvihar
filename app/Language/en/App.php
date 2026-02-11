@@ -387,6 +387,15 @@ return [
     'adminJoined'                 => 'Joined',
     'adminDate'                   => 'Date',
 
+    // Admin registered users page
+    'adminRegisteredUsersTitle'   => 'Registered Users',
+    'adminRegisteredUsersSubtitle'=> 'Manage all registered portal users.',
+    'adminNoUsersFound'           => 'No users found.',
+    'adminUserEmailLabel'         => 'Email',
+    'adminUserLanguageLabel'      => 'Language',
+    'adminUserDetailTitle'        => 'User Detail',
+    'adminUserDetailSubtitle'     => 'Overview of the registered user profile.',
+
     // Admin payments page
     'adminPaymentsTitle'          => 'Payments Management',
     'adminPaymentsSubtitle'       => 'Manage and monitor all payment transactions.',
@@ -478,6 +487,18 @@ return [
     'adminPaymentPendingMessage' => 'Payment is pending for this application. Verification cannot be performed until payment is completed.',
     'adminApplicationsPendingPayment' => 'applications pending payment',
     'adminPendingAmount'              => 'pending amount',
+
+    // Forgot password
+    'forgotPasswordTitle'          => 'Forgot Password',
+    'forgotPasswordButton'         => 'Reset Password',
+    'forgotPasswordLink'           => 'Forgot password?',
+    'backToLogin'                  => 'Back to login',
+    'forgotPasswordOtpLabel'      => 'Enter OTP',
+    'forgotPasswordVerifyOtp'     => 'Verify OTP',
+    'forgotPasswordResendOtp'     => 'Resend OTP',
+    'forgotPasswordNewPassword'   => 'New Password',
+    'forgotPasswordConfirmPassword' => 'Confirm New Password',
+    'forgotPasswordSaveButton'    => 'Save New Password',
 
     // Admin plots page
     'adminPlotsSubtitle'            => 'Manage and monitor all available plots.',

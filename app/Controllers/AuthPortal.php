@@ -3,14 +3,17 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use App\Models\ForgotOtpModel;
 
 class AuthPortal extends BaseController
 {
     protected $userModel;
+    protected $forgotOtpModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
+        $this->forgotOtpModel = new ForgotOtpModel();
     }
 
     /**
@@ -119,6 +122,145 @@ class AuthPortal extends BaseController
         // GET: show form
         return view('layout/header')
             . view('auth/register')
+            . view('layout/footer');
+    }
+
+    public function forgotPassword()
+    {
+        $session = session();
+        $stage   = $session->get('forgot_stage') ?? 'mobile';
+
+        if (strtolower($this->request->getMethod()) === 'post') {
+            $step = (string) $this->request->getPost('step');
+
+            // STEP 1: Enter mobile, generate & save OTP (always 123456)
+            if ($step === 'mobile') {
+                $mobile = (string) $this->request->getPost('mobile');
+
+                if ($mobile === '') {
+                    return redirect()->back()->withInput()->with('error', 'Please enter your registered mobile number');
+                }
+
+                $user = $this->userModel->where('mobile', $mobile)->first();
+
+                if (! $user) {
+                    return redirect()->back()->withInput()->with('error', 'No account found with this mobile number');
+                }
+
+                $session->set('forgot_user_id', $user['id']);
+
+                // Fixed OTP 123456 (as requested)
+                $otpValue = '123456';
+
+                // Upsert into forgot_otps table (one row per user)
+                $existing = $this->forgotOtpModel->where('user_id', $user['id'])->first();
+                if ($existing) {
+                    $this->forgotOtpModel->update($existing['id'], ['otp' => $otpValue]);
+                } else {
+                    $this->forgotOtpModel->insert([
+                        'user_id' => $user['id'],
+                        'otp'     => $otpValue,
+                    ]);
+                }
+
+                $session->set('forgot_stage', 'otp');
+
+                return redirect()->to('/auth/forgot-password')
+                    ->with('success', 'OTP has been generated. For demo, your OTP is 123456.');
+            }
+
+            // STEP 2: Verify OTP
+            if ($step === 'otp') {
+                $userId = (int) $session->get('forgot_user_id');
+                $inputOtp = (string) $this->request->getPost('otp');
+
+                if (! $userId) {
+                    return redirect()->to('/auth/forgot-password')->with('error', 'Session expired. Please try again.');
+                }
+
+                $record = $this->forgotOtpModel->where('user_id', $userId)->first();
+
+                if (! $record) {
+                    return redirect()->back()->with('error', 'OTP expired. Please request again.');
+                }
+
+                if ($inputOtp !== $record['otp']) {
+                    return redirect()->back()->with('error', 'Invalid OTP entered.');
+                }
+
+                // OTP verified – delete row as per requirement
+                $this->forgotOtpModel->delete($record['id']);
+
+                $session->set('forgot_stage', 'reset');
+
+                return redirect()->to('/auth/forgot-password')
+                    ->with('success', 'OTP verified. Please set your new password.');
+            }
+
+            // Optional: Resend OTP (update same row)
+            if ($step === 'resend') {
+                $userId = (int) $session->get('forgot_user_id');
+
+                if (! $userId) {
+                    return redirect()->to('/auth/forgot-password')->with('error', 'Session expired. Please start again.');
+                }
+
+                $otpValue = '123456';
+                $existing = $this->forgotOtpModel->where('user_id', $userId)->first();
+
+                if ($existing) {
+                    $this->forgotOtpModel->update($existing['id'], ['otp' => $otpValue]);
+                } else {
+                    $this->forgotOtpModel->insert([
+                        'user_id' => $userId,
+                        'otp'     => $otpValue,
+                    ]);
+                }
+
+                $session->set('forgot_stage', 'otp');
+
+                return redirect()->to('/auth/forgot-password')
+                    ->with('success', 'OTP resent. For demo, your OTP is 123456.');
+            }
+
+            // STEP 3: Reset password
+            if ($step === 'reset') {
+                $userId = (int) $session->get('forgot_user_id');
+
+                if (! $userId) {
+                    return redirect()->to('/auth/forgot-password')->with('error', 'Session expired. Please try again.');
+                }
+
+                $password     = (string) $this->request->getPost('password');
+                $passwordConf = (string) $this->request->getPost('password_confirm');
+
+                if ($password === '' || $passwordConf === '') {
+                    return redirect()->back()->with('error', 'Please enter and confirm your new password.');
+                }
+
+                if ($password !== $passwordConf) {
+                    return redirect()->back()->with('error', 'Passwords do not match.');
+                }
+
+                if (strlen($password) < 6) {
+                    return redirect()->back()->with('error', 'Password must be at least 6 characters long.');
+                }
+
+                $this->userModel->update($userId, [
+                    'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                ]);
+
+                // Clear session data for flow
+                $session->remove(['forgot_user_id', 'forgot_stage']);
+
+                return redirect()->to('/auth/login')->with('success', 'Password has been reset successfully. Please login with your new password.');
+            }
+        }
+
+        $data['stage'] = $stage;
+
+        return view('layout/header')
+            . view('auth/forgot_password', $data)
             . view('layout/footer');
     }
 

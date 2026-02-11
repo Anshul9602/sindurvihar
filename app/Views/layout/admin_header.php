@@ -110,6 +110,10 @@
                 <span>👥</span>
                 <span><?= esc(lang('App.adminApplicationsTitle')) ?></span>
             </a>
+            <a href="/admin/users" class="admin-nav-item <?= $isActive('admin/users') ?>">
+                <span>📱</span>
+                <span><?= esc(lang('App.adminRegisteredUsersTitle') ?? 'Registered Users') ?></span>
+            </a>
         </div>
 
         <div class="admin-nav-section">
@@ -158,7 +162,7 @@
                 <span>📋</span>
                 <span><?= esc(lang('App.adminSchemesTitle')) ?></span>
             </a>
-            <a href="/admin/login" class="admin-nav-item">
+            <a href="/admin/settings" class="admin-nav-item <?= $isActive('admin/settings') ?>">
                 <span>⚙️</span>
                 <span><?= esc(lang('App.adminSidebarSettings')) ?></span>
             </a>

@@ -34,6 +34,7 @@ class AdminPortal extends BaseController
             $mobile   = (string) $this->request->getPost('mobile');
             $email    = (string) $this->request->getPost('email');
             $password = (string) $this->request->getPost('password');
+            $role     = (string) ($this->request->getPost('role') ?? 'admin');
 
             if ($mobile === '' || $password === '') {
                 return redirect()->back()
@@ -48,7 +49,7 @@ class AdminPortal extends BaseController
                 'mobile'        => $mobile,
                 'email'         => $email,
                 'password_hash' => $hash,
-                'role'          => 'admin',
+                'role'          => $role !== '' ? $role : 'admin',
             ];
 
             $ok = $this->adminModel->insert($data);
@@ -70,10 +71,99 @@ class AdminPortal extends BaseController
             . view('layout/footer');
     }
 
+    /**
+     * Admin settings page - add new admin users from inside the admin panel
+     */
+    public function settings()
+    {
+        // Handle add-admin form submit
+        if (strtolower($this->request->getMethod()) === 'post') {
+            $name     = (string) $this->request->getPost('name');
+            $mobile   = (string) $this->request->getPost('mobile');
+            $email    = (string) $this->request->getPost('email');
+            $password = (string) $this->request->getPost('password');
+
+            if ($mobile === '' || $password === '') {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Mobile and password are required.');
+            }
+
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+
+            $data = [
+                'name'          => $name,
+                'mobile'        => $mobile,
+                'email'         => $email,
+                'password_hash' => $hash,
+                'role'          => 'admin',
+            ];
+
+            $ok = $this->adminModel->insert($data);
+            if (! $ok) {
+                $dbError  = $this->adminModel->db->error();
+                $errorMsg = $dbError['message'] ?? 'Failed to create admin user.';
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $errorMsg);
+            }
+
+            return redirect()->to('/admin/settings')
+                ->with('success', 'Admin user added successfully.');
+        }
+
+        // List existing admins (simple overview)
+        $data['admins'] = $this->adminModel
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
+        return view('layout/admin_header')
+            . view('admin/settings', $data)
+            . view('layout/admin_footer');
+    }
+
+    /**
+     * Update an admin's password from settings page
+     */
+    public function updateAdminPassword($id)
+    {
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return redirect()->to('/admin/settings');
+        }
+
+        $admin = $this->adminModel->find($id);
+        if (! $admin) {
+            return redirect()->to('/admin/settings')->with('error', 'Admin not found.');
+        }
+
+        $password     = (string) $this->request->getPost('password');
+        $passwordConf = (string) $this->request->getPost('password_confirm');
+
+        if ($password === '' || $passwordConf === '') {
+            return redirect()->back()->with('error', 'Please enter and confirm the new password.');
+        }
+
+        if ($password !== $passwordConf) {
+            return redirect()->back()->with('error', 'Passwords do not match.');
+        }
+
+        if (strlen($password) < 6) {
+            return redirect()->back()->with('error', 'Password must be at least 6 characters long.');
+        }
+
+        $this->adminModel->update($id, [
+            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+        ]);
+
+        return redirect()->to('/admin/settings')->with('success', 'Admin password updated successfully.');
+    }
+
     public function dashboard()
     {
         $userModel = new UserModel();
         $paymentModel = new PaymentModel();
+        $plotModel    = new PlotModel();
         
         // User statistics
         $data['totalUsers'] = $userModel->countAllResults();
@@ -101,19 +191,28 @@ class AdminPortal extends BaseController
         $data['pendingPaymentApplications'] = $pendingPaymentCount;
         $data['pendingPaymentAmount'] = $pendingPaymentAmount;
         
-        // Payment statistics
+        // Payment statistics (amount and status based)
         $data['totalPayments'] = $paymentModel->countAllResults();
-        $data['totalAmount'] = $paymentModel->selectSum('amount')->first()['amount'] ?? 0;
+        $data['totalAmount']   = $paymentModel->selectSum('amount')->first()['amount'] ?? 0;
         $data['pendingPayments'] = $paymentModel->where('status', 'pending')->countAllResults();
-        $pendingFromRecords = $paymentModel->selectSum('amount')->where('status', 'pending')->first()['amount'] ?? 0;
+        $pendingFromRecords      = $paymentModel->selectSum('amount')->where('status', 'pending')->first()['amount'] ?? 0;
+        $completedFromRecords    = max(($data['totalAmount'] ?? 0) - $pendingFromRecords, 0);
+        $data['completedAmount'] = $completedFromRecords;
+        $data['pendingAmountOnlyPayments'] = $pendingFromRecords;
         
-        // Total pending amount = pending from payment records + pending from applications without payment
+        // Total pending amount across system = pending from payment records + pending from applications without payment
         $data['pendingAmount'] = $pendingFromRecords + $pendingPaymentAmount;
         
         // Today's statistics
         $today = date('Y-m-d');
         $data['todayPayments'] = $paymentModel->like('created_at', $today)->countAllResults();
         $data['todayAmount'] = $paymentModel->selectSum('amount')->like('created_at', $today)->first()['amount'] ?? 0;
+
+        // Plot statistics
+        $data['totalPlots']      = $plotModel->countAllResults();
+        $data['availablePlots']  = $plotModel->where('status', 'available')->countAllResults();
+        $data['allocatedPlots']  = $plotModel->where('status', 'allocated')->countAllResults();
+        $data['reservedPlots']   = $plotModel->where('status', 'reserved')->countAllResults();
         
         return view('layout/admin_header')
             . view('admin/dashboard', $data)
@@ -146,6 +245,55 @@ class AdminPortal extends BaseController
         return view('layout/admin_header')
             . view('admin/applications', $data)
             . view('layout/admin_footer');
+    }
+
+    /**
+     * Registered users list (frontend users)
+     */
+    public function users()
+    {
+        $userModel = new UserModel();
+        $data['users'] = $userModel->orderBy('created_at', 'DESC')->findAll();
+
+        return view('layout/admin_header')
+            . view('admin/users', $data)
+            . view('layout/admin_footer');
+    }
+
+    /**
+     * Single user detail view
+     */
+    public function userDetail($id)
+    {
+        $userModel = new UserModel();
+        $user = $userModel->find($id);
+
+        if (! $user) {
+            return redirect()->to('/admin/users')->with('error', 'User not found');
+        }
+
+        $data['user'] = $user;
+
+        return view('layout/admin_header')
+            . view('admin/user_detail', $data)
+            . view('layout/admin_footer');
+    }
+
+    /**
+     * Delete a registered user
+     */
+    public function deleteUser($id)
+    {
+        $userModel = new UserModel();
+        $user = $userModel->find($id);
+
+        if (! $user) {
+            return redirect()->to('/admin/users')->with('error', 'User not found');
+        }
+
+        $userModel->delete($id);
+
+        return redirect()->to('/admin/users')->with('success', 'User deleted successfully.');
     }
 
     public function applicationDetail($id)
@@ -423,8 +571,53 @@ class AdminPortal extends BaseController
 
     public function reports()
     {
+        $paymentModel     = new PaymentModel();
+        $applicationModel = $this->applicationModel;
+        $plotModel        = new PlotModel();
+
+        // Application status summary
+        $data['appStatus'] = [
+            'draft'              => $applicationModel->where('status', 'draft')->countAllResults(),
+            'submitted'          => $applicationModel->where('status', 'submitted')->countAllResults(),
+            'under_verification' => $applicationModel->where('status', 'under_verification')->countAllResults(),
+            'verified'           => $applicationModel->where('status', 'verified')->countAllResults(),
+            'rejected'           => $applicationModel->where('status', 'rejected')->countAllResults(),
+        ];
+
+        // Payment status and amount summary
+        $pendingModel   = new PaymentModel();
+        $completedModel = new PaymentModel();
+        $failedModel    = new PaymentModel();
+
+        $data['paymentStatus'] = [
+            'pending'   => [
+                'count'  => $pendingModel->where('status', 'pending')->countAllResults(),
+                'amount' => $pendingModel->selectSum('amount')->where('status', 'pending')->first()['amount'] ?? 0,
+            ],
+            'completed' => [
+                'count'  => $completedModel->whereIn('status', ['completed', 'success'])->countAllResults(),
+                'amount' => $completedModel->selectSum('amount')->whereIn('status', ['completed', 'success'])->first()['amount'] ?? 0,
+            ],
+            'failed'   => [
+                'count'  => $failedModel->where('status', 'failed')->countAllResults(),
+                'amount' => $failedModel->selectSum('amount')->where('status', 'failed')->first()['amount'] ?? 0,
+            ],
+        ];
+
+        // Plot status summary
+        $data['plotStatus'] = [
+            'available' => $plotModel->where('status', 'available')->countAllResults(),
+            'allocated' => $plotModel->where('status', 'allocated')->countAllResults(),
+            'reserved'  => $plotModel->where('status', 'reserved')->countAllResults(),
+        ];
+
+        // Recent records
+        $data['recentApplications'] = $applicationModel->orderBy('created_at', 'DESC')->limit(5)->find();
+        $data['recentPayments']     = $paymentModel->orderBy('created_at', 'DESC')->limit(5)->find();
+        $data['recentPlots']        = $plotModel->orderBy('created_at', 'DESC')->limit(5)->find();
+
         return view('layout/admin_header')
-            . view('admin/reports')
+            . view('admin/reports', $data)
             . view('layout/admin_footer');
     }
 

@@ -126,6 +126,25 @@
         <div class="text-2xl font-bold text-gray-900"><?= esc($pendingApplications ?? 0) ?></div>
         <div class="text-sm text-gray-500 mt-1"><?= esc(lang('App.adminAwaitingReview')) ?></div>
     </div>
+
+    <!-- Plots summary -->
+    <div class="metric-card">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-gray-600">Plots Overview</h3>
+            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                <span class="text-indigo-600">🏘️</span>
+            </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900"><?= esc($totalPlots ?? 0) ?></div>
+        <div class="text-sm text-gray-500 mt-1">
+            Available: <?= esc($availablePlots ?? 0) ?> ·
+            Allocated: <?= esc($allocatedPlots ?? 0) ?> ·
+            Reserved: <?= esc($reservedPlots ?? 0) ?>
+        </div>
+        <div class="text-sm text-blue-600 mt-2">
+            <a href="/admin/plots" class="hover:underline">View plots</a>
+        </div>
+    </div>
 </div>
 
 <!-- Charts Section -->
@@ -195,7 +214,7 @@
         });
     }
 
-    // Payments Chart
+    // Payments Chart (Completed vs Pending amounts)
     const paymentsCtx = document.getElementById('paymentsChart');
     if (paymentsCtx) {
         new Chart(paymentsCtx, {
@@ -203,10 +222,10 @@
             data: {
                 labels: ['<?= esc(lang('App.adminChartTotalPayments')) ?>', '<?= esc(lang('App.adminChartPending')) ?>'],
                 datasets: [{
-                    data: [<?= esc($totalAmount ?? 0) ?>, <?= esc($pendingAmount ?? 0) ?>],
+                    data: [<?= esc($completedAmount ?? 0) ?>, <?= esc($pendingAmountOnlyPayments ?? 0) ?>],
                     backgroundColor: [
-                        'rgb(34, 197, 94)',
-                        'rgb(59, 130, 246)'
+                        'rgb(34, 197, 94)', // completed
+                        'rgb(59, 130, 246)' // pending
                     ]
                 }]
             },

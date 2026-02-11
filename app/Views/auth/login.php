@@ -35,10 +35,17 @@
                     style="background-color: #0747A6;">
                 <?= esc(lang('App.loginButton')) ?>
             </button>
-            <p class="text-center text-sm mt-4" style="color: #4B5563;">
-                <?= esc(lang('App.loginNoAccount')) ?>
-                <a href="<?= site_url('auth/register') ?>" class="text-blue-600 hover:underline"><?= esc(lang('App.loginRegisterLink')) ?></a>
-            </p>
+            <div class="mt-4 flex flex-col gap-2 text-sm" style="color:#4B5563;">
+                <a href="<?= site_url('auth/forgot-password') ?>" class="text-blue-600 hover:underline text-center">
+                    <?= esc(lang('App.forgotPasswordLink') ?? 'Forgot password?') ?>
+                </a>
+                <p class="text-center">
+                    <?= esc(lang('App.loginNoAccount')) ?>
+                    <a href="<?= site_url('auth/register') ?>" class="text-blue-600 hover:underline">
+                        <?= esc(lang('App.loginRegisterLink')) ?>
+                    </a>
+                </p>
+            </div>
         </form>
     </div>
 </div>

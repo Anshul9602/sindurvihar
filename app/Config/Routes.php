@@ -14,6 +14,7 @@ $routes->get('/', 'Portal::index');
 $routes->group('auth', static function ($routes) {
     $routes->match(['get', 'post'], 'login', 'AuthPortal::login');
     $routes->match(['get', 'post'], 'register', 'AuthPortal::register');
+    $routes->match(['get', 'post'], 'forgot-password', 'AuthPortal::forgotPassword');
     $routes->get('logout', 'AuthPortal::logout');
 });
 
@@ -43,6 +44,9 @@ $routes->group('admin', static function ($routes) {
     $routes->match(['get', 'post'], 'register', 'AdminPortal::register');
     $routes->get('dashboard', 'AdminPortal::dashboard');
     $routes->get('applications', 'AdminPortal::applications');
+    $routes->get('users', 'AdminPortal::users');
+    $routes->get('users/(:segment)', 'AdminPortal::userDetail/$1');
+    $routes->post('users/(:segment)/delete', 'AdminPortal::deleteUser/$1');
     $routes->match(['get', 'post'], 'applications/(:segment)/edit', 'AdminPortal::editApplication/$1');
     $routes->post('applications/(:segment)/update', 'AdminPortal::updateApplication/$1');
     $routes->post('applications/(:segment)/reject', 'AdminPortal::rejectApplication/$1');
@@ -55,6 +59,8 @@ $routes->group('admin', static function ($routes) {
     $routes->get('payments', 'AdminPortal::payments');
     $routes->get('schemes', 'AdminPortal::schemes');
     $routes->get('reports', 'AdminPortal::reports');
+    $routes->match(['get', 'post'], 'settings', 'AdminPortal::settings');
+    $routes->post('admins/(:segment)/password', 'AdminPortal::updateAdminPassword/$1');
     $routes->get('plots', 'AdminPortal::plots');
     $routes->match(['get', 'post'], 'plots/add', 'AdminPortal::addPlot');
     $routes->match(['get', 'post'], 'plots/(:segment)/edit', 'AdminPortal::editPlot/$1');

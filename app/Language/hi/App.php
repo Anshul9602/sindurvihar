@@ -387,6 +387,15 @@ return [
     'adminJoined'                 => 'शामिल हुए',
     'adminDate'                   => 'तिथि',
 
+    // Admin registered users page
+    'adminRegisteredUsersTitle'   => 'पंजीकृत उपयोगकर्ता',
+    'adminRegisteredUsersSubtitle'=> 'सभी पंजीकृत पोर्टल उपयोगकर्ताओं का प्रबंधन करें।',
+    'adminNoUsersFound'           => 'कोई उपयोगकर्ता नहीं मिला।',
+    'adminUserEmailLabel'         => 'ईमेल',
+    'adminUserLanguageLabel'      => 'भाषा',
+    'adminUserDetailTitle'        => 'उपयोगकर्ता विवरण',
+    'adminUserDetailSubtitle'     => 'पंजीकृत उपयोगकर्ता प्रोफ़ाइल का संक्षिप्त विवरण।',
+
     // Admin payments page
     'adminPaymentsTitle'          => 'भुगतान प्रबंधन',
     'adminPaymentsSubtitle'       => 'सभी भुगतान लेनदेन को प्रबंधित और निगरानी करें।',
@@ -478,6 +487,18 @@ return [
     'adminPaymentPendingMessage' => 'इस आवेदन के लिए भुगतान लंबित है। भुगतान पूरा होने तक सत्यापन नहीं किया जा सकता।',
     'adminApplicationsPendingPayment' => 'आवेदन भुगतान लंबित',
     'adminPendingAmount'              => 'लंबित राशि',
+
+    // Forgot password
+    'forgotPasswordTitle'          => 'पासवर्ड भूल गए',
+    'forgotPasswordButton'         => 'पासवर्ड रीसेट करें',
+    'forgotPasswordLink'           => 'पासवर्ड भूल गए?',
+    'backToLogin'                  => 'लॉगिन पर वापस जाएँ',
+    'forgotPasswordOtpLabel'      => 'ओटीपी दर्ज करें',
+    'forgotPasswordVerifyOtp'     => 'ओटीपी सत्यापित करें',
+    'forgotPasswordResendOtp'     => 'ओटीपी पुनः भेजें',
+    'forgotPasswordNewPassword'   => 'नया पासवर्ड',
+    'forgotPasswordConfirmPassword' => 'नया पासवर्ड पुष्टि करें',
+    'forgotPasswordSaveButton'    => 'नया पासवर्ड सहेजें',
 
     // Admin plots page
     'adminPlotsSubtitle'            => 'सभी उपलब्ध भूखण्डों को प्रबंधित और निगरानी करें।',
