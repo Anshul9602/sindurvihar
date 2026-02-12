@@ -18,6 +18,29 @@
 
         <form id="register-form" action="<?= site_url('auth/register') ?>" method="POST" class="space-y-4">
             <div>
+                <label for="reg-name" class="block text-sm font-medium mb-1">Full Name</label>
+                <input id="reg-name" name="name" type="text" required
+                       value="<?= esc(old('name', '')) ?>"
+                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                       placeholder="Enter your full name">
+            </div>
+            <div>
+                <label for="reg-email" class="block text-sm font-medium mb-1">Email</label>
+                <input id="reg-email" name="email" type="email" required
+                       value="<?= esc(old('email', '')) ?>"
+                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                       placeholder="Enter your email address">
+            </div>
+            <div>
+                <label for="reg-language" class="block text-sm font-medium mb-1">Preferred Language</label>
+                <select id="reg-language" name="language" required
+                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                    <option value="">Select language</option>
+                    <option value="en" <?= old('language') === 'en' ? 'selected' : '' ?>>English</option>
+                    <option value="hi" <?= old('language') === 'hi' ? 'selected' : '' ?>>Hindi</option>
+                </select>
+            </div>
+            <div>
                 <label for="reg-mobile" class="block text-sm font-medium mb-1"><?= esc(lang('App.registerMobileLabel')) ?></label>
                 <input id="reg-mobile" name="mobile" type="text" required maxlength="10" pattern="[0-9]{10}"
                        value="<?= esc(old('mobile', '')) ?>"
@@ -48,9 +71,39 @@
         var form = document.getElementById("register-form");
         if (form) {
             form.addEventListener("submit", function(e) {
+                var name = document.getElementById("reg-name").value.trim();
+                var email = document.getElementById("reg-email").value.trim();
+                var language = document.getElementById("reg-language").value;
                 var mobile = document.getElementById("reg-mobile").value;
                 var password = document.getElementById("reg-password").value;
                 
+                // Basic validation for new fields
+                if (name.length === 0) {
+                    e.preventDefault();
+                    alert("Please enter your name");
+                    return false;
+                }
+
+                if (email.length === 0) {
+                    e.preventDefault();
+                    alert("Please enter your email");
+                    return false;
+                }
+
+                // Simple email format check
+                var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) {
+                    e.preventDefault();
+                    alert("Please enter a valid email address");
+                    return false;
+                }
+
+                if (!language) {
+                    e.preventDefault();
+                    alert("Please select your preferred language");
+                    return false;
+                }
+
                 // Client-side validation
                 if (!/^[0-9]{10}$/.test(mobile)) {
                     e.preventDefault();
