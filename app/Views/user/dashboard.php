@@ -13,11 +13,23 @@
     $paymentDone     = $steps['payment']['completed'] ?? false;
 
     $hasApplication  = !empty($application);
+    $applicationStatus = $application['status'] ?? null;
+    
     if (! $hasApplication) {
         $statusLabel = lang('App.dashboardStatusNoApplication') ?? 'No application found. Start a new application.';
         $statusColor = '#4B5563';
         $statusBg    = 'transparent';
         $statusPill  = false;
+    } elseif ($applicationStatus === 'verified') {
+        $statusLabel = lang('App.dashboardStatusVerified') ?? 'Verified';
+        $statusColor = '#065F46';
+        $statusBg    = '#D1FAE5';
+        $statusPill  = true;
+    } elseif ($applicationStatus === 'rejected') {
+        $statusLabel = lang('App.dashboardStatusRejected') ?? 'Rejected';
+        $statusColor = '#991B1B';
+        $statusBg    = '#FEE2E2';
+        $statusPill  = true;
     } elseif ($eligibilityDone && $applicationDone && $documentsDone && $paymentDone) {
         $statusLabel = lang('App.dashboardStatusSubmitted') ?? 'Submitted';
         $statusColor = '#166534';
@@ -148,14 +160,14 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Step 3: Documents -->
+            <!-- Step 3: Payment -->
             <div class="<?= $applicationDone ? '' : 'opacity-60 cursor-not-allowed' ?>">
                 <?php if ($applicationDone): ?>
-            <a href="/user/documents">
+            <a href="/user/payment">
                 <?php endif; ?>
                 <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                         <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep3')) ?></span>
-                        <?php if ($documentsDone): ?>
+                        <?php if ($paymentDone): ?>
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
@@ -178,14 +190,14 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Step 4: Payment -->
-            <div class="<?= $documentsDone ? '' : 'opacity-60 cursor-not-allowed' ?>">
-                <?php if ($documentsDone): ?>
-            <a href="/user/payment">
+            <!-- Step 4: Documents -->
+            <div class="<?= $paymentDone ? '' : 'opacity-60 cursor-not-allowed' ?>">
+                <?php if ($paymentDone): ?>
+            <a href="/user/documents">
                 <?php endif; ?>
                 <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                         <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep4')) ?></span>
-                        <?php if ($paymentDone): ?>
+                        <?php if ($documentsDone): ?>
                             <div class="flex items-center space-x-2">
                                 <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs"
                                       style="background-color:#16A34A;">✓</span>
@@ -198,51 +210,62 @@
                         <?php else: ?>
                             <button class="px-3 py-1 border rounded-md text-sm"
                                     style="border-color:#0747A6; color:#0747A6;"
-                                    <?= $documentsDone ? '' : 'disabled' ?>>
+                                    <?= $paymentDone ? '' : 'disabled' ?>>
                                 <?= esc(lang('App.dashboardGo')) ?>
                             </button>
                         <?php endif; ?>
                     </div>
-                <?php if ($documentsDone): ?>
+                <?php if ($paymentDone): ?>
                     </a>
                 <?php endif; ?>
             </div>
-            <a href="/user/application/status">
-                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep5')) ?></span>
-                    <button class="px-3 py-1 border rounded-md text-sm"
-                            style="border-color: #0747A6; color: #0747A6;">
-                        <?= esc(lang('App.dashboardGo')) ?>
-                    </button>
-                </div>
-            </a>
-            <a href="/user/lottery-results">
-                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep6')) ?></span>
-                    <button class="px-3 py-1 border rounded-md text-sm"
-                            style="border-color: #0747A6; color: #0747A6;">
-                        <?= esc(lang('App.dashboardGo')) ?>
-                    </button>
-                </div>
-            </a>
-            <a href="/user/allotment">
-                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep7')) ?></span>
-                    <button class="px-3 py-1 border rounded-md text-sm"
-                            style="border-color: #0747A6; color: #0747A6;">
-                        <?= esc(lang('App.dashboardGo')) ?>
-                    </button>
-                </div>
-            </a>
-            <a href="/user/refund-status">
-                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <span style="color: #4B5563;"><?= esc(lang('App.dashboardStep8')) ?></span>
-                    <button class="px-3 py-1 border rounded-md text-sm"
-                            style="border-color: #0747A6; color: #0747A6;">
-                        <?= esc(lang('App.dashboardGo')) ?>
-                    </button>
-                </div>
-            </a>
+            <!-- Steps 5-8 in Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                <a href="/user/application/status">
+                    <div class="bg-white border rounded-lg p-4 hover:shadow-md transition h-full flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-semibold text-sm mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep5')) ?></h3>
+                        </div>
+                        <button class="w-full px-3 py-2 border rounded-md text-sm font-semibold mt-3"
+                                style="border-color: #0747A6; color: #0747A6;">
+                            <?= esc(lang('App.dashboardGo')) ?>
+                        </button>
+                    </div>
+                </a>
+                <a href="/user/lottery-results">
+                    <div class="bg-white border rounded-lg p-4 hover:shadow-md transition h-full flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-semibold text-sm mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep6')) ?></h3>
+                        </div>
+                        <button class="w-full px-3 py-2 border rounded-md text-sm font-semibold mt-3"
+                                style="border-color: #0747A6; color: #0747A6;">
+                            <?= esc(lang('App.dashboardGo')) ?>
+                        </button>
+                    </div>
+                </a>
+                <a href="/user/allotment">
+                    <div class="bg-white border rounded-lg p-4 hover:shadow-md transition h-full flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-semibold text-sm mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep7')) ?></h3>
+                        </div>
+                        <button class="w-full px-3 py-2 border rounded-md text-sm font-semibold mt-3"
+                                style="border-color: #0747A6; color: #0747A6;">
+                            <?= esc(lang('App.dashboardGo')) ?>
+                        </button>
+                    </div>
+                </a>
+                <a href="/user/refund-status">
+                    <div class="bg-white border rounded-lg p-4 hover:shadow-md transition h-full flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-semibold text-sm mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep8')) ?></h3>
+                        </div>
+                        <button class="w-full px-3 py-2 border rounded-md text-sm font-semibold mt-3"
+                                style="border-color: #0747A6; color: #0747A6;">
+                            <?= esc(lang('App.dashboardGo')) ?>
+                        </button>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 </div>

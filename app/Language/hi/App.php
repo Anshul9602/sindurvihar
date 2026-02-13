@@ -38,6 +38,8 @@ return [
     'dashboardStatusNoApplication' => 'कोई आवेदन नहीं मिला। कृपया नया आवेदन प्रारम्भ करें।',
     'dashboardStatusPending'       => 'लंबित (कुछ चरण अभी पूर्ण नहीं हैं)',
     'dashboardStatusSubmitted'     => 'जमा हो गया (सभी चरण पूर्ण हो गए हैं)',
+    'dashboardStatusVerified'      => 'सत्यापित',
+    'dashboardStatusRejected'      => 'अस्वीकृत',
     'dashboardQuickActions'      => 'त्वरित कार्य',
     'dashboardCheckEligibility'  => 'पात्रता जाँचें',
     'dashboardStartApplication'  => 'आवेदन प्रारम्भ करें',
@@ -47,8 +49,8 @@ return [
     'dashboardFlowTitle'         => 'आवेदन प्रक्रिया',
     'dashboardStep1'             => 'चरण 1: पात्रता जाँच',
     'dashboardStep2'             => 'चरण 2: आवेदन फॉर्म',
-    'dashboardStep3'             => 'चरण 3: दस्तावेज़ अपलोड',
-    'dashboardStep4'             => 'चरण 4: शुल्क भुगतान',
+    'dashboardStep3'             => 'चरण 3: शुल्क भुगतान',
+    'dashboardStep4'             => 'चरण 4: दस्तावेज़ अपलोड',
     'dashboardStep5'             => 'चरण 5: आवेदन की स्थिति',
     'dashboardStep6'             => 'चरण 6: लॉटरी परिणाम',
     'dashboardStep7'             => 'चरण 7: आवंटन',
@@ -64,6 +66,7 @@ return [
     'statusNone'                 => 'कोई आवेदन नहीं मिला। कृपया डैशबोर्ड से नया आवेदन करें।',
     'statusApplicationId'        => 'आवेदन क्रमांक:',
     'statusCurrentStatus'        => 'वर्तमान स्थिति:',
+    'statusLotteryParticipation' => 'आप लॉटरी राउंड में भाग ले रहे हैं।',
     'statusFooterText'           => 'आप इस पृष्ठ या डैशबोर्ड से आगे की सभी अद्यतन जानकारी देख सकते हैं।',
 
     // Status labels
@@ -255,8 +258,12 @@ return [
     'profileTitle'                 => 'प्रोफ़ाइल सेटिंग्स',
     'profileFullNameLabel'         => 'पूरा नाम',
     'profileEmailLabel'            => 'ईमेल',
+    'profileCategoryLabel'         => 'श्रेणी',
     'profileLanguageLabel'         => 'भाषा',
     'profileSaveButton'            => 'प्रोफ़ाइल सहेजें',
+
+    'selectOption'                 => 'चयन करें',
+    'backButton'                   => 'वापस',
 
     // Documents page
     'docDownload'                   => 'डाउनलोड',
@@ -288,6 +295,26 @@ return [
 
     'lotteryResultsDemoText'       => 'यह पृष्ठ localStorage में संग्रहीत मॉक लॉटरी परिणाम दिखाता है। डेमो प्रवाह में, एक बार एडमिन लॉटरी चलाता है, परिणाम यहाँ भरा जा सकता है।',
     'lotteryResultsDemoPlaceholder' => '(डेमो प्लेसहोल्डर)',
+    'lotteryCongratulations'       => 'बधाई हो!',
+    'lotteryYouWon'                => 'आप लॉटरी में विजेता हैं!',
+    'lotteryYourAllotment'         => 'आपका आवंटन विवरण',
+    'lotteryAllotmentId'           => 'आवंटन आईडी',
+    'lotteryApplicationId'         => 'आवेदन आईडी',
+    'lotteryPlotNumber'            => 'भूखण्ड संख्या',
+    'lotteryBlockName'             => 'ब्लॉक नाम',
+    'lotteryStatus'                => 'स्थिति',
+    'lotteryAllottedDate'          => 'आवंटन तिथि',
+    'lotteryAllResults'            => 'सभी लॉटरी परिणाम',
+    'lotteryResultsDescription'   => 'लॉटरी प्रक्रिया के माध्यम से चुने गए सभी विजेताओं की सूची।',
+    'lotteryNoResults'             => 'अभी तक कोई लॉटरी परिणाम उपलब्ध नहीं है।',
+    'lotteryResultsWillAppear'     => 'लॉटरी आयोजित होने के बाद परिणाम यहाँ दिखाई देंगे।',
+    'lotteryRank'                  => 'रैंक',
+    'lotteryWinnerName'            => 'विजेता का नाम',
+    'lotteryDate'                  => 'तिथि',
+    'lotteryRoundNumber'           => 'लॉटरी राउंड संख्या',
+    'lotteryRoundName'             => 'लॉटरी राउंड नाम',
+    'lotteryRoundNamePlaceholder'  => 'पहला लॉटरी राउंड',
+    'lotteryConfirmText'           => 'मैं पुष्टि करता/करती हूँ कि मैं लॉटरी चलाना चाहता/चाहती हूँ। एक यादृच्छिक सत्यापित आवेदक को समान श्रेणी के उपलब्ध भूखण्ड से जोड़ा जाएगा।',
 
     // Admin pages
     'adminLoginTitle'              => 'एडमिन लॉगिन',
@@ -311,8 +338,10 @@ return [
     'adminReportsTitle'           => 'रिपोर्ट्स',
     'adminVerificationTitle'      => 'सत्यापन',
     'adminAllotmentsTitle'        => 'आवंटन',
-    'adminPlotsTitle'            => 'भूखण्ड प्रबंधन',
+    'adminPlotsTitle'            => 'भूखण्ड',
     'adminLotteryTitle'           => 'लॉटरी',
+    'adminExamples'              => 'उदाहरण भूखण्ड',
+    'adminNoPlotsForLottery'     => 'कोई उपलब्ध भूखण्ड नहीं मिले। कृपया लॉटरी चलाने से पहले भूखण्ड जोड़ें।',
 
     // Admin sidebar
     'adminSidebarTitle'           => 'सिन्दूर विहार एडमिन',
@@ -347,6 +376,7 @@ return [
     'adminTotal'                  => 'कुल:',
     'adminVerifiedApplications'  => 'सत्यापित आवेदन',
     'adminViewVerificationQueue'  => 'सत्यापन कतार देखें →',
+    'cancel'                     => 'रद्द करें',
     'adminPendingVerificationLabel2' => 'लंबित सत्यापन',
     'adminApplicationsOverview'  => 'आवेदन अवलोकन',
     'adminApplicationsVsVerifications' => 'आवेदन बनाम सत्यापन',

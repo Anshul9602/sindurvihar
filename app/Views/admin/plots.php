@@ -137,23 +137,32 @@
                         <td class="px-4 py-3" style="color: #111827;"><?= esc($plot['plot_number'] ?? 'N/A') ?></td>
                         <td class="px-4 py-3">
                             <?php
-                            // category stored as string like "EWS:10,MIG-A:5"
-                            $categoryStr     = $plot['category'] ?? '';
+                            // Category is now stored as plain string (e.g. "SC", "General").
+                            // For backward compatibility, also handle old "EWS:10,MIG-A:5" format.
+                            $categoryStr     = trim((string) ($plot['category'] ?? ''));
                             $categoryDisplay = 'N/A';
 
-                            if (! empty($categoryStr)) {
-                                $pairs = [];
-                                foreach (explode(',', $categoryStr) as $part) {
-                                    [$cat, $qty] = array_pad(explode(':', $part), 2, '');
-                                    $cat = trim($cat);
-                                    $qty = (int) $qty;
-                                    if ($cat !== '' && $qty > 0) {
-                                        // Show as "Category = Quantity"
-                                        $pairs[] = $cat . ' = ' . $qty;
+                            if ($categoryStr !== '') {
+                                if (strpos($categoryStr, ':') === false && strpos($categoryStr, ',') === false) {
+                                    // New format: simple category name
+                                    $categoryDisplay = $categoryStr;
+                                } else {
+                                    // Old format: "EWS:10,MIG-A:5"
+                                    $pairs = [];
+                                    foreach (explode(',', $categoryStr) as $part) {
+                                        [$cat, $qty] = array_pad(explode(':', $part), 2, '');
+                                        $cat = trim($cat);
+                                        $qty = (int) $qty;
+                                        if ($cat !== '' && $qty > 0) {
+                                            $pairs[] = $cat . ' = ' . $qty;
+                                        }
                                     }
-                                }
-                                if (! empty($pairs)) {
-                                    $categoryDisplay = implode(', ', $pairs);
+                                    if (! empty($pairs)) {
+                                        $categoryDisplay = implode(', ', $pairs);
+                                    } else {
+                                        // Fallback to raw string if parsing fails
+                                        $categoryDisplay = $categoryStr;
+                                    }
                                 }
                             }
                             ?>

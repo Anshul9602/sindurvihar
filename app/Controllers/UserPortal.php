@@ -73,7 +73,7 @@ class UserPortal extends BaseController
         }
 
         // Soldier related categories
-        if (in_array($category, ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent'], true)) {
+        if (in_array($category, ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category'], true)) {
             $required[] = $annexIV;
             $required[] = $annexV;
             $required[] = $annexVI;
@@ -327,7 +327,7 @@ class UserPortal extends BaseController
                     'application_id' => $this->applicationModel->getInsertID()
                 ]);
             }
-            return redirect()->to('/user/documents')->with('success', 'Application submitted successfully');
+            return redirect()->to('/user/payment')->with('success', 'Application submitted successfully. Please proceed to payment.');
         } else {
             // Capture DB error for debugging
             $dbError  = $this->applicationModel->db->error();
@@ -385,9 +385,13 @@ class UserPortal extends BaseController
 
         $applicationDone = (bool) $application;
 
-        // Overall status label (Pending vs Submitted) for this page
+        // Overall status label - check application status from database first
         if (! $application) {
             $overallStatus = 'none';
+        } elseif ($application['status'] === 'verified') {
+            $overallStatus = 'verified';
+        } elseif ($application['status'] === 'rejected') {
+            $overallStatus = 'rejected';
         } elseif ($eligibilityDone && $applicationDone && $documentsDone && $paymentDone) {
             $overallStatus = 'submitted';
         } else {
@@ -419,7 +423,7 @@ class UserPortal extends BaseController
 
         $userId = session()->get('user_id');
 
-        // Require application to exist
+        // Require application and payment to be completed
         $application = $this->applicationModel
             ->where('user_id', $userId)
             ->orderBy('created_at', 'DESC')
@@ -427,6 +431,17 @@ class UserPortal extends BaseController
 
         if (! $application) {
             return redirect()->to('/user/application')->with('error', 'Please submit your application form before uploading documents.');
+        }
+
+        // Check if payment is completed
+        $payment = $this->paymentModel
+            ->where('user_id', $userId)
+            ->where('application_id', $application['id'])
+            ->where('status', 'success')
+            ->first();
+
+        if (! $payment) {
+            return redirect()->to('/user/payment')->with('error', 'Please complete payment before uploading documents.');
         }
 
         // Follow same pattern as eligibility: detect POST by presence of a field
@@ -530,8 +545,8 @@ class UserPortal extends BaseController
                     ->with('error', $errorMsg);
             }
 
-            return redirect()->to('/user/payment')
-                ->with('success', 'Documents details saved successfully. Please proceed to payment.');
+            return redirect()->to('/user/application/status')
+                ->with('success', 'Documents details saved successfully.');
         }
 
         $documents = $this->documentModel
@@ -562,7 +577,7 @@ class UserPortal extends BaseController
 
         $userId = session()->get('user_id');
 
-        // Require documents step to be completed
+        // Require application to be completed
         $application = $this->applicationModel
             ->where('user_id', $userId)
             ->orderBy('created_at', 'DESC')
@@ -572,41 +587,67 @@ class UserPortal extends BaseController
             return redirect()->to('/user/application')->with('error', 'Please submit your application form before payment.');
         }
 
-        $documents = $this->documentModel
+        // Check if payment already exists
+        $existingPayment = $this->paymentModel
             ->where('user_id', $userId)
             ->where('application_id', $application['id'])
+            ->where('status', 'success')
+            ->orderBy('created_at', 'DESC')
             ->first();
 
-        if (! $documents) {
-            return redirect()->to('/user/documents')->with('error', 'Please submit your document details before payment.');
-        }
-
-        if ($this->request->getMethod() === 'post') {
+        // Detect POST by presence of amount field (same pattern as documents method)
+        if ($this->request->getPost('amount') !== null) {
             $amount = (int) $this->request->getPost('amount');
 
             if ($amount <= 0) {
                 return redirect()->back()->with('error', 'अमान्य भुगतान राशि।');
             }
 
-            $this->paymentModel->insert([
-                'user_id'        => $userId,
-                'application_id' => $application['id'],
-                'amount'         => $amount,
-                'status'         => 'success',
-                'transaction_ref'=> null,
-            ]);
+            try {
+                // Check if payment already exists, update instead of insert
+                if ($existingPayment) {
+                    $result = $this->paymentModel->update($existingPayment['id'], [
+                        'amount'         => $amount,
+                        'status'         => 'success',
+                    ]);
+                } else {
+                    $result = $this->paymentModel->insert([
+                        'user_id'        => $userId,
+                        'application_id' => $application['id'],
+                        'amount'         => $amount,
+                        'status'         => 'success',
+                        'transaction_ref'=> null,
+                    ]);
+                }
 
-            // Mark application as paid so that admin flow matches booklet-style process
-            $this->applicationModel->update($application['id'], [
-                'status' => 'paid',
-            ]);
+                if (!$result) {
+                    $dbError = $this->paymentModel->db->error();
+                    $errorMsg = $dbError['message'] ?? 'Failed to save payment.';
+                    log_message('error', 'Payment save failed: ' . $errorMsg);
+                    return redirect()->back()->withInput()->with('error', $errorMsg);
+                }
 
-            return redirect()->to('/user/application/status')
-                ->with('success', 'भुगतान सफलतापूर्वक दर्ज हो गया है।');
+                // Mark application as paid so that admin flow matches booklet-style process
+                $this->applicationModel->update($application['id'], [
+                    'status' => 'paid',
+                ]);
+
+                // Redirect back to same payment page with success message
+                return redirect()->to('/user/payment')
+                    ->with('success', 'Payment completed successfully! You can now proceed to upload documents.');
+            } catch (\Exception $e) {
+                log_message('error', 'Payment exception: ' . $e->getMessage());
+                return redirect()->back()->withInput()->with('error', 'Payment failed: ' . $e->getMessage());
+            }
         }
 
+        $data = [
+            'payment' => $existingPayment,
+            'application' => $application,
+        ];
+
         return view('layout/header')
-            . view('user/payment')
+            . view('user/payment', $data)
             . view('layout/footer');
     }
 
@@ -624,12 +665,17 @@ class UserPortal extends BaseController
             $name     = (string) $this->request->getPost('name');
             $email    = (string) $this->request->getPost('email');
             $language = (string) $this->request->getPost('language') ?: 'en';
+            $category = (string) $this->request->getPost('category');
 
             $updateData = [
                 'name'     => $name,
                 'email'    => $email,
                 'language' => $language,
             ];
+
+            if ($category !== '') {
+                $updateData['category'] = $category;
+            }
 
             $this->userModel->update($userId, $updateData);
 
@@ -649,6 +695,7 @@ class UserPortal extends BaseController
             'name'     => session()->get('user_name'),
             'email'    => session()->get('user_email'),
             'language' => 'en',
+            'category' => null,
         ];
 
         return view('layout/header')
@@ -663,8 +710,41 @@ class UserPortal extends BaseController
             return redirect()->to('/auth/login')->with('error', 'Please login to view lottery results');
         }
 
+        $userId = session()->get('user_id');
+        $allotmentModel = new \App\Models\AllotmentModel();
+        
+        // Get user's application
+        $userApplication = $this->applicationModel
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'DESC')
+            ->first();
+        
+        // Get all allotments (lottery winners) with application and user details
+        $allAllotments = $allotmentModel
+            ->select('allotments.*, applications.full_name, applications.mobile, applications.user_id')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->orderBy('allotments.created_at', 'DESC')
+            ->findAll();
+        
+        // Check if current user won (has an allotment)
+        $userWon = false;
+        $userAllotment = null;
+        if ($userApplication) {
+            $userAllotment = $allotmentModel
+                ->where('application_id', $userApplication['id'])
+                ->first();
+            $userWon = !empty($userAllotment);
+        }
+        
+        $data = [
+            'allAllotments' => $allAllotments,
+            'userWon' => $userWon,
+            'userAllotment' => $userAllotment,
+            'userApplication' => $userApplication,
+        ];
+
         return view('layout/header')
-            . view('user/lottery_results')
+            . view('user/lottery_results', $data)
             . view('layout/footer');
     }
 

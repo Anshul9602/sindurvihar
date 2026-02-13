@@ -36,6 +36,14 @@
                         <div class="text-xs uppercase tracking-wide" style="color:#9CA3AF;">Email</div>
                         <div><?= esc($user['email'] ?? '') ?></div>
                     </div>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide" style="color:#9CA3AF;">Category</div>
+                        <div>
+                            <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                                <?= esc($user['category'] ?? 'N/A') ?>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 

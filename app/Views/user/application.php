@@ -105,29 +105,17 @@
             </div>
             <div>
                 <label for="app-category" class="block text-sm font-medium mb-1"><?= esc(lang('App.appCategoryLabel')) ?></label>
-                <?php $currentCat = old('income_category', $application['income_category'] ?? 'General'); ?>
+                <?php $currentCat = old('income_category', $application['income_category'] ?? 'Central Govt Employee'); ?>
+                <?php
+                    $soldierCategories = ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category'];
+                    $soldierSelected   = in_array($currentCat, $soldierCategories, true);
+                ?>
                 <select id="app-category" name="income_category"
                         class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-                    <option value="General" <?= $currentCat === 'General' ? 'selected' : '' ?>>General</option>
-                    <option value="EWS" <?= $currentCat === 'EWS' ? 'selected' : '' ?>>EWS</option>
-                    <option value="LIG" <?= $currentCat === 'LIG' ? 'selected' : '' ?>>LIG</option>
-                    <option value="MIG-A" <?= $currentCat === 'MIG-A' ? 'selected' : '' ?>>MIG-A</option>
-                    <option value="MIG-B" <?= $currentCat === 'MIG-B' ? 'selected' : '' ?>>MIG-B</option>
-                    <option value="HIG" <?= $currentCat === 'HIG' ? 'selected' : '' ?>>HIG</option>
-                    <option value="SC" <?= $currentCat === 'SC' ? 'selected' : '' ?>>SC</option>
-                    <option value="ST" <?= $currentCat === 'ST' ? 'selected' : '' ?>>ST</option>
                     <option value="Central Govt Employee" <?= $currentCat === 'Central Govt Employee' ? 'selected' : '' ?>>Central Govt Employee</option>
                     <option value="State Govt Employee" <?= $currentCat === 'State Govt Employee' ? 'selected' : '' ?>>State Govt Employee</option>
                     <option value="PSU Employee" <?= $currentCat === 'PSU Employee' ? 'selected' : '' ?>>PSU Employee</option>
-                    <option value="Serving Soldier" <?= $currentCat === 'Serving Soldier' ? 'selected' : '' ?>>Serving Soldier</option>
-                    <option value="Ex-Serviceman" <?= $currentCat === 'Ex-Serviceman' ? 'selected' : '' ?>>Ex-Serviceman</option>
-                    <option value="Soldier Widow/Dependent" <?= $currentCat === 'Soldier Widow/Dependent' ? 'selected' : '' ?>>Soldier Widow/Dependent</option>
-                    <option value="Divyang (PwD)" <?= $currentCat === 'Divyang (PwD)' ? 'selected' : '' ?>>Divyang (PwD)</option>
-                    <option value="Accredited Journalist" <?= $currentCat === 'Accredited Journalist' ? 'selected' : '' ?>>Accredited Journalist</option>
-                    <option value="Transgender" <?= $currentCat === 'Transgender' ? 'selected' : '' ?>>Transgender</option>
-                    <option value="Destitute Woman" <?= $currentCat === 'Destitute Woman' ? 'selected' : '' ?>>Destitute Woman</option>
-                    <option value="Landless Woman" <?= $currentCat === 'Landless Woman' ? 'selected' : '' ?>>Landless Woman</option>
-                    <option value="Single Woman/Widow" <?= $currentCat === 'Single Woman/Widow' ? 'selected' : '' ?>>Single Woman/Widow</option>
+                    <option value="Soldier Category" <?= $soldierSelected ? 'selected' : '' ?>>Soldier (Serving / Ex-Serviceman / Widow/Dependent)</option>
                 </select>
             </div>
         </div>
@@ -201,7 +189,7 @@
             }
 
             // Soldier related categories
-            if (c === "Serving Soldier" || c === "Ex-Serviceman" || c === "Soldier Widow/Dependent") {
+            if (c === "Soldier Category" || c === "Serving Soldier" || c === "Ex-Serviceman" || c === "Soldier Widow/Dependent") {
                 forms.push({
                     label: "Annexure IV – Soldier Certificate (Soldier)",
                     url: imgBase + "BookLet Sindoor Vihar_page-0018.jpg"

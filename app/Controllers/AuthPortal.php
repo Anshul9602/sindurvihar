@@ -72,15 +72,46 @@ class AuthPortal extends BaseController
         if ($this->request->getPost('mobile') !== null) {
             $mobile   = (string) $this->request->getPost('mobile');
             $password = (string) $this->request->getPost('password');
+            $name     = trim((string) $this->request->getPost('name'));
+            $email    = trim((string) $this->request->getPost('email'));
+            $language = trim((string) $this->request->getPost('language'));
+            $category = trim((string) $this->request->getPost('category'));
 
             if (empty($mobile) || empty($password)) {
                 return redirect()->back()->withInput()->with('error', 'Mobile and password are required');
+            }
+
+            if (empty($name)) {
+                return redirect()->back()->withInput()->with('error', 'Name is required');
+            }
+
+            if (empty($email)) {
+                return redirect()->back()->withInput()->with('error', 'Email is required');
+            }
+
+            if (empty($language)) {
+                return redirect()->back()->withInput()->with('error', 'Language is required');
+            }
+
+            if (empty($category)) {
+                return redirect()->back()->withInput()->with('error', 'Category is required');
+            }
+
+            // Validate email format
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return redirect()->back()->withInput()->with('error', 'Please enter a valid email address');
             }
 
             // Check if mobile already exists
             $existingUser = $this->userModel->where('mobile', $mobile)->first();
             if ($existingUser) {
                 return redirect()->back()->withInput()->with('error', 'Mobile number already registered. Please login.');
+            }
+
+            // Check if email already exists
+            $existingEmail = $this->userModel->where('email', $email)->first();
+            if ($existingEmail) {
+                return redirect()->back()->withInput()->with('error', 'Email already registered. Please login.');
             }
 
             // Validate mobile number (10 digits)
@@ -97,8 +128,10 @@ class AuthPortal extends BaseController
             $data = [
                 'mobile'        => $mobile,
                 'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                'name'          => 'User ' . substr($mobile, -4),
-                'language'      => 'en',
+                'name'          => $name,
+                'email'         => $email,
+                'language'      => $language,
+                'category'      => $category,
             ];
 
             if ($this->userModel->insert($data)) {
@@ -109,7 +142,7 @@ class AuthPortal extends BaseController
                     'user_id'     => $userId,
                     'user_name'   => $data['name'],
                     'user_mobile' => $mobile,
-                    'user_email'  => '',
+                    'user_email'  => $email,
                     'logged_in'   => true,
                 ]);
 

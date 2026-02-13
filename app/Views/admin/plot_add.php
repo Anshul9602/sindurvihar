@@ -122,51 +122,25 @@
         </div>
     </div>
 
-    <!-- Category-wise quantity rows -->
+    <!-- Single category selection (quantity is defined above as total quantity) -->
     <div class="space-y-3">
-        <label class="block text-sm font-medium mb-1" style="color: #374151;">
-            <?= esc(lang('App.adminPlotCategory')) ?> / <?= esc(lang('App.adminPlotQuantity')) ?>
+        <label for="plot-category" class="block text-sm font-medium mb-1" style="color: #374151;">
+            <?= esc(lang('App.adminPlotCategory')) ?>
         </label>
-        <table class="w-full text-sm border border-gray-200 rounded-md">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-3 py-2 text-left" style="color:#6B7280;"><?= esc(lang('App.adminPlotCategory')) ?></th>
-                    <th class="px-3 py-2 text-left" style="color:#6B7280;"><?= esc(lang('App.adminPlotQuantity')) ?></th>
-                    <th class="px-3 py-2 text-center" style="color:#6B7280;">+</th>
-                </tr>
-            </thead>
-            <tbody id="category-rows">
-                <tr class="category-row border-t">
-                    <td class="px-3 py-2">
-                        <select name="categories[0][category]"
-                                class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="General">General</option>
-                            <option value="EWS">EWS</option>
-                            <option value="LIG">LIG</option>
-                            <option value="MIG-A">MIG-A</option>
-                            <option value="MIG-B">MIG-B</option>
-                            <option value="HIG">HIG</option>
-                            <option value="SC">SC</option>
-                            <option value="ST">ST</option>
-                        </select>
-                    </td>
-                    <td class="px-3 py-2">
-                        <input type="number" min="1" value="1"
-                               name="categories[0][quantity]"
-                               class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </td>
-                    <td class="px-3 py-2 text-center">
-                        <button type="button"
-                                class="px-2 py-1 rounded-full bg-blue-600 text-white text-sm"
-                                onclick="addCategoryRow()">
-                            +
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <?php $cat = old('category', 'General'); ?>
+        <select id="plot-category" name="category"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="General" <?= $cat === 'General' ? 'selected' : '' ?>>General</option>
+            <option value="EWS" <?= $cat === 'EWS' ? 'selected' : '' ?>>EWS</option>
+            <option value="LIG" <?= $cat === 'LIG' ? 'selected' : '' ?>>LIG</option>
+            <option value="MIG-A" <?= $cat === 'MIG-A' ? 'selected' : '' ?>>MIG-A</option>
+            <option value="MIG-B" <?= $cat === 'MIG-B' ? 'selected' : '' ?>>MIG-B</option>
+            <option value="HIG" <?= $cat === 'HIG' ? 'selected' : '' ?>>HIG</option>
+            <option value="SC" <?= $cat === 'SC' ? 'selected' : '' ?>>SC</option>
+            <option value="ST" <?= $cat === 'ST' ? 'selected' : '' ?>>ST</option>
+        </select>
         <p class="text-xs text-gray-500">
-            Click "+" to add more (category, quantity) rows. Total quantity should equal sum of all row quantities.
+            <?= esc(lang('App.adminPlotCategoryHelp') ?? 'Select the category for this plot. Total quantity above applies to this category.') ?>
         </p>
     </div>
 

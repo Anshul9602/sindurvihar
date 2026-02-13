@@ -74,6 +74,7 @@
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color:#6B7280;"><?= esc(lang('App.adminApplicationMobile')) ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color:#6B7280;"><?= esc(lang('App.adminUserEmailLabel') ?? 'Email') ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color:#6B7280;"><?= esc(lang('App.adminUserLanguageLabel') ?? 'Language') ?></th>
+                    <th class="px-4 py-3 font-semibold text-xs uppercase" style="color:#6B7280;"><?= esc(lang('App.adminUserCategoryLabel') ?? 'Category') ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color:#6B7280;"><?= esc(lang('App.adminJoined')) ?></th>
                     <th class="px-4 py-3 font-semibold text-xs uppercase" style="color:#6B7280;"><?= esc(lang('App.adminActions')) ?></th>
                 </tr>
@@ -81,7 +82,7 @@
             <tbody id="users-table-body">
                 <?php if (empty($users)): ?>
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center" style="color:#9CA3AF;">
+                        <td colspan="8" class="px-4 py-8 text-center" style="color:#9CA3AF;">
                             <?= esc(lang('App.adminNoUsersFound') ?? 'No users found.') ?>
                         </td>
                     </tr>
@@ -95,6 +96,11 @@
                             <td class="px-4 py-3 text-xs">
                                 <span class="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-800">
                                     <?= esc(strtoupper($user['language'] ?? 'HI')) ?>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-xs">
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                                    <?= esc($user['category'] ?? 'N/A') ?>
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-xs" style="color:#6B7280;">
@@ -160,9 +166,10 @@
             const rowLang = row.querySelector('td:nth-child(5) span')?.textContent.toLowerCase().trim();
             const rowName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
             const rowMobile = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+            const rowCategory = row.querySelector('td:nth-child(6) span')?.textContent.toLowerCase() || '';
 
             const langMatch = !language || rowLang === language.toLowerCase();
-            const searchMatch = !search || rowName.includes(search) || rowMobile.includes(search);
+            const searchMatch = !search || rowName.includes(search) || rowMobile.includes(search) || rowCategory.includes(search);
 
             if (langMatch && searchMatch) {
                 row.style.display = '';

@@ -27,6 +27,7 @@
                 <select name="status" id="filter-status" 
                         class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value=""><?= esc(lang('App.adminFilterAllStatus')) ?></option>
+                    <option value="paid">Paid</option>
                     <option value="submitted">Submitted</option>
                     <option value="under_verification">Under Verification</option>
                     <option value="verified">Verified</option>
@@ -94,11 +95,6 @@
 let filtersVisible = true;
 let allApplications = <?= json_encode($applications ?? []) ?>;
 
-(function () {
-    renderApplications(allApplications);
-    updateTotalCount(allApplications.length);
-})();
-
 function renderApplications(applications) {
     const body = document.getElementById("verification-table-body");
     if (!applications.length) {
@@ -124,9 +120,12 @@ function renderApplications(applications) {
             '<a href="/admin/applications/' + app.id + '" class="p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition" title="<?= esc(lang('App.adminView')) ?>">' +
             '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' +
             '</a>' +
-            '<a href="/admin/applications/' + app.id + '/verify" class="p-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200 transition" title="Verify">' +
+            (app.status !== 'rejected' ? '<button onclick="openVerifyModal(' + app.id + ')" class="p-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200 transition" title="Verify">' +
             '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' +
-            '</a>' +
+            '</button>' : '') +
+            (app.status !== 'rejected' ? '<button onclick="openRejectModal(' + app.id + ')" class="p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition" title="Reject">' +
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' +
+            '</button>' : '') +
             '</div></td></tr>';
     });
     body.innerHTML = html;
@@ -174,4 +173,195 @@ function resetFilters() {
     renderApplications(allApplications);
     updateTotalCount(allApplications.length);
 }
+
+// Modals for verify and reject
+let currentAppId = null;
+
+function openVerifyModal(appId) {
+    currentAppId = appId;
+    document.getElementById('verify-modal').classList.remove('hidden');
+}
+
+function openRejectModal(appId) {
+    currentAppId = appId;
+    document.getElementById('reject-modal').classList.remove('hidden');
+}
+
+function closeVerifyModal() {
+    document.getElementById('verify-modal').classList.add('hidden');
+    document.getElementById('verify-form').reset();
+    currentAppId = null;
+}
+
+function closeRejectModal() {
+    document.getElementById('reject-modal').classList.add('hidden');
+    document.getElementById('reject-form').reset();
+    currentAppId = null;
+}
+
+// Verify form submission
+document.getElementById('verify-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const confirmed = document.getElementById('verify-confirm-check').checked;
+    
+    if (!confirmed) {
+        alert("<?= esc(lang('App.adminVerifyConfirmRequired')) ?>");
+        return;
+    }
+    
+    if (!currentAppId) {
+        alert("Application ID not found");
+        return;
+    }
+    
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/admin/applications/" + currentAppId + "/verify", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        alert("<?= esc(lang('App.adminActionSuccess')) ?>");
+                        window.location.reload();
+                    } else {
+                        alert("<?= esc(lang('App.adminActionFailed')) ?>: " + (response.message || ""));
+                    }
+                } catch (e) {
+                    alert("Error parsing response");
+                }
+            } else {
+                alert("Server error: " + xhr.status);
+            }
+        }
+    };
+    
+    xhr.send(JSON.stringify({
+        confirmed: true
+    }));
+});
+
+// Reject form submission
+document.getElementById('reject-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const reason = document.getElementById('reject-reason').value.trim();
+    
+    if (!reason) {
+        alert("<?= esc(lang('App.adminRejectReasonRequired')) ?>");
+        return;
+    }
+    
+    if (!currentAppId) {
+        alert("Application ID not found");
+        return;
+    }
+    
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/admin/applications/" + currentAppId + "/reject", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        alert("<?= esc(lang('App.adminActionSuccess')) ?>");
+                        window.location.reload();
+                    } else {
+                        alert("<?= esc(lang('App.adminActionFailed')) ?>: " + (response.message || ""));
+                    }
+                } catch (e) {
+                    alert("Error parsing response");
+                }
+            } else {
+                alert("Server error: " + xhr.status);
+            }
+        }
+    };
+    
+    xhr.send(JSON.stringify({
+        reason: reason
+    }));
+});
+
+// Close modals on cancel button click
+document.getElementById('verify-cancel').addEventListener('click', closeVerifyModal);
+document.getElementById('reject-cancel').addEventListener('click', closeRejectModal);
+
+// Close modals on outside click
+document.getElementById('verify-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeVerifyModal();
+    }
+});
+
+document.getElementById('reject-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectModal();
+    }
+});
 </script>
+
+<!-- Reject Application Modal -->
+<div id="reject-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold mb-4" style="color: #0F1F3F;">
+            <?= esc(lang('App.adminRejectApplicationTitle')) ?>
+        </h3>
+        <form id="reject-form">
+            <div class="mb-4">
+                <label for="reject-reason" class="block text-sm font-medium mb-2" style="color: #374151;">
+                    <?= esc(lang('App.adminRejectReasonLabel')) ?>
+                </label>
+                <textarea id="reject-reason" name="reason" rows="4" required
+                          placeholder="<?= esc(lang('App.adminRejectReasonPlaceholder')) ?>"
+                          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-700 transition">
+                    <?= esc(lang('App.adminRejectConfirm')) ?>
+                </button>
+                <button type="button" id="reject-cancel"
+                        class="flex-1 px-4 py-2 rounded-md font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+                    <?= esc(lang('App.adminRejectCancel')) ?>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Verify Application Modal -->
+<div id="verify-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold mb-4" style="color: #0F1F3F;">
+            <?= esc(lang('App.adminVerifyApplicationTitle')) ?>
+        </h3>
+        <form id="verify-form">
+            <div class="mb-4">
+                <label class="inline-flex items-start gap-2">
+                    <input type="checkbox" id="verify-confirm-check" name="confirmed" value="1" required
+                           class="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <span class="text-sm" style="color: #374151;">
+                        <?= esc(lang('App.adminVerifyConfirmLabel')) ?>
+                    </span>
+                </label>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 rounded-md font-semibold text-white bg-green-600 hover:bg-green-700 transition">
+                    <?= esc(lang('App.adminVerifyConfirm')) ?>
+                </button>
+                <button type="button" id="verify-cancel"
+                        class="flex-1 px-4 py-2 rounded-md font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+                    <?= esc(lang('App.adminVerifyCancel')) ?>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

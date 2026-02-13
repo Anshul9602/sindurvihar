@@ -54,7 +54,9 @@ $routes->group('admin', static function ($routes) {
     $routes->get('applications/(:segment)', 'AdminPortal::applicationDetail/$1');
     $routes->post('applications/update-status', 'AdminPortal::updateApplicationStatus');
     $routes->get('verification', 'AdminPortal::verification');
+    $routes->get('verification/verified', 'AdminPortal::verifiedApplications');
     $routes->get('lottery', 'AdminPortal::lottery');
+    $routes->post('lottery/run', 'AdminPortal::runLottery');
     $routes->get('allotments', 'AdminPortal::allotments');
     $routes->get('payments', 'AdminPortal::payments');
     $routes->get('schemes', 'AdminPortal::schemes');

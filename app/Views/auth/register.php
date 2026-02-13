@@ -41,6 +41,24 @@
                 </select>
             </div>
             <div>
+                <label for="reg-category" class="block text-sm font-medium mb-1">Category</label>
+                <select id="reg-category" name="category" required
+                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                    <option value="">Select category</option>
+                    <option value="General" <?= old('category') === 'General' ? 'selected' : '' ?>>General</option>
+                    <option value="EWS" <?= old('category') === 'EWS' ? 'selected' : '' ?>>EWS</option>
+                    <option value="LIG" <?= old('category') === 'LIG' ? 'selected' : '' ?>>LIG</option>
+                    <option value="MIG-A" <?= old('category') === 'MIG-A' ? 'selected' : '' ?>>MIG-A</option>
+                    <option value="MIG-B" <?= old('category') === 'MIG-B' ? 'selected' : '' ?>>MIG-B</option>
+                    <option value="HIG" <?= old('category') === 'HIG' ? 'selected' : '' ?>>HIG</option>
+                    <option value="SC" <?= old('category') === 'SC' ? 'selected' : '' ?>>SC</option>
+                    <option value="ST" <?= old('category') === 'ST' ? 'selected' : '' ?>>ST</option>
+                    <option value="Divyang (PwD)" <?= old('category') === 'Divyang (PwD)' ? 'selected' : '' ?>>Divyang (PwD)</option>
+                    <option value="Accredited Journalist" <?= old('category') === 'Accredited Journalist' ? 'selected' : '' ?>>Accredited Journalist</option>
+                    <option value="Transgender" <?= old('category') === 'Transgender' ? 'selected' : '' ?>>Transgender</option>
+                </select>
+            </div>
+            <div>
                 <label for="reg-mobile" class="block text-sm font-medium mb-1"><?= esc(lang('App.registerMobileLabel')) ?></label>
                 <input id="reg-mobile" name="mobile" type="text" required maxlength="10" pattern="[0-9]{10}"
                        value="<?= esc(old('mobile', '')) ?>"
@@ -74,6 +92,7 @@
                 var name = document.getElementById("reg-name").value.trim();
                 var email = document.getElementById("reg-email").value.trim();
                 var language = document.getElementById("reg-language").value;
+                var category = document.getElementById("reg-category").value;
                 var mobile = document.getElementById("reg-mobile").value;
                 var password = document.getElementById("reg-password").value;
                 
@@ -101,6 +120,12 @@
                 if (!language) {
                     e.preventDefault();
                     alert("Please select your preferred language");
+                    return false;
+                }
+
+                if (!category) {
+                    e.preventDefault();
+                    alert("Please select your category");
                     return false;
                 }
 

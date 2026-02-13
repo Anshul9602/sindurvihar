@@ -1,0 +1,96 @@
+---
+alwaysApply: false
+description: Explanation of the lottery algorithm, matching rules between applications and plots, and common reasons why no eligible applications are found.
+---
+
+# Lottery Algorithm – Rules & Debug Guide
+
+This project implements the lottery flow primarily in:
+
+- Controller: [`AdminPortal.php`](mdc:app/Controllers/AdminPortal.php) – methods `lottery()` and `runLottery()`
+- Models: [`ApplicationModel.php`](mdc:app/Models/ApplicationModel.php), [`PlotModel.php`](mdc:app/Models/PlotModel.php), [`AllotmentModel.php`](mdc:app/Models/AllotmentModel.php)
+- Views: [`admin/lottery.php`](mdc:app/Views/admin/lottery.php), [`user/lottery_results.php`](mdc:app/Views/user/lottery_results.php)
+
+## Core Rules
+
+1. **Eligible applications**
+   - Only applications with `applications.status = 'verified'` are considered.
+   - In `runLottery()`, we build `$applications` by joining `applications` with `users` and filtering `where('applications.status', 'verified')`.
+   - Applications that already have an allotment (if we later add that filter) should be excluded to avoid double-winning.
+
+2. **Available plots**
+   - Plots are loaded from `plots` table with `status = 'available'` (and optionally `available_quantity > 0`).
+   - In `runLottery()`, these are grouped by `category` into `$plotsByCategory[$category][]`.
+   - The **category string must match exactly** the category we use on the application side (e.g. `'SC'`, `'General'`, `'Soldier Category'`). Any extra characters such as `'SC:1'` or trailing spaces will cause a mismatch.
+
+3. **Category matching logic**
+   - Each application carries two category concepts:
+     - `users.category` → referred to as `user_category` (registration/profile category).
+     - `applications.income_category` → service-related category chosen in the application form.
+   - In `runLottery()`, we consider an application eligible if:
+     - `user_category` exists in `$plotsByCategory`, **or**
+     - `income_category` exists in `$plotsByCategory`.
+   - This means a plot with category `'SC'` will match either:
+     - `users.category = 'SC'`, or
+     - `applications.income_category = 'SC'`.
+
+4. **Special combined soldier category**
+   - UI options *Serving Soldier*, *Ex-Serviceman*, and *Soldier Widow/Dependent* are now combined into a single stored category value `'Soldier Category'` in:
+     - [`user/application.php`](mdc:app/Views/user/application.php)
+     - [`admin/application_edit.php`](mdc:app/Views/admin/application_edit.php)
+     - [`user/profile.php`](mdc:app/Views/user/profile.php)
+   - The documents logic in `UserPortal::resolveFormsForCategory()` treats any of:
+     - `'Serving Soldier'`, `'Ex-Serviceman'`, `'Soldier Widow/Dependent'`, `'Soldier Category'`
+     - as **soldier** categories and attaches Annexure IV–VI.
+   - When defining plots for soldier quota, use `category = 'Soldier Category'` so they match correctly.
+
+5. **Winner and plot selection**
+   - After filtering eligible applications (`$eligibleApps`):
+     - A random winner is chosen via `array_rand($eligibleApps)`.
+     - The winner’s effective category is determined:
+       - Prefer `user_category` if that exists in `$plotsByCategory`.
+       - Otherwise fall back to `income_category` if that exists.
+   - Within the chosen category, a random plot is picked from `$plotsByCategory[$winnerCat]`.
+   - An allotment row is created with:
+     - `application_id`, `plot_number`, `block_name`, `status = 'provisional'`.
+   - The chosen plot’s `available_quantity` is decremented and `status` may be set to `'allotted'` when it reaches zero.
+   - The application status is updated to `'selected'`.
+
+## Why “No eligible applications found with matching plot categories” Appears
+
+This error is returned when `$eligibleApps` is empty in `runLottery()`. Common causes:
+
+1. **Category string mismatch**
+   - The plot’s `category` column value does not exactly equal the user/application category.
+   - Example problematic values:
+     - Plot category `'SC:1'` vs application category `'SC'`.
+     - Extra spaces: `'SC '` vs `'SC'`.
+   - **Fix**: ensure that plot `category` values are clean, e.g. `'SC'`, `'General'`, `'Soldier Category'`, etc.
+
+2. **No verified applications**
+   - Applications are present, but `applications.status` is not `'verified'` (e.g. still `'submitted'`, `'paid'`, or `'under_verification'`).
+   - **Fix**: verify the application from the admin panel so status becomes `'verified'`.
+
+3. **No plots in the matched category**
+   - There is a verified application with category `'SC'` but no plot with `category = 'SC'` and `status = 'available'`.
+   - **Fix**: create or update plots so at least one has matching `category` and status `'available'`.
+
+4. **Legacy soldier categories**
+   - Older records may still use `'Serving Soldier'`, `'Ex-Serviceman'`, or `'Soldier Widow/Dependent'` while plots use `'Soldier Category'` (or vice versa).
+   - **Fix**: normalize old data to `'Soldier Category'` (or add additional handling if required), and ensure plots use the same value.
+
+## Checklist When Debugging Lottery Issues
+
+1. Confirm at least one application has `status = 'verified'`.
+2. Check that this application’s:
+   - `users.category` **or**
+   - `applications.income_category`
+   matches **exactly** one of the plot `category` values.
+3. Ensure the plot with that category has:
+   - `status = 'available'`
+   - `available_quantity > 0` (if used).
+4. For soldier quota:
+   - Applications and plots should both use `'Soldier Category'` after the consolidation change.
+5. If the error still appears, dump or log:
+   - `$applications` and `$plotsByCategory` inside `runLottery()` to check what categories the code is actually seeing.
+

@@ -30,27 +30,21 @@
 <?php endif; ?>
 
 <?php
-// Decode category string like "EWS:2,LIG:3" into rows
-$categoryPairs = [];
-$totalQty      = 0;
-
-if (! empty($plot['category'])) {
-    $parts = explode(',', $plot['category']);
-    foreach ($parts as $part) {
-        [$cat, $qty] = array_pad(explode(':', $part), 2, '');
-        $qty = (int) $qty;
-        if ($cat === '' || $qty <= 0) {
-            continue;
-        }
-        $categoryPairs[] = ['category' => $cat, 'quantity' => $qty];
-        $totalQty += $qty;
-    }
+// Determine current category and total quantity for edit form
+$rawCategory = (string) ($plot['category'] ?? 'General');
+// If old format like "SC:10" or "EWS:2,LIG:3", take first part before ":" or ","
+$firstPart   = $rawCategory;
+if (strpos($firstPart, ',') !== false) {
+    $firstPart = explode(',', $firstPart)[0];
+}
+if (strpos($firstPart, ':') !== false) {
+    $firstPart = explode(':', $firstPart)[0];
 }
 
-if (empty($categoryPairs)) {
-    $categoryPairs[] = ['category' => 'General', 'quantity' => $plot['quantity'] ?? 1];
-    $totalQty        = $plot['quantity'] ?? 1;
-}
+$currentCategory = old('category', $firstPart ?: 'General');
+$totalQty        = (int) ($plot['quantity'] ?? 1);
+// Backwards-compat: keep an empty array for old JS that still calls count($categoryPairs)
+$categoryPairs   = [];
 
 // If form was posted and failed validation, prefer old total
 $oldTotal = old('total_quantity');
@@ -155,63 +149,24 @@ if ($oldTotal !== null && $oldTotal !== '') {
         </div>
     </div>
 
-    <!-- Category-wise quantity rows -->
+    <!-- Single category selection (quantity is defined above as total quantity) -->
     <div class="space-y-3">
-        <label class="block text-sm font-medium mb-1" style="color: #374151;">
-            <?= esc(lang('App.adminPlotCategory')) ?> / <?= esc(lang('App.adminPlotQuantity')) ?>
+        <label for="plot-category" class="block text-sm font-medium mb-1" style="color: #374151;">
+            <?= esc(lang('App.adminPlotCategory')) ?>
         </label>
-        <table class="w-full text-sm border border-gray-200 rounded-md">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-3 py-2 text-left" style="color:#6B7280;"><?= esc(lang('App.adminPlotCategory')) ?></th>
-                    <th class="px-3 py-2 text-left" style="color:#6B7280;"><?= esc(lang('App.adminPlotQuantity')) ?></th>
-                    <th class="px-3 py-2 text-center" style="color:#6B7280;">+</th>
-                </tr>
-            </thead>
-            <tbody id="category-rows">
-                <?php foreach ($categoryPairs as $index => $row): ?>
-                <tr class="category-row border-t">
-                    <td class="px-3 py-2">
-                        <select name="categories[<?= $index ?>][category]"
-                                class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <?php $currentCat = $row['category']; ?>
-                            <option value="General" <?= $currentCat === 'General' ? 'selected' : '' ?>>General</option>
-                            <option value="EWS" <?= $currentCat === 'EWS' ? 'selected' : '' ?>>EWS</option>
-                            <option value="LIG" <?= $currentCat === 'LIG' ? 'selected' : '' ?>>LIG</option>
-                            <option value="MIG-A" <?= $currentCat === 'MIG-A' ? 'selected' : '' ?>>MIG-A</option>
-                            <option value="MIG-B" <?= $currentCat === 'MIG-B' ? 'selected' : '' ?>>MIG-B</option>
-                            <option value="HIG" <?= $currentCat === 'HIG' ? 'selected' : '' ?>>HIG</option>
-                            <option value="SC" <?= $currentCat === 'SC' ? 'selected' : '' ?>>SC</option>
-                            <option value="ST" <?= $currentCat === 'ST' ? 'selected' : '' ?>>ST</option>
-                        </select>
-                    </td>
-                    <td class="px-3 py-2">
-                        <input type="number" min="1"
-                               name="categories[<?= $index ?>][quantity]"
-                               value="<?= esc($row['quantity']) ?>"
-                               class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </td>
-                    <td class="px-3 py-2 text-center">
-                        <?php if ($index === 0): ?>
-                            <button type="button"
-                                    class="px-2 py-1 rounded-full bg-blue-600 text-white text-sm"
-                                    onclick="addCategoryRow()">
-                                +
-                            </button>
-                        <?php else: ?>
-                            <button type="button"
-                                    class="px-2 py-1 rounded-full bg-red-600 text-white text-sm"
-                                    onclick="removeCategoryRow(this)">
-                                –
-                            </button>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <select id="plot-category" name="category"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="General" <?= $currentCategory === 'General' ? 'selected' : '' ?>>General</option>
+            <option value="EWS" <?= $currentCategory === 'EWS' ? 'selected' : '' ?>>EWS</option>
+            <option value="LIG" <?= $currentCategory === 'LIG' ? 'selected' : '' ?>>LIG</option>
+            <option value="MIG-A" <?= $currentCategory === 'MIG-A' ? 'selected' : '' ?>>MIG-A</option>
+            <option value="MIG-B" <?= $currentCategory === 'MIG-B' ? 'selected' : '' ?>>MIG-B</option>
+            <option value="HIG" <?= $currentCategory === 'HIG' ? 'selected' : '' ?>>HIG</option>
+            <option value="SC" <?= $currentCategory === 'SC' ? 'selected' : '' ?>>SC</option>
+            <option value="ST" <?= $currentCategory === 'ST' ? 'selected' : '' ?>>ST</option>
+        </select>
         <p class="text-xs text-gray-500">
-            Click "+" to add more (category, quantity) rows. Total quantity should equal sum of all row quantities.
+            <?= esc(lang('App.adminPlotCategoryHelp') ?? 'Select the category for this plot. Total quantity above applies to this category.') ?>
         </p>
     </div>
 

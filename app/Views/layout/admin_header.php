@@ -95,6 +95,9 @@
         $isActive = function($path) use ($currentUri) {
             return strpos($currentUri, $path) !== false ? 'active' : '';
         };
+        // Special handling for verification routes to avoid both being active
+        $isVerificationQueue = ($currentUri === 'admin/verification' || $currentUri === 'admin/verification/');
+        $isVerifiedApplications = ($currentUri === 'admin/verification/verified');
         ?>
         <div class="admin-nav-section">
             <div class="admin-nav-section-title"><?= esc(lang('App.adminSidebarMain')) ?></div>
@@ -118,9 +121,13 @@
 
         <div class="admin-nav-section">
             <div class="admin-nav-section-title"><?= esc(lang('App.adminSidebarVerification')) ?></div>
-            <a href="/admin/verification" class="admin-nav-item <?= $isActive('admin/verification') ?>">
+            <a href="/admin/verification" class="admin-nav-item <?= $isVerificationQueue ? 'active' : '' ?>">
                 <span>✅</span>
                 <span><?= esc(lang('App.adminVerificationQueue')) ?></span>
+            </a>
+            <a href="/admin/verification/verified" class="admin-nav-item <?= $isVerifiedApplications ? 'active' : '' ?>">
+                <span>✓</span>
+                <span><?= esc(lang('App.adminVerifiedApplications') ?? 'Verified Applications') ?></span>
             </a>
         </div>
 

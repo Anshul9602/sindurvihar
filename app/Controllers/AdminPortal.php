@@ -7,6 +7,7 @@ use App\Models\AdminModel;
 use App\Models\UserModel;
 use App\Models\PaymentModel;
 use App\Models\PlotModel;
+use App\Models\AllotmentModel;
 
 class AdminPortal extends BaseController
 {
@@ -367,8 +368,19 @@ class AdminPortal extends BaseController
 
     public function rejectApplication($id)
     {
-        if ($this->request->getMethod() !== 'post') {
-            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request method']);
+        // Detect POST by presence of reason field (same pattern as other methods)
+        $jsonData = $this->request->getJSON(true);
+        $reason = null;
+        
+        if ($jsonData && isset($jsonData['reason'])) {
+            $reason = $jsonData['reason'];
+        } else {
+            $reason = $this->request->getPost('reason');
+        }
+        
+        // If no reason provided, it's not a POST submission
+        if ($reason === null || $reason === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request method or missing reason']);
         }
 
         $application = $this->applicationModel->find($id);
@@ -376,7 +388,7 @@ class AdminPortal extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Application not found']);
         }
 
-        $reason = $this->request->getJSON(true)['reason'] ?? $this->request->getPost('reason');
+        $reason = trim((string)$reason);
         if (empty($reason)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Rejection reason is required']);
         }
@@ -414,17 +426,25 @@ class AdminPortal extends BaseController
 
     public function verifyApplication($id)
     {
-        if ($this->request->getMethod() !== 'post') {
-            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request method']);
+        // Detect POST by presence of confirmed field (same pattern as other methods)
+        $jsonData = $this->request->getJSON(true);
+        $confirmed = null;
+        
+        if ($jsonData && isset($jsonData['confirmed'])) {
+            $confirmed = $jsonData['confirmed'];
+        } else {
+            $confirmed = $this->request->getPost('confirmed');
+        }
+        
+        // If no confirmed field provided, it's not a POST submission
+        if ($confirmed === null) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request method or missing confirmation']);
         }
 
         $application = $this->applicationModel->find($id);
         if (!$application) {
             return $this->response->setJSON(['success' => false, 'message' => 'Application not found']);
         }
-
-        $data = $this->request->getJSON(true) ?? [];
-        $confirmed = $data['confirmed'] ?? $this->request->getPost('confirmed');
 
         if (!$confirmed) {
             return $this->response->setJSON(['success' => false, 'message' => 'Verification confirmation is required']);
@@ -493,21 +513,273 @@ class AdminPortal extends BaseController
 
     public function verification()
     {
-        $data['applications'] = $this->applicationModel
-            ->whereIn('status', ['submitted', 'under_verification'])
+        $paymentModel = new PaymentModel();
+        $documentModel = new \App\Models\ApplicationDocumentModel();
+        
+        // Get all applications that are not verified or rejected (pending verification)
+        $allPendingApplications = $this->applicationModel
+            ->whereNotIn('status', ['verified', 'rejected'])
             ->orderBy('created_at', 'DESC')
             ->findAll();
+        
+        // Filter applications that have both payment completed AND documents submitted
+        $pendingApplications = [];
+        foreach ($allPendingApplications as $app) {
+            // Check if payment exists and is successful
+            $payment = $paymentModel
+                ->where('application_id', $app['id'])
+                ->where('status', 'success')
+                ->first();
+            
+            // Check if documents exist
+            $documents = $documentModel
+                ->where('application_id', $app['id'])
+                ->first();
+            
+            // Only include if both payment and documents exist
+            if ($payment && $documents) {
+                $pendingApplications[] = $app;
+            }
+        }
+        
+        $data['applications'] = $pendingApplications;
         
         return view('layout/admin_header')
             . view('admin/verification', $data)
             . view('layout/admin_footer');
     }
 
+    public function verifiedApplications()
+    {
+        // Get verified applications
+        $verifiedApplications = $this->applicationModel
+            ->where('status', 'verified')
+            ->orderBy('updated_at', 'DESC')
+            ->findAll();
+        
+        $data['applications'] = $verifiedApplications;
+        
+        return view('layout/admin_header')
+            . view('admin/verified_applications', $data)
+            . view('layout/admin_footer');
+    }
+
     public function lottery()
     {
+        // List all verified applications with user + category details
+        $applications = $this->applicationModel
+            ->select('applications.*, users.name as user_name, users.mobile, users.category as user_category')
+            ->join('users', 'users.id = applications.user_id', 'left')
+            ->where('applications.status', 'verified')
+            ->orderBy('applications.created_at', 'ASC')
+            ->findAll();
+
+        // Get available plots grouped by category
+        $plotModel = new PlotModel();
+        $availablePlots = $plotModel
+            ->where('status', 'available')
+            ->orderBy('category', 'ASC')
+            ->findAll();
+
+        $plotsByCategory = [];
+        foreach ($availablePlots as $plot) {
+            $cat = $plot['category'] ?? 'Unknown';
+            if (! isset($plotsByCategory[$cat])) {
+                $plotsByCategory[$cat] = [
+                    'count' => 0,
+                    'examples' => [],
+                ];
+            }
+            $plotsByCategory[$cat]['count']++;
+            if (count($plotsByCategory[$cat]['examples']) < 2) {
+                $plotsByCategory[$cat]['examples'][] = $plot['plot_number'] ?? $plot['plot_name'] ?? '';
+            }
+        }
+
+        $data = [
+            'applications'     => $applications,
+            'plotsByCategory'  => $plotsByCategory,
+        ];
+
         return view('layout/admin_header')
-            . view('admin/lottery')
+            . view('admin/lottery', $data)
             . view('layout/admin_footer');
+    }
+
+    /**
+     * Run a lottery round.
+     *
+     * Picks a random verified application that has a matching plot category
+     * and creates an allotment. Also updates plot availability.
+     */
+    public function runLottery()
+    {
+        if ($this->request->getPost('round_number') === null) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $roundNumber = trim((string) $this->request->getPost('round_number'));
+        $roundName   = trim((string) $this->request->getPost('round_name'));
+        $confirmed   = (bool) $this->request->getPost('confirmed');
+
+        if ($roundNumber === '' || $roundName === '') {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Please enter lottery round number and name.']);
+        }
+
+        if (! $confirmed) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Please confirm that you want to run the lottery.']);
+        }
+
+        $plotModel      = new PlotModel();
+        $allotmentModel = new AllotmentModel();
+
+        // Get verified applications with user category (for matching with plot category)
+        $applications = $this->applicationModel
+            ->select('applications.*, users.name as user_name, users.mobile, users.category as user_category')
+            ->join('users', 'users.id = applications.user_id', 'left')
+            ->where('applications.status', 'verified')
+            ->orderBy('applications.created_at', 'ASC')
+            ->findAll();
+
+        if (! $applications) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'No verified applications available for lottery.']);
+        }
+
+        // Load available plots indexed by category
+        $availablePlots = $plotModel
+            ->where('status', 'available')
+            ->orderBy('category', 'ASC')
+            ->findAll();
+
+        if (! $availablePlots) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'No available plots found. Please add plots first.']);
+        }
+
+        $plotsByCategory = [];
+        foreach ($availablePlots as $plot) {
+            $cat = $plot['category'] ?? null;
+            if (! $cat) {
+                continue;
+            }
+            $plotsByCategory[$cat][] = $plot;
+        }
+
+        // Filter applications that have at least one matching plot category
+        $eligibleApps = [];
+        foreach ($applications as $app) {
+            $userCategory    = $app['user_category'] ?? null;   // main category from registration
+            $serviceCategory = $app['income_category'] ?? null; // service category from application
+
+            $hasMatch = false;
+            if ($userCategory && ! empty($plotsByCategory[$userCategory])) {
+                $hasMatch = true;
+            } elseif ($serviceCategory && ! empty($plotsByCategory[$serviceCategory])) {
+                $hasMatch = true;
+            }
+
+            if ($hasMatch) {
+                $eligibleApps[] = $app;
+            }
+        }
+
+        if (! $eligibleApps) {
+            return $this->response->setStatusCode(400)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'No eligible applications found with matching plot categories.',
+                ]);
+        }
+
+        // Pick a random eligible application
+        $winnerIndex = array_rand($eligibleApps);
+        $winner      = $eligibleApps[$winnerIndex];
+
+        // Decide which category we are using for this winner (primary category first, then service category)
+        $winnerCat = null;
+        if (! empty($winner['user_category']) && ! empty($plotsByCategory[$winner['user_category']])) {
+            $winnerCat = $winner['user_category'];
+        } elseif (! empty($winner['income_category']) && ! empty($plotsByCategory[$winner['income_category']])) {
+            $winnerCat = $winner['income_category'];
+        }
+
+        if (! $winnerCat) {
+            return $this->response->setStatusCode(400)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Selected winner does not match any available plot category.',
+                ]);
+        }
+
+        // Pick a random plot from the winner's category
+        $plotsForCat = $plotsByCategory[$winnerCat];
+        $plotIndex   = array_rand($plotsForCat);
+        $plot        = $plotsForCat[$plotIndex];
+
+        // Create allotment and update plot availability in a transaction
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $allotmentData = [
+            'application_id' => $winner['id'],
+            'plot_number'    => $plot['plot_number'],
+            'block_name'     => $plot['location'] ?? null,
+            'status'         => 'provisional',
+        ];
+        $allotmentId = $allotmentModel->insert($allotmentData);
+
+        // Mark plot as allotted / decrement available quantity if tracked
+        if (array_key_exists('available_quantity', $plot) && $plot['available_quantity'] !== null) {
+            $newQty = max(0, (int) $plot['available_quantity'] - 1);
+            $update = ['available_quantity' => $newQty];
+            if ($newQty === 0) {
+                $update['status'] = 'allotted';
+            }
+            $plotModel->update($plot['id'], $update);
+        } else {
+            $plotModel->update($plot['id'], ['status' => 'allotted']);
+        }
+
+        // Optionally update application status to selected
+        $this->applicationModel->update($winner['id'], ['status' => 'selected']);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            $dbError = $db->error();
+            $msg = 'Failed to run lottery. Please try again.';
+            if (!empty($dbError['message'])) {
+                // Attach DB error in message to help debugging in dev
+                $msg .= ' DB Error: ' . $dbError['message'];
+            }
+            return $this->response->setStatusCode(500)
+                ->setJSON(['success' => false, 'message' => $msg]);
+        }
+
+        return $this->response->setJSON([
+            'success'       => true,
+            'message'       => 'Lottery run successfully.',
+            'round_number'  => $roundNumber,
+            'round_name'    => $roundName,
+            'winner'        => [
+                'application_id' => $winner['id'],
+                'name'           => $winner['user_name'],
+                'mobile'         => $winner['mobile'],
+                'category'       => $winner['user_category'],
+                'service_cat'    => $winner['income_category'] ?? null,
+            ],
+            'plot'          => [
+                'id'           => $plot['id'],
+                'plot_number'  => $plot['plot_number'],
+                'category'     => $plot['category'],
+                'location'     => $plot['location'] ?? null,
+            ],
+            'allotment_id'  => $allotmentId,
+        ]);
     }
 
     public function allotments()
@@ -669,38 +941,18 @@ class AdminPortal extends BaseController
                 $imagePath = 'uploads/plots/' . $newName;
             }
 
-            $categories = $this->request->getPost('categories') ?? [];
-            $totalQty   = (int) ($this->request->getPost('total_quantity') ?? 0);
+            $category = trim((string) $this->request->getPost('category'));
+            $totalQty = (int) ($this->request->getPost('total_quantity') ?? 0);
 
-            $pairs  = []; // for string like "EWS:2,LIG:3"
-            $sumQty = 0;
-
-            foreach ($categories as $row) {
-                $category = trim($row['category'] ?? '');
-                $qty      = (int) ($row['quantity'] ?? 0);
-
-                if ($category === '' || $qty <= 0) {
-                    continue;
-                }
-
-                $pairs[] = $category . ':' . $qty;
-                $sumQty += $qty;
-            }
-
-            if (empty($pairs)) {
+            if ($category === '' || $totalQty <= 0) {
                 return redirect()->back()->withInput()->with('error', lang('App.adminPlotAddFailed'));
             }
 
-            // If total quantity provided, validate against sum of category quantities
-            if ($totalQty > 0 && $sumQty !== $totalQty) {
-                return redirect()->back()->withInput()->with('error', lang('App.adminPlotTotalQuantityMismatch'));
-            }
-
-            // Build single row: store category-wise quantity as string in category column
+            // Build single row: store plain category name, quantity taken from total_quantity
             $data = $baseData;
-            $data['category']           = implode(',', $pairs);   // e.g. "EWS:2,LIG:3,SC:5"
-            $data['quantity']           = $sumQty;
-            $data['available_quantity'] = $sumQty;
+            $data['category']           = $category;
+            $data['quantity']           = $totalQty;
+            $data['available_quantity'] = $totalQty;
             if ($imagePath) {
                 $data['plot_image'] = $imagePath;
             }
@@ -767,37 +1019,18 @@ class AdminPortal extends BaseController
             'description' => $this->request->getPost('description'),
         ];
 
-        // Decode category-wise quantities from form
-        $categories = $this->request->getPost('categories') ?? [];
-        $totalQty   = (int) ($this->request->getPost('total_quantity') ?? 0);
+        // Single category + total quantity
+        $category = trim((string) $this->request->getPost('category'));
+        $totalQty = (int) ($this->request->getPost('total_quantity') ?? 0);
 
-        $pairs  = [];
-        $sumQty = 0;
-
-        foreach ($categories as $row) {
-            $category = trim($row['category'] ?? '');
-            $qty      = (int) ($row['quantity'] ?? 0);
-
-            if ($category === '' || $qty <= 0) {
-                continue;
-            }
-
-            $pairs[] = $category . ':' . $qty;
-            $sumQty += $qty;
-        }
-
-        if (empty($pairs)) {
+        if ($category === '' || $totalQty <= 0) {
             return redirect()->back()->withInput()->with('error', lang('App.adminPlotUpdateFailed'));
         }
 
-        if ($totalQty > 0 && $sumQty !== $totalQty) {
-            return redirect()->back()->withInput()->with('error', lang('App.adminPlotTotalQuantityMismatch'));
-        }
-
         $data = $baseData;
-        $data['category']           = implode(',', $pairs);
-        $data['quantity']           = $sumQty;
-        $data['available_quantity'] = $sumQty;
+        $data['category']           = $category;
+        $data['quantity']           = $totalQty;
+        $data['available_quantity'] = $totalQty;
 
         // Handle image upload
         $imageFile = $this->request->getFile('plot_image');

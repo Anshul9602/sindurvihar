@@ -317,8 +317,12 @@ $canVerify = $hasPayment && ($paymentStatus === 'completed' || $paymentStatus ==
             </h3>
             <div class="flex flex-wrap gap-3">
                 <?php 
-                // Only show verify button if payment is completed and status allows verification
-                if ($canVerify && ($application['status'] === 'submitted' || $application['status'] === 'under_verification')): 
+                // Show verify button if payment is completed and application is not already verified or rejected
+                $canVerifyApplication = $canVerify && 
+                    $application['status'] !== 'verified' && 
+                    $application['status'] !== 'rejected';
+                
+                if ($canVerifyApplication): 
                 ?>
                     <button id="btn-verify" 
                             class="px-6 py-2 rounded-md font-semibold text-white bg-green-600 hover:bg-green-700 transition">

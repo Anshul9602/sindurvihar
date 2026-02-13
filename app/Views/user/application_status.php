@@ -15,6 +15,16 @@
             <?php
             $overallStatus = $overallStatus ?? 'pending';
             switch ($overallStatus) {
+                case 'verified':
+                    $statusLabel = lang('App.dashboardStatusVerified') ?? 'Verified';
+                    $statusBg    = '#D1FAE5';
+                    $statusColor = '#065F46';
+                    break;
+                case 'rejected':
+                    $statusLabel = lang('App.dashboardStatusRejected') ?? 'Rejected';
+                    $statusBg    = '#FEE2E2';
+                    $statusColor = '#991B1B';
+                    break;
                 case 'submitted':
                     $statusLabel = lang('App.dashboardStatusSubmitted') ?? 'Submitted (all steps completed)';
                     $statusBg    = '#DCFCE7';
@@ -40,6 +50,14 @@
                     <?= esc($statusLabel) ?>
                 </span>
             </p>
+
+            <?php if ($overallStatus === 'verified'): ?>
+            <div class="mb-4 p-3 rounded-md" style="background-color: #DBEAFE; border: 1px solid #3B82F6;">
+                <p class="text-sm font-semibold" style="color: #1E40AF;">
+                    <?= esc(lang('App.statusLotteryParticipation') ?? 'You are participating in the lottery round.') ?>
+                </p>
+            </div>
+            <?php endif; ?>
 
             <p class="text-sm mb-4" style="color:#4B5563;">
                 <?= esc(lang('App.statusFooterText')) ?>
@@ -71,14 +89,14 @@
                     </li>
                     <li class="flex items-center justify-between">
                         <span><?= esc(lang('App.dashboardStep3')) ?></span>
-                        <span class="font-semibold" style="color:<?= $documentsDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $documentsDone ? '✓ Completed' : 'Pending' ?>
+                        <span class="font-semibold" style="color:<?= $paymentDone ? '#16A34A' : '#92400E' ?>;">
+                            <?= $paymentDone ? '✓ Completed' : 'Pending' ?>
                         </span>
                     </li>
                     <li class="flex items-center justify-between">
                         <span><?= esc(lang('App.dashboardStep4')) ?></span>
-                        <span class="font-semibold" style="color:<?= $paymentDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $paymentDone ? '✓ Completed' : 'Pending' ?>
+                        <span class="font-semibold" style="color:<?= $documentsDone ? '#16A34A' : '#92400E' ?>;">
+                            <?= $documentsDone ? '✓ Completed' : 'Pending' ?>
                         </span>
                     </li>
                 </ul>
