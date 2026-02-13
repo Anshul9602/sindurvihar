@@ -264,6 +264,7 @@ return [
 
     'selectOption'                 => 'Select',
     'backButton'                   => 'Back',
+    'notProvided'                  => 'None',
 
     // Documents page
     'docDownload'                   => 'Download',
@@ -287,11 +288,15 @@ return [
     'refundStatusPaymentId'        => 'Payment ID',
     'refundStatusStatus'           => 'Status:',
 
+    'userCategory'                 => 'User Category',
+    'serviceCategory'              => 'Service Category',
+
     'allotmentDetailsTitle'        => 'Allotment Details',
     'allotmentNoAllotmentFound'    => 'No allotment found.',
     'allotmentNumber'              => 'Allotment Number:',
     'allotmentPlotDetails'         => 'Plot Details:',
     'allotmentPrintMessage'        => 'You can print this page as your provisional allotment letter.',
+    'allotmentPrintButton'         => 'Print Allotment Letter',
 
     'lotteryResultsTitle'          => 'Lottery Results',
     'lotteryResultsDemoText'       => 'This page shows mock lottery results stored in localStorage. In the demo flow, once the admin runs the lottery, results can be populated here.',

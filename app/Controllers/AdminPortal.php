@@ -720,17 +720,28 @@ class AdminPortal extends BaseController
         $plotIndex   = array_rand($plotsForCat);
         $plot        = $plotsForCat[$plotIndex];
 
-        // Create allotment and update plot availability in a transaction
+        // Create allotment
+        // Create allotment using query builder to avoid model field-protection issues
         $db = \Config\Database::connect();
-        $db->transStart();
-
         $allotmentData = [
             'application_id' => $winner['id'],
             'plot_number'    => $plot['plot_number'],
             'block_name'     => $plot['location'] ?? null,
             'status'         => 'provisional',
+            'created_at'     => date('Y-m-d H:i:s'),
         ];
-        $allotmentId = $allotmentModel->insert($allotmentData);
+
+        if (! $db->table('allotments')->insert($allotmentData)) {
+            $dbError = $db->error();
+            $msg = 'Failed to create allotment.';
+            if (! empty($dbError['message'])) {
+                $msg .= ' DB Error: ' . $dbError['message'];
+            }
+            return $this->response->setStatusCode(500)
+                ->setJSON(['success' => false, 'message' => $msg]);
+        }
+
+        $allotmentId = $db->insertID();
 
         // Mark plot as allotted / decrement available quantity if tracked
         if (array_key_exists('available_quantity', $plot) && $plot['available_quantity'] !== null) {
@@ -739,26 +750,29 @@ class AdminPortal extends BaseController
             if ($newQty === 0) {
                 $update['status'] = 'allotted';
             }
-            $plotModel->update($plot['id'], $update);
+            if (! $plotModel->update($plot['id'], $update)) {
+                $dbError = $plotModel->db->error();
+                $msg = 'Failed to update plot availability.';
+                if (! empty($dbError['message'])) {
+                    $msg .= ' DB Error: ' . $dbError['message'];
+                }
+                return $this->response->setStatusCode(500)
+                    ->setJSON(['success' => false, 'message' => $msg]);
+            }
         } else {
-            $plotModel->update($plot['id'], ['status' => 'allotted']);
+            if (! $plotModel->update($plot['id'], ['status' => 'allotted'])) {
+                $dbError = $plotModel->db->error();
+                $msg = 'Failed to update plot status.';
+                if (! empty($dbError['message'])) {
+                    $msg .= ' DB Error: ' . $dbError['message'];
+                }
+                return $this->response->setStatusCode(500)
+                    ->setJSON(['success' => false, 'message' => $msg]);
+            }
         }
 
         // Optionally update application status to selected
         $this->applicationModel->update($winner['id'], ['status' => 'selected']);
-
-        $db->transComplete();
-
-        if ($db->transStatus() === false) {
-            $dbError = $db->error();
-            $msg = 'Failed to run lottery. Please try again.';
-            if (!empty($dbError['message'])) {
-                // Attach DB error in message to help debugging in dev
-                $msg .= ' DB Error: ' . $dbError['message'];
-            }
-            return $this->response->setStatusCode(500)
-                ->setJSON(['success' => false, 'message' => $msg]);
-        }
 
         return $this->response->setJSON([
             'success'       => true,
@@ -784,8 +798,20 @@ class AdminPortal extends BaseController
 
     public function allotments()
     {
+        $allotmentModel = new AllotmentModel();
+
+        // Fetch allotments with application and user details
+        $allotments = $allotmentModel
+            ->select('allotments.*, applications.id as application_id, applications.full_name, users.name as user_name')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->join('users', 'users.id = applications.user_id', 'left')
+            ->orderBy('allotments.created_at', 'DESC')
+            ->findAll();
+
+        $data['allotments'] = $allotments;
+
         return view('layout/admin_header')
-            . view('admin/allotments')
+            . view('admin/allotments', $data)
             . view('layout/admin_footer');
     }
 

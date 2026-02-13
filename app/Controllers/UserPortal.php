@@ -755,8 +755,36 @@ class UserPortal extends BaseController
             return redirect()->to('/auth/login')->with('error', 'Please login to view allotment');
         }
 
+        $userId = session()->get('user_id');
+
+        $allotmentModel = new \App\Models\AllotmentModel();
+
+        // Step 1: latest allotment with application info (no plots join to avoid collation issues)
+        $allotment = $allotmentModel
+            ->select('allotments.*, applications.id as application_id, applications.full_name')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->where('applications.user_id', $userId)
+            ->orderBy('allotments.created_at', 'DESC')
+            ->first();
+
+        // Step 2: enrich with plot info in a separate query (no cross-collation JOIN)
+        if ($allotment && ! empty($allotment['plot_number'])) {
+            $plotModel = new \App\Models\PlotModel();
+            $plot = $plotModel
+                ->where('plot_number', $allotment['plot_number'])
+                ->first();
+
+            if ($plot) {
+                $allotment['plot_category'] = $plot['category'] ?? null;
+                $allotment['location']      = $plot['location'] ?? null;
+                $allotment['dimensions']    = $plot['dimensions'] ?? null;
+            }
+        }
+
+        $data['allotment'] = $allotment;
+
         return view('layout/header')
-            . view('user/allotment')
+            . view('user/allotment', $data)
             . view('layout/footer');
     }
 

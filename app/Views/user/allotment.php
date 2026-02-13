@@ -1,39 +1,93 @@
 <div class="container mx-auto px-4 py-8 max-w-3xl">
-    <h1 class="text-3xl font-bold mb-6 text-center" style="color: #0F1F3F;">
+    <h1 class="text-3xl font-bold mb-6 text-center print:mb-4" style="color: #0F1F3F;">
         <?= esc(lang('App.allotmentDetailsTitle')) ?>
     </h1>
 
-    <div id="allotment-container" class="bg-white shadow-md rounded-lg p-6">
-        <p style="color: #4B5563;"><?= esc(lang('App.allotmentNoAllotmentFound')) ?> <?= esc(lang('App.refundStatusDemoPlaceholder')) ?></p>
-    </div>
+    <?php if (empty($allotment)): ?>
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <p style="color: #4B5563;"><?= esc(lang('App.allotmentNoAllotmentFound')) ?></p>
+        </div>
+    <?php else: ?>
+        <!-- Congratulations Card -->
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-lg p-6 mb-6 shadow-lg">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                    <span class="text-2xl text-white">🎉</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold" style="color:#065F46;">
+                        <?= esc(lang('App.lotteryCongratulations') ?? 'Congratulations!') ?>
+                    </h2>
+                    <p class="text-sm" style="color:#047857;">
+                        <?= esc(lang('App.lotteryYouWon') ?? 'You are a winner in the lottery!') ?>
+                    </p>
+                </div>
+            </div>
+            <p class="text-sm" style="color:#065F46;">
+                <?= esc(lang('App.allotmentPrintMessage')) ?>
+            </p>
+        </div>
+
+        <!-- Allotment Letter Style -->
+        <div class="bg-white shadow-md rounded-lg p-6 print:border print:border-gray-300 print:p-8">
+            <div class="flex justify-between mb-6">
+                <div>
+                    <h2 class="text-lg font-semibold" style="color:#0F1F3F;">Allotment Letter</h2>
+                </div>
+                <div class="text-sm" style="color:#4B5563;">
+                    <div><strong>Date:</strong> <?= esc(date('d M Y')) ?></div>
+                    <div><strong>Ref No:</strong> ALLOT-<?= esc($allotment['id']) ?></div>
+                </div>
+            </div>
+
+            <div class="mb-6 text-sm" style="color:#111827;">
+                <p><strong>To,</strong></p>
+                <p><?= esc($allotment['full_name'] ?? 'Applicant') ?></p>
+                <?php if (!empty($allotment['location'])): ?>
+                    <p><?= esc($allotment['location']) ?></p>
+                <?php endif; ?>
+            </div>
+
+            <p class="font-semibold mb-4 text-sm" style="color:#111827;">
+                Subject: Provisional Allotment of Plot
+            </p>
+
+            <div class="space-y-3 text-sm leading-relaxed" style="color:#111827;">
+                <p>
+                    This is with reference to your application for the Sindoor Vihar housing scheme.
+                    We are pleased to inform you that you have been selected in the lottery for
+                    provisional allotment of the following plot:
+                </p>
+                <p>
+                    <strong>Plot No:</strong> <?= esc($allotment['plot_number'] ?? 'N/A') ?><?php if (!empty($allotment['plot_category'])): ?>,
+                    <strong>Category:</strong> <?= esc($allotment['plot_category']) ?><?php endif; ?>
+                    <?php if (!empty($allotment['dimensions'])): ?>,
+                    <strong>Size:</strong> <?= esc($allotment['dimensions']) ?><?php endif; ?>
+                </p>
+                <p>
+                    You are requested to complete the required formalities and make payment as per
+                    the scheme guidelines within the stipulated time. A duly signed final allotment
+                    letter will be issued after completion of all formalities.
+                </p>
+                <p>
+                    This letter is generated electronically and does not require a physical signature.
+                </p>
+            </div>
+
+            <div class="mt-8 text-sm" style="color:#111827;">
+                <p>Thanking you,</p>
+                <p class="mt-4 font-semibold">Executive Officer</p>
+                <p>Sindoor Vihar, Chaksu Nagar Palika</p>
+            </div>
+
+            <div class="mt-6 flex flex-wrap gap-3 print:hidden">
+                <button type="button"
+                        onclick="window.print()"
+                        class="px-6 py-2 rounded-md font-semibold text-white"
+                        style="background-color:#0747A6;">
+                    <?= esc(lang('App.allotmentPrintButton') ?? 'Print Allotment Letter') ?>
+                </button>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
-
-<script>
-    (function () {
-        function getAllotments() {
-            try {
-                var raw = localStorage.getItem("admin_allotments");
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) {
-                return [];
-            }
-        }
-
-        var container = document.getElementById("allotment-container");
-        var list = getAllotments();
-        if (!container) return;
-
-        if (!list.length) {
-            container.innerHTML = '<p style="color:#4B5563;"><?= esc(lang('App.allotmentNoAllotmentFound')) ?> <?= esc(lang('App.refundStatusDemoPlaceholder')) ?></p>';
-            return;
-        }
-
-        var first = list[0];
-        container.innerHTML =
-            '<p class="mb-2" style="color:#4B5563;"><?= esc(lang('App.allotmentNumber')) ?> <strong>' + first.id + '</strong></p>' +
-            '<p class="mb-2" style="color:#4B5563;"><?= esc(lang('App.allotmentPlotDetails')) ?> <strong>' + (first.plot || "Demo Plot") + '</strong></p>' +
-            '<p style="color:#4B5563;"><?= esc(lang('App.allotmentPrintMessage')) ?></p>';
-    })();
-</script>
-
-

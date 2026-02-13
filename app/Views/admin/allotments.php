@@ -50,7 +50,7 @@
             <?= esc(lang('App.adminAllotmentsTitle')) ?>
         </h3>
         <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold" id="allotments-total">
-            0 <?= esc(lang('App.adminTotal')) ?>
+            <?= isset($allotments) ? count($allotments) : 0 ?> <?= esc(lang('App.adminTotal')) ?>
         </span>
     </div>
 
@@ -67,11 +67,31 @@
                 </tr>
             </thead>
             <tbody id="allotments-table-body">
-                <tr>
-                    <td colspan="6" class="px-4 py-8 text-center" style="color: #9CA3AF;">
-                        <?= esc(lang('App.adminNoAllotmentsFound')) ?>
-                    </td>
-                </tr>
+                <?php if (empty($allotments)): ?>
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center" style="color: #9CA3AF;">
+                            <?= esc(lang('App.adminNoAllotmentsFound')) ?>
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($allotments as $allotment): ?>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="px-4 py-3" style="color: #111827;">#<?= esc($allotment['id']) ?></td>
+                            <td class="px-4 py-3" style="color: #111827;"><?= esc($allotment['application_id']) ?></td>
+                            <td class="px-4 py-3" style="color: #111827;"><?= esc($allotment['full_name'] ?? $allotment['user_name'] ?? 'N/A') ?></td>
+                            <td class="px-4 py-3" style="color: #111827;"><?= esc($allotment['plot_number'] ?? 'N/A') ?></td>
+                            <td class="px-4 py-3 text-xs" style="color: #6B7280;">
+                                <?= isset($allotment['created_at']) ? esc(date('d M Y', strtotime($allotment['created_at']))) : '—' ?>
+                            </td>
+                            <td class="px-4 py-3">
+                                <!-- For now just a placeholder; detailed view/edit not implemented -->
+                                <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                    <?= esc(ucfirst($allotment['status'] ?? 'provisional')) ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -79,65 +99,6 @@
 
 <script>
 let filtersVisible = true;
-let allAllotments = [];
-
-(function () {
-    function getAllotments() {
-        try {
-            var raw = localStorage.getItem("admin_allotments");
-            return raw ? JSON.parse(raw) : [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    var body = document.getElementById("allotments-table-body");
-    if (!body) return;
-
-    allAllotments = getAllotments();
-    renderAllotments(allAllotments);
-    updateTotalCount(allAllotments.length);
-})();
-
-function renderAllotments(allotments) {
-    const body = document.getElementById("allotments-table-body");
-    if (!allotments.length) {
-        body.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center" style="color:#9CA3AF;"><?= esc(lang('App.adminNoAllotmentsFound')) ?></td></tr>';
-        return;
-    }
-
-    let html = "";
-    for (var i = 0; i < allotments.length; i++) {
-        var a = allotments[i];
-        html += '<tr class="border-b hover:bg-gray-50 transition">' +
-            '<td class="px-4 py-3" style="color: #111827;">' + (a.id || 'N/A') + '</td>' +
-            '<td class="px-4 py-3" style="color: #111827;">' + (a.applicationId || 'N/A') + '</td>' +
-            '<td class="px-4 py-3" style="color: #111827;">' + (a.name || 'N/A') + '</td>' +
-            '<td class="px-4 py-3" style="color: #111827;">' + (a.plot || 'N/A') + '</td>' +
-            '<td class="px-4 py-3 text-xs" style="color: #6B7280;">' + 
-            (a.date || new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'})) + '</td>' +
-            '<td class="px-4 py-3">' +
-            '<div class="flex items-center gap-2">' +
-            '<a href="/admin/allotments/' + a.id + '" class="p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition" title="<?= esc(lang('App.adminView')) ?>">' +
-            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' +
-            '</a>' +
-            '<a href="/admin/allotments/' + a.id + '/edit" class="p-1.5 bg-cyan-100 text-cyan-600 rounded hover:bg-cyan-200 transition" title="<?= esc(lang('App.adminEdit')) ?>">' +
-            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
-            '</a>' +
-            '<button onclick="deleteAllotment(' + (a.id || i) + ')" class="p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition" title="<?= esc(lang('App.adminDelete')) ?>">' +
-            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' +
-            '</button>' +
-            '</div></td></tr>';
-    }
-    body.innerHTML = html;
-}
-
-function updateTotalCount(count) {
-    const badge = document.getElementById('allotments-total');
-    if (badge) {
-        badge.textContent = count + ' <?= esc(lang('App.adminTotal')) ?>';
-    }
-}
 
 function toggleFilters() {
     const content = document.getElementById('filters-content');
@@ -154,32 +115,29 @@ function toggleFilters() {
 
 function applyFilters() {
     const search = document.getElementById('filter-search').value.toLowerCase();
-    
-    let filtered = allAllotments.filter(a => {
-        const searchMatch = !search || 
-            String(a.id || '').includes(search) || 
-            String(a.applicationId || '').includes(search) ||
-            String(a.name || '').toLowerCase().includes(search) ||
-            String(a.plot || '').toLowerCase().includes(search);
-        return searchMatch;
+    const rows   = document.querySelectorAll('#allotments-table-body tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const match = !search || text.includes(search);
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
     });
-    
-    renderAllotments(filtered);
-    updateTotalCount(filtered.length);
+
+    const badge = document.getElementById('allotments-total');
+    if (badge) {
+        badge.textContent = visibleCount + ' <?= esc(lang('App.adminTotal')) ?>';
+    }
 }
 
 function resetFilters() {
     document.getElementById('filter-search').value = '';
-    renderAllotments(allAllotments);
-    updateTotalCount(allAllotments.length);
-}
-
-function deleteAllotment(id) {
-    if (confirm('Are you sure you want to delete this allotment?')) {
-        allAllotments = allAllotments.filter(a => a.id != id);
-        localStorage.setItem("admin_allotments", JSON.stringify(allAllotments));
-        renderAllotments(allAllotments);
-        updateTotalCount(allAllotments.length);
+    const rows   = document.querySelectorAll('#allotments-table-body tr');
+    rows.forEach(row => row.style.display = '');
+    const badge = document.getElementById('allotments-total');
+    if (badge) {
+        badge.textContent = rows.length + ' <?= esc(lang('App.adminTotal')) ?>';
     }
 }
 </script>

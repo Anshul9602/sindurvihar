@@ -264,6 +264,7 @@ return [
 
     'selectOption'                 => 'चयन करें',
     'backButton'                   => 'वापस',
+    'notProvided'                  => 'कोई नहीं',
 
     // Documents page
     'docDownload'                   => 'डाउनलोड',
@@ -287,11 +288,15 @@ return [
     'refundStatusPaymentId'        => 'भुगतान आईडी',
     'refundStatusStatus'           => 'स्थिति:',
 
+    'userCategory'                 => 'उपयोगकर्ता श्रेणी',
+    'serviceCategory'              => 'सेवा श्रेणी',
+
     'allotmentDetailsTitle'        => 'आवंटन विवरण',
     'allotmentNoAllotmentFound'    => 'कोई आवंटन नहीं मिला।',
     'allotmentNumber'              => 'आवंटन संख्या:',
     'allotmentPlotDetails'         => 'भूखण्ड विवरण:',
     'allotmentPrintMessage'        => 'आप इस पृष्ठ को अपने अस्थायी आवंटन पत्र के रूप में प्रिंट कर सकते हैं।',
+    'allotmentPrintButton'         => 'आवंटन पत्र प्रिंट करें',
 
     'lotteryResultsDemoText'       => 'यह पृष्ठ localStorage में संग्रहीत मॉक लॉटरी परिणाम दिखाता है। डेमो प्रवाह में, एक बार एडमिन लॉटरी चलाता है, परिणाम यहाँ भरा जा सकता है।',
     'lotteryResultsDemoPlaceholder' => '(डेमो प्लेसहोल्डर)',
