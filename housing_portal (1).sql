@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 11, 2026 at 12:36 PM
+-- Generation Time: Feb 13, 2026 at 01:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -64,6 +64,14 @@ CREATE TABLE `admin_actions` (
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `admin_actions`
+--
+
+INSERT INTO `admin_actions` (`id`, `application_id`, `admin_id`, `action_type`, `reason`, `notes`, `confirmed`, `created_at`, `updated_at`) VALUES
+(1, 4, NULL, 'verified', NULL, NULL, 1, '2026-02-13 07:13:41', '2026-02-13 07:13:41'),
+(2, 2, NULL, 'verified', NULL, NULL, 1, '2026-02-13 09:51:03', '2026-02-13 09:51:03');
+
 -- --------------------------------------------------------
 
 --
@@ -78,6 +86,13 @@ CREATE TABLE `allotments` (
   `status` enum('provisional','final') DEFAULT 'provisional',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `allotments`
+--
+
+INSERT INTO `allotments` (`id`, `application_id`, `plot_number`, `block_name`, `status`, `created_at`) VALUES
+(1, 2, '1230456', 'kgjnkdskg', 'provisional', '2026-02-13 12:22:57');
 
 -- --------------------------------------------------------
 
@@ -113,7 +128,9 @@ CREATE TABLE `applications` (
 --
 
 INSERT INTO `applications` (`id`, `user_id`, `scheme_id`, `status`, `full_name`, `aadhaar`, `father_husband_name`, `age`, `mobile`, `address`, `tehsil`, `district`, `city`, `state`, `income`, `income_category`, `declaration_truth`, `declaration_cancellation`, `created_at`, `updated_at`) VALUES
-(2, 1, NULL, 'draft', 'anshul kumar', '641107520610', 'bhanwar', 25, '01234567890', 'jaipur', 'danta', 'sikr', NULL, 'Rajasthan', 59999.00, 'SC', 1, 1, '2026-02-10 10:48:26', '2026-02-11 11:54:32');
+(2, 1, NULL, 'selected', 'anshul kumar', '641107520610', 'bhanwar', 25, '9602964437', 'jaipur', 'danta', 'sikr', NULL, 'Rajasthan', 59999.00, '', 1, 1, '2026-02-10 10:48:26', '2026-02-13 12:22:57'),
+(3, 4, NULL, 'draft', 'anshul kumar', '641107520611', 'bhanwar', 25, '9602964438', '894, SANTINAGR DURGAPRA', 'danta', 'sikr', NULL, 'Rajasthan', 500000.00, 'SC', 1, 1, '2026-02-12 08:37:14', '2026-02-12 08:37:14'),
+(4, 5, NULL, 'verified', 'anshul kumar', '641107520612', 'bhanwar', 18, '01234567899', 'jaipur', 'danta', 'sikr', NULL, 'Rajasthan', 600000.00, 'State Govt Employee', 1, 1, '2026-02-13 06:15:27', '2026-02-13 07:13:41');
 
 -- --------------------------------------------------------
 
@@ -142,7 +159,9 @@ CREATE TABLE `application_documents` (
 --
 
 INSERT INTO `application_documents` (`id`, `user_id`, `application_id`, `has_identity_proof`, `has_income_proof`, `has_residence_proof`, `identity_files`, `income_files`, `residence_files`, `annexure_files`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, 1, 1, 1, '[\"uploads\\/documents\\/1\\/1770722219_4ae5841e2e6dc50e29f3.pdf\"]', '[\"uploads\\/documents\\/1\\/1770722219_d7c17925fc1b74f6527b.pdf\"]', '[\"uploads\\/documents\\/1\\/1770722219_6ca88283cea5be93101b.pdf\"]', '[\"uploads\\/documents\\/1\\/1770722219_4f17bf76d21518de8ce1.pdf\"]', 'shjghdkf', '2026-02-10 11:16:59', '2026-02-10 11:16:59');
+(1, 1, 2, 1, 1, 1, '[\"uploads\\/documents\\/1\\/1770722219_4ae5841e2e6dc50e29f3.pdf\"]', '[\"uploads\\/documents\\/1\\/1770722219_d7c17925fc1b74f6527b.pdf\"]', '[\"uploads\\/documents\\/1\\/1770722219_6ca88283cea5be93101b.pdf\"]', '[\"uploads\\/documents\\/1\\/1770722219_4f17bf76d21518de8ce1.pdf\"]', 'shjghdkf', '2026-02-10 11:16:59', '2026-02-10 11:16:59'),
+(2, 4, 3, 1, 1, 1, '[\"uploads\\/documents\\/4\\/1770885552_209b40da1f7cb26707c6.jpg\"]', '[\"uploads\\/documents\\/4\\/1770885552_5ecc9c4fe3b7195dc01f.jpg\"]', '[\"uploads\\/documents\\/4\\/1770885552_3148787a075cac6a59f7.jpg\"]', '[\"uploads\\/documents\\/4\\/1770885552_45f25fb8dcbd9cb8c4fd.jpg\"]', '', '2026-02-12 08:39:12', '2026-02-12 08:39:12'),
+(3, 5, 4, 1, 1, 1, '[\"uploads\\/documents\\/5\\/1770966347_8b78f7e9f47ae096f751.jpg\"]', '[\"uploads\\/documents\\/5\\/1770966347_63fc73730073dc5e22c2.png\"]', '[\"uploads\\/documents\\/5\\/1770966347_f464439d5afc3c4a97b6.png\"]', '[\"uploads\\/documents\\/5\\/1770966347_6ed8d815761b23b33fbb.jpg\"]', '', '2026-02-13 07:05:47', '2026-02-13 07:05:47');
 
 -- --------------------------------------------------------
 
@@ -168,7 +187,9 @@ CREATE TABLE `eligibilities` (
 
 INSERT INTO `eligibilities` (`id`, `user_id`, `age`, `income`, `residency`, `property_status`, `is_eligible`, `created_at`, `updated_at`) VALUES
 (3, 1, 25, 45000, 'state', 'none', 1, '2026-02-10 09:02:07', '2026-02-11 06:12:35'),
-(4, 2, 33, 333333333, 'state', 'none', 1, '2026-02-11 05:51:47', '2026-02-11 05:51:47');
+(4, 2, 33, 333333333, 'state', 'none', 1, '2026-02-11 05:51:47', '2026-02-11 05:51:47'),
+(5, 4, 25, 100000, 'state', 'none', 1, '2026-02-12 08:34:26', '2026-02-12 08:34:26'),
+(6, 5, 18, 45000, 'state', 'none', 1, '2026-02-13 06:13:43', '2026-02-13 06:13:43');
 
 -- --------------------------------------------------------
 
@@ -231,6 +252,14 @@ CREATE TABLE `payments` (
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`id`, `user_id`, `application_id`, `amount`, `status`, `transaction_ref`, `created_at`, `updated_at`) VALUES
+(1, 5, 4, 1000, 'success', NULL, '2026-02-13 07:04:53', '2026-02-13 07:04:53'),
+(2, 1, 2, 1000, 'success', NULL, '2026-02-13 09:41:30', '2026-02-13 09:41:30');
+
 -- --------------------------------------------------------
 
 --
@@ -260,7 +289,7 @@ CREATE TABLE `plots` (
 --
 
 INSERT INTO `plots` (`id`, `plot_name`, `plot_number`, `category`, `dimensions`, `area`, `location`, `plot_image`, `quantity`, `available_quantity`, `price`, `status`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'test plot ', '1230456', 'EWS:10,MIG-A:5', '100*1000', 1000.00, 'kgjnkdskg', 'uploads/plots/1770794605_09f0026721b5034d60ef.jpg', 15, 15, 1350.00, 'available', 'agzh', '2026-02-11 07:23:25', '2026-02-11 07:23:25');
+(3, 'test plot ', '1230456', 'SC', '100x150', 1500.00, 'kgjnkdskg', 'uploads/plots/1770983449_5ec66ca0a70bba2d6206.jpg', 1, 0, 5000.00, 'allotted', '', '2026-02-13 11:50:49', '2026-02-13 12:22:57');
 
 -- --------------------------------------------------------
 
@@ -291,6 +320,7 @@ CREATE TABLE `users` (
   `password_hash` varchar(255) NOT NULL,
   `name` varchar(191) NOT NULL,
   `language` varchar(5) DEFAULT 'en',
+  `category` varchar(100) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -299,9 +329,12 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `mobile`, `email`, `password_hash`, `name`, `language`, `created_at`, `updated_at`) VALUES
-(1, '9602964437', 'anshulkumar969602@gmail.com', '$2y$10$KwbgeI0p8KCMnDXJ.Lj3.eUv.H/S257qwaQVvfsmvJE7xy4UQEn1C', 'anshul kumar', 'en', '2026-02-10 07:41:57', '2026-02-11 09:25:23'),
-(2, '8949465158', NULL, '$2y$10$0KCIzQBIFHocWU8bO.qcgOTZkNFNETQLydgFx4jVF1owEb0VUHywm', 'User 5158', 'en', '2026-02-11 05:49:55', '2026-02-11 05:49:55');
+INSERT INTO `users` (`id`, `mobile`, `email`, `password_hash`, `name`, `language`, `category`, `created_at`, `updated_at`) VALUES
+(1, '9602964437', 'anshulkumar969602@gmail.com', '$2y$10$KwbgeI0p8KCMnDXJ.Lj3.eUv.H/S257qwaQVvfsmvJE7xy4UQEn1C', 'anshul kumar', 'en', 'SC', '2026-02-10 07:41:57', '2026-02-13 09:48:58'),
+(2, '8949465158', NULL, '$2y$10$0KCIzQBIFHocWU8bO.qcgOTZkNFNETQLydgFx4jVF1owEb0VUHywm', 'User 5158', 'en', NULL, '2026-02-11 05:49:55', '2026-02-11 05:49:55'),
+(3, '1234567890', NULL, '$2y$10$lwAhNG8fmChkIg.TQ9mFOObRFZrUMTdH8Zl3WRQ63ZAGpuwPGGpvS', 'User 7890', 'en', NULL, '2026-02-12 07:10:10', '2026-02-12 07:10:10'),
+(4, '9602964438', NULL, '$2y$10$0Vk.C6Um1tyRlPWULsgySuLv.WnzdDCtyuDiMPaKzZh/NCxGLzzg2', 'User 4438', 'en', NULL, '2026-02-12 08:32:37', '2026-02-12 08:32:37'),
+(5, '1234567899', 'Admin@gmail.com', '$2y$10$sBKEvBmZb2orGDW/vvzWuOf3xqJbTrtM/MuYAgdQcGSaSBmkH6AUO', 'anshul kumar', 'en', 'General', '2026-02-13 05:52:58', '2026-02-13 05:52:58');
 
 --
 -- Indexes for dumped tables
@@ -416,31 +449,31 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_actions`
 --
 ALTER TABLE `admin_actions`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `allotments`
 --
 ALTER TABLE `allotments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `application_documents`
 --
 ALTER TABLE `application_documents`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `eligibilities`
 --
 ALTER TABLE `eligibilities`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `forgot_otps`
@@ -464,13 +497,13 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `plots`
 --
 ALTER TABLE `plots`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `schemes`
@@ -482,7 +515,7 @@ ALTER TABLE `schemes`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
