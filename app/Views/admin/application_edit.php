@@ -141,21 +141,87 @@
             </div>
             <div>
                 <label for="income_category" class="block text-sm font-medium mb-1" style="color: #374151;">
-                    <?= esc(lang('App.serviceCategory') ?? 'Service Category') ?>
+                    <?= esc(lang('App.appCategoryLabel') ?? 'Category') ?>
                 </label>
-                <?php $currentCat = old('income_category', $application['income_category'] ?? ''); ?>
+                <?php $currentCat = old('income_category', $application['income_category'] ?? 'EWS'); ?>
+                <?php
+                    $soldierCategories = ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category', 'Soldier', 'Army'];
+                    $soldierSelected   = in_array($currentCat, $soldierCategories, true);
+                ?>
                 <select id="income_category" name="income_category"
                         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="" <?= $currentCat === '' ? 'selected' : '' ?>>None</option>
-                    <option value="Central Govt Employee" <?= $currentCat === 'Central Govt Employee' ? 'selected' : '' ?>>Central Govt Employee</option>
-                    <option value="State Govt Employee" <?= $currentCat === 'State Govt Employee' ? 'selected' : '' ?>>State Govt Employee</option>
-                    <option value="PSU Employee" <?= $currentCat === 'PSU Employee' ? 'selected' : '' ?>>PSU Employee</option>
-                    <?php
-                        $soldierCategories = ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category'];
-                        $soldierSelected   = in_array($currentCat, $soldierCategories, true);
-                    ?>
-                    <option value="Soldier Category" <?= $soldierSelected ? 'selected' : '' ?>>Soldier Category (Serving / Ex‑Serviceman / Widow/Dependent)</option>
+                    <option value="EWS" <?= $currentCat === 'EWS' ? 'selected' : '' ?>>EWS</option>
+                    <option value="LIG" <?= $currentCat === 'LIG' ? 'selected' : '' ?>>LIG</option>
+                    <option value="MIG" <?= $currentCat === 'MIG' ? 'selected' : '' ?>>MIG</option>
+                    <option value="Govt" <?= $currentCat === 'Govt' ? 'selected' : '' ?>>Govt</option>
+                    <option value="Soldier" <?= $soldierSelected ? 'selected' : '' ?>>Soldier</option>
                 </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lottery & Reservation Section -->
+    <div>
+        <h2 class="text-lg font-semibold mb-4" style="color: #0F1F3F;">
+            <?= esc(lang('App.appLotterySection') ?? 'Lottery & Reservation Details') ?>
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="caste_category" class="block text-sm font-medium mb-1" style="color: #374151;">
+                    <?= esc(lang('App.appCasteCategoryLabel') ?? 'Caste Category') ?>
+                </label>
+                <?php $currentCaste = old('caste_category', $application['caste_category'] ?? ''); ?>
+                <select id="caste_category" name="caste_category"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value=""><?= esc(lang('App.selectOption') ?? 'Select') ?></option>
+                    <option value="SC" <?= $currentCaste === 'SC' ? 'selected' : '' ?>>SC</option>
+                    <option value="ST" <?= $currentCaste === 'ST' ? 'selected' : '' ?>>ST</option>
+                    <option value="OBC" <?= $currentCaste === 'OBC' ? 'selected' : '' ?>>OBC</option>
+                    <option value="GENERAL" <?= $currentCaste === 'GENERAL' ? 'selected' : '' ?>>GENERAL</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4">
+            <p class="text-sm font-medium mb-3" style="color: #374151;">
+                <?= esc(lang('App.appReservationCategoriesLabel') ?? 'Reservation Categories') ?>
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_disabled" value="1"
+                           <?= old('is_disabled', $application['is_disabled'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appDisabledLabel') ?? 'Disabled (5% reservation)') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_single_woman" value="1"
+                           <?= old('is_single_woman', $application['is_single_woman'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appSingleWomanLabel') ?? 'Single Woman/Widow (10% reservation)') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_transgender" value="1"
+                           <?= old('is_transgender', $application['is_transgender'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appTransgenderLabel') ?? 'Transgender') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_army" value="1"
+                           <?= old('is_army', $application['is_army'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appArmyLabel') ?? 'Army/Ex-serviceman') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_media" value="1"
+                           <?= old('is_media', $application['is_media'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appMediaLabel') ?? 'Media') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_govt_employee" value="1"
+                           <?= old('is_govt_employee', $application['is_govt_employee'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appGovtEmployeeLabel') ?? 'Government Employee') ?></span>
+                </label>
             </div>
         </div>
     </div>

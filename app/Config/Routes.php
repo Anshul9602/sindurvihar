@@ -26,9 +26,11 @@ $routes->group('user', static function ($routes) {
     $routes->get('dashboard', 'UserPortal::dashboard');
     // Eligibility: allow GET (form) + POST (submit)
     $routes->match(['get', 'post'], 'eligibility', 'UserPortal::eligibility');
+    // Application routes - specific routes first
+    $routes->get('application/edit', 'UserPortal::editApplication', ['as' => 'user.application.edit']);
+    $routes->get('application/status', 'UserPortal::applicationStatus');
     $routes->get('application', 'UserPortal::application');
     $routes->post('application/submit', 'UserPortal::submitApplication');
-    $routes->get('application/status', 'UserPortal::applicationStatus');
     $routes->match(['get', 'post'], 'documents', 'UserPortal::documents');
     // Payment: allow GET (summary) + POST (record payment)
     $routes->match(['get', 'post'], 'payment', 'UserPortal::payment');
@@ -58,6 +60,7 @@ $routes->group('admin', static function ($routes) {
     $routes->get('lottery', 'AdminPortal::lottery');
     $routes->post('lottery/run', 'AdminPortal::runLottery');
     $routes->get('allotments', 'AdminPortal::allotments');
+    $routes->get('allotments/(:segment)', 'AdminPortal::allotmentDetail/$1');
     $routes->get('payments', 'AdminPortal::payments');
     $routes->get('schemes', 'AdminPortal::schemes');
     $routes->get('reports', 'AdminPortal::reports');

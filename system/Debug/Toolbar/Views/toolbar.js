@@ -7,7 +7,7 @@ var ciDebugBar = {
     toolbar: null,
     icon: null,
 
-    init: function () {
+    init: function() {
         this.toolbarContainer = document.getElementById("toolbarContainer");
         this.toolbar = document.getElementById("debug-bar");
         this.icon = document.getElementById("debug-icon");
@@ -38,7 +38,7 @@ var ciDebugBar = {
         for (var i = 0; i < historyLoad.length; i++) {
             historyLoad[i].addEventListener(
                 "click",
-                function () {
+                function() {
                     loadDoc(this.getAttribute("data-time"));
                 },
                 true
@@ -58,7 +58,7 @@ var ciDebugBar = {
         }
     },
 
-    createListeners: function () {
+    createListeners: function() {
         var buttons = [].slice.call(
             this.toolbar.querySelectorAll(".ci-label a")
         );
@@ -77,26 +77,26 @@ var ciDebugBar = {
                 links[i].addEventListener("click", function() {
                     ciDebugBar.toggleDataTable(datatable)
                 }, true);
-               
+
             } else if (toggleData === "childrows") {
 
                 let child = links[i].getAttribute("data-child");
                 links[i].addEventListener("click", function() {
                     ciDebugBar.toggleChildRows(child)
                 }, true);
-                
+
             } else {
                 links[i].addEventListener("click", ciDebugBar.toggleRows, true);
             }
         }
     },
 
-    showTab: function () {
+    showTab: function() {
         // Get the target tab, if any
         var tab = document.getElementById(this.getAttribute("data-tab"));
 
         // If the label have not a tab stops here
-        if (! tab) {
+        if (!tab) {
             return;
         }
 
@@ -121,7 +121,7 @@ var ciDebugBar = {
         }
 
         // Show/hide the selected tab
-        if (! state) {
+        if (!state) {
             ciDebugBar.switchClass(tab, "debug-bar-ndisplay", "debug-bar-dblock");
             ciDebugBar.addClass(this.parentNode, "active");
             // Create debug-bar-tab cookie to persistent state
@@ -133,7 +133,7 @@ var ciDebugBar = {
         }
     },
 
-    addClass: function (el, className) {
+    addClass: function(el, className) {
         if (el.classList) {
             el.classList.add(className);
         } else {
@@ -141,7 +141,7 @@ var ciDebugBar = {
         }
     },
 
-    removeClass: function (el, className) {
+    removeClass: function(el, className) {
         if (el.classList) {
             el.classList.remove(className);
         } else {
@@ -155,7 +155,7 @@ var ciDebugBar = {
         }
     },
 
-    switchClass  : function(el, classFrom, classTo) {
+    switchClass: function(el, classFrom, classTo) {
         ciDebugBar.removeClass(el, classFrom);
         ciDebugBar.addClass(el, classTo);
     },
@@ -166,7 +166,7 @@ var ciDebugBar = {
      *
      * @param event
      */
-    toggleRows: function (event) {
+    toggleRows: function(event) {
         if (event.target) {
             let row = event.target.closest("tr");
             let target = document.getElementById(
@@ -174,10 +174,10 @@ var ciDebugBar = {
             );
 
             if (target.classList.contains("debug-bar-ndisplay")) {
-                ciDebugBar.switchClass(target, "debug-bar-ndisplay", "debug-bar-dtableRow");   
+                ciDebugBar.switchClass(target, "debug-bar-ndisplay", "debug-bar-dtableRow");
             } else {
                 ciDebugBar.switchClass(target, "debug-bar-dtableRow", "debug-bar-ndisplay");
-            } 
+            }
         }
     },
 
@@ -186,7 +186,7 @@ var ciDebugBar = {
      *
      * @param obj
      */
-    toggleDataTable: function (obj) {
+    toggleDataTable: function(obj) {
         if (typeof obj == "string") {
             obj = document.getElementById(obj + "_table");
         }
@@ -205,7 +205,7 @@ var ciDebugBar = {
      *
      * @param obj
      */
-    toggleChildRows: function (obj) {
+    toggleChildRows: function(obj) {
         if (typeof obj == "string") {
             par = document.getElementById(obj + "_parent");
             obj = document.getElementById(obj + "_children");
@@ -228,8 +228,8 @@ var ciDebugBar = {
     /**
      *   Toggle tool bar from full to icon and icon to full
      */
-    toggleToolbar: function () {
-        var open = ! ciDebugBar.toolbar.classList.contains("debug-bar-ndisplay");
+    toggleToolbar: function() {
+        var open = !ciDebugBar.toolbar.classList.contains("debug-bar-ndisplay");
 
         if (open) {
             ciDebugBar.switchClass(ciDebugBar.icon, "debug-bar-ndisplay", "debug-bar-dinlineBlock");
@@ -252,7 +252,7 @@ var ciDebugBar = {
      * Sets the initial state of the toolbar (open or minimized) when
      * the page is first loaded to allow it to remember the state between refreshes.
      */
-    setToolbarState: function () {
+    setToolbarState: function() {
         var open = ciDebugBar.readCookie("debug-bar-state");
 
         if (open != "open") {
@@ -261,10 +261,10 @@ var ciDebugBar = {
         } else {
             ciDebugBar.switchClass(ciDebugBar.icon, "debug-bar-dinlineBlock", "debug-bar-ndisplay");
             ciDebugBar.switchClass(ciDebugBar.toolbar, "debug-bar-ndisplay", "debug-bar-dinlineBlock");
-        } 
+        }
     },
 
-    toggleViewsHints: function () {
+    toggleViewsHints: function() {
         // Avoid toggle hints on history requests that are not the initial
         if (
             localStorage.getItem("debugbar-time") !=
@@ -279,7 +279,7 @@ var ciDebugBar = {
         var sortedComments = [];
         var comments = [];
 
-        var getComments = function () {
+        var getComments = function() {
             var nodes = [];
             var result = [];
             var xpathResults = document.evaluate(
@@ -317,7 +317,7 @@ var ciDebugBar = {
         };
 
         // find node that has TargetNode as parentNode
-        var getParentNode = function (node, targetNode) {
+        var getParentNode = function(node, targetNode) {
             if (node.parentNode === null) {
                 return null;
             }
@@ -333,13 +333,13 @@ var ciDebugBar = {
         const INVALID_ELEMENTS = ["NOSCRIPT", "SCRIPT", "STYLE"];
         const OUTER_ELEMENTS = ["HTML", "BODY", "HEAD"];
 
-        var getValidElementInner = function (node, reverse) {
+        var getValidElementInner = function(node, reverse) {
             // handle invalid tags
             if (OUTER_ELEMENTS.indexOf(node.nodeName) !== -1) {
                 for (var i = 0; i < document.body.children.length; ++i) {
-                    var index = reverse
-                        ? document.body.children.length - (i + 1)
-                        : i;
+                    var index = reverse ?
+                        document.body.children.length - (i + 1) :
+                        i;
                     var element = document.body.children[index];
 
                     // skip invalid tags
@@ -358,9 +358,9 @@ var ciDebugBar = {
                 node !== null &&
                 INVALID_ELEMENTS.indexOf(node.nodeName) !== -1
             ) {
-                node = reverse
-                    ? node.previousElementSibling
-                    : node.nextElementSibling;
+                node = reverse ?
+                    node.previousElementSibling :
+                    node.nextElementSibling;
             }
 
             // return non array if we couldnt find something
@@ -373,7 +373,7 @@ var ciDebugBar = {
 
         // get next valid element ( to be safe to add divs )
         // @return [ element, skip element ] or null if we couldnt find a valid place
-        var getValidElement = function (nodeElement) {
+        var getValidElement = function(nodeElement) {
             if (nodeElement) {
                 if (nodeElement.nextElementSibling !== null) {
                     return (
@@ -507,8 +507,7 @@ var ciDebugBar = {
 
                 // find index
                 for (
-                    var j = 0;
-                    j < nodeList[i].parentNode.childNodes.length;
+                    var j = 0; j < nodeList[i].parentNode.childNodes.length;
                     ++j
                 ) {
                     if (nodeList[i].parentNode.childNodes[j] === nodeList[i]) {
@@ -537,11 +536,11 @@ var ciDebugBar = {
         var btn = document.querySelector("[data-tab=ci-views]");
 
         // If the Views Collector is inactive stops here
-        if (! btn) {
+        if (!btn) {
             return;
         }
 
-        btn.parentNode.onclick = function () {
+        btn.parentNode.onclick = function() {
             if (ciDebugBar.readCookie("debug-view")) {
                 hideHints();
             } else {
@@ -555,7 +554,7 @@ var ciDebugBar = {
         }
     },
 
-    setToolbarPosition: function () {
+    setToolbarPosition: function() {
         var btnPosition = this.toolbar.querySelector("#toolbar-position");
 
         if (ciDebugBar.readCookie("debug-bar-position") === "top") {
@@ -565,12 +564,12 @@ var ciDebugBar = {
 
         btnPosition.addEventListener(
             "click",
-            function () {
+            function() {
                 var position = ciDebugBar.readCookie("debug-bar-position");
 
                 ciDebugBar.createCookie("debug-bar-position", "", -1);
 
-                if (! position || position === "bottom") {
+                if (!position || position === "bottom") {
                     ciDebugBar.createCookie("debug-bar-position", "top", 365);
                     ciDebugBar.addClass(ciDebugBar.icon, "fixed-top");
                     ciDebugBar.addClass(ciDebugBar.toolbar, "fixed-top");
@@ -588,7 +587,7 @@ var ciDebugBar = {
         );
     },
 
-    setToolbarTheme: function () {
+    setToolbarTheme: function() {
         var btnTheme = this.toolbar.querySelector("#toolbar-theme");
         var isDarkMode = window.matchMedia(
             "(prefers-color-scheme: dark)"
@@ -608,11 +607,11 @@ var ciDebugBar = {
 
         btnTheme.addEventListener(
             "click",
-            function () {
+            function() {
                 var theme = ciDebugBar.readCookie("debug-bar-theme");
 
                 if (
-                    ! theme &&
+                    !theme &&
                     window.matchMedia("(prefers-color-scheme: dark)").matches
                 ) {
                     // If there is no cookie, and "prefers-color-scheme" is set to "dark"
@@ -654,17 +653,17 @@ var ciDebugBar = {
         );
     },
 
-    setHotReloadState: function () {
+    setHotReloadState: function() {
         var btn = document.getElementById("debug-hot-reload").parentNode;
         var btnImg = btn.getElementsByTagName("img")[0];
         var eventSource;
 
         // If the Hot Reload Collector is inactive stops here
-        if (! btn) {
+        if (!btn) {
             return;
         }
 
-        btn.onclick = function () {
+        btn.onclick = function() {
             if (ciDebugBar.readCookie("debug-hot-reload")) {
                 ciDebugBar.createCookie("debug-hot-reload", "", -1);
                 ciDebugBar.removeClass(btn, "active");
@@ -692,10 +691,10 @@ var ciDebugBar = {
         }
     },
 
-    hotReloadConnect: function () {
+    hotReloadConnect: function() {
         const eventSource = new EventSource(ciSiteURL + "/__hot-reload");
 
-        eventSource.addEventListener("reload", function (e) {
+        eventSource.addEventListener("reload", function(e) {
             console.log("reload", e);
             window.location.reload();
         });
@@ -714,7 +713,7 @@ var ciDebugBar = {
      * @param value
      * @param days
      */
-    createCookie: function (name, value, days) {
+    createCookie: function(name, value, days) {
         if (days) {
             var date = new Date();
 
@@ -729,7 +728,7 @@ var ciDebugBar = {
             name + "=" + value + expires + "; path=/; samesite=Lax";
     },
 
-    readCookie: function (name) {
+    readCookie: function(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(";");
 
@@ -745,11 +744,11 @@ var ciDebugBar = {
         return null;
     },
 
-    trimSlash: function (text) {
+    trimSlash: function(text) {
         return text.replace(/^\/|\/$/g, "");
     },
 
-    routerLink: function () {
+    routerLink: function() {
         var row, _location;
         var rowGet = this.toolbar.querySelectorAll(
             'td[data-debugbar-route="GET"]'
@@ -764,7 +763,7 @@ var ciDebugBar = {
                     "title",
                     location.origin + "/" + ciDebugBar.trimSlash(row.innerText)
                 );
-                row.addEventListener("click", function (ev) {
+                row.addEventListener("click", function(ev) {
                     _location =
                         location.origin +
                         "/" +
@@ -795,7 +794,7 @@ var ciDebugBar = {
         for (var i = 0; i < rowGet.length; i++) {
             row = rowGet[i];
 
-            row.addEventListener("submit", function (event) {
+            row.addEventListener("submit", function(event) {
                 event.preventDefault();
                 var inputArray = [],
                     t = 0;
@@ -812,7 +811,7 @@ var ciDebugBar = {
                     _location =
                         location.origin +
                         "/" +
-                        tpl.replace(/\?/g, function () {
+                        tpl.replace(/\?/g, function() {
                             return inputArray[t++];
                         });
 

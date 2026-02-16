@@ -27,6 +27,13 @@ class ApplicationModel extends Model
         'state',
         'income',
         'income_category',
+        'caste_category',
+        'is_disabled',
+        'is_single_woman',
+        'is_transgender',
+        'is_army',
+        'is_media',
+        'is_govt_employee',
         'declaration_truth',
         'declaration_cancellation',
     ];

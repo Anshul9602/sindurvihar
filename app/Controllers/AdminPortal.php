@@ -356,6 +356,13 @@ class AdminPortal extends BaseController
             'state' => $this->request->getPost('state'),
             'income' => $this->request->getPost('income'),
             'income_category' => $this->request->getPost('income_category'),
+            'caste_category' => $this->request->getPost('caste_category') ?: null,
+            'is_disabled' => $this->request->getPost('is_disabled') ? 1 : 0,
+            'is_single_woman' => $this->request->getPost('is_single_woman') ? 1 : 0,
+            'is_transgender' => $this->request->getPost('is_transgender') ? 1 : 0,
+            'is_army' => $this->request->getPost('is_army') ? 1 : 0,
+            'is_media' => $this->request->getPost('is_media') ? 1 : 0,
+            'is_govt_employee' => $this->request->getPost('is_govt_employee') ? 1 : 0,
             'status' => $this->request->getPost('status'),
         ];
 
@@ -574,13 +581,15 @@ class AdminPortal extends BaseController
             ->orderBy('applications.created_at', 'ASC')
             ->findAll();
 
-        // Get available plots grouped by category
+        // Get all available plots
         $plotModel = new PlotModel();
         $availablePlots = $plotModel
             ->where('status', 'available')
             ->orderBy('category', 'ASC')
+            ->orderBy('plot_number', 'ASC')
             ->findAll();
 
+        // Also get grouped by category for summary
         $plotsByCategory = [];
         foreach ($availablePlots as $plot) {
             $cat = $plot['category'] ?? 'Unknown';
@@ -598,6 +607,7 @@ class AdminPortal extends BaseController
 
         $data = [
             'applications'     => $applications,
+            'plots'            => $availablePlots,
             'plotsByCategory'  => $plotsByCategory,
         ];
 
@@ -619,14 +629,24 @@ class AdminPortal extends BaseController
                 ->setJSON(['success' => false, 'message' => 'Invalid request']);
         }
 
-        $roundNumber = trim((string) $this->request->getPost('round_number'));
-        $roundName   = trim((string) $this->request->getPost('round_name'));
-        $confirmed   = (bool) $this->request->getPost('confirmed');
+        $roundNumber    = trim((string) $this->request->getPost('round_number'));
+        $roundName      = trim((string) $this->request->getPost('round_name'));
+        $category       = trim((string) $this->request->getPost('category')); // Plot category (ST, SC, etc.)
+        $serviceCategory = trim((string) $this->request->getPost('service_category')); // Service category (EWS, LIG, MIG, GOVT, SOLDIER)
+        $confirmed     = (bool) $this->request->getPost('confirmed');
 
         if ($roundNumber === '' || $roundName === '') {
             return $this->response->setStatusCode(400)
                 ->setJSON(['success' => false, 'message' => 'Please enter lottery round number and name.']);
         }
+
+        if (empty($category)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Please select a category.']);
+        }
+
+        // NOTE: service_category is OPTIONAL for direct-run category buttons.
+        // When present (from the modal), it will be used to narrow applications.
 
         if (! $confirmed) {
             return $this->response->setStatusCode(400)
@@ -635,164 +655,329 @@ class AdminPortal extends BaseController
 
         $plotModel      = new PlotModel();
         $allotmentModel = new AllotmentModel();
+        $db             = \Config\Database::connect();
 
-        // Get verified applications with user category (for matching with plot category)
+        // STEP 1: Filter Applicants by Category and Service Category
         $applications = $this->applicationModel
             ->select('applications.*, users.name as user_name, users.mobile, users.category as user_category')
             ->join('users', 'users.id = applications.user_id', 'left')
             ->where('applications.status', 'verified')
-            ->orderBy('applications.created_at', 'ASC')
             ->findAll();
 
-        if (! $applications) {
-            return $this->response->setStatusCode(400)
-                ->setJSON(['success' => false, 'message' => 'No verified applications available for lottery.']);
-        }
-
-        // Load available plots indexed by category
-        $availablePlots = $plotModel
-            ->where('status', 'available')
-            ->orderBy('category', 'ASC')
-            ->findAll();
-
-        if (! $availablePlots) {
-            return $this->response->setStatusCode(400)
-                ->setJSON(['success' => false, 'message' => 'No available plots found. Please add plots first.']);
-        }
-
-        $plotsByCategory = [];
-        foreach ($availablePlots as $plot) {
-            $cat = $plot['category'] ?? null;
-            if (! $cat) {
-                continue;
-            }
-            $plotsByCategory[$cat][] = $plot;
-        }
-
-        // Filter applications that have at least one matching plot category
+        // Filter by caste category (ST, SC, etc.) - use user.category or applications.caste_category
+        // Special handling: Army button can match both Army category and Army reservation
         $eligibleApps = [];
         foreach ($applications as $app) {
-            $userCategory    = $app['user_category'] ?? null;   // main category from registration
-            $serviceCategory = $app['income_category'] ?? null; // service category from application
+            $userCategory = $app['user_category'] ?? null;
+            $casteCategory = $app['caste_category'] ?? $userCategory; // Fallback to user category
+            $appServiceCategory = $app['income_category'] ?? null;
 
-            $hasMatch = false;
-            if ($userCategory && ! empty($plotsByCategory[$userCategory])) {
-                $hasMatch = true;
-            } elseif ($serviceCategory && ! empty($plotsByCategory[$serviceCategory])) {
-                $hasMatch = true;
+            // Match category based on button clicked
+            $casteMatch = false;
+            $categoryUpper = strtoupper($category);
+            
+            // Special reservation categories (not caste-based)
+            if ($categoryUpper === 'MEDIA') {
+                $casteMatch = !empty($app['is_media']) && $app['is_media'] == 1;
+            } elseif ($categoryUpper === 'TRANSGENDER') {
+                $casteMatch = !empty($app['is_transgender']) && $app['is_transgender'] == 1;
+            } elseif ($categoryUpper === 'ARMY') {
+                // Match if: user has Army category OR has Army reservation
+                $casteMatch = ($casteCategory && strtoupper($casteCategory) === 'ARMY') ||
+                             (!empty($app['is_army']) && $app['is_army'] == 1);
+            } elseif ($categoryUpper === 'GOVT') {
+                // Match if: caste category is GOVT OR income_category is Govt
+                $casteMatch = ($casteCategory && strtoupper($casteCategory) === 'GOVT') ||
+                             ($appServiceCategory && strtoupper($appServiceCategory) === 'GOVT');
+            } else {
+                // For caste-based categories (ST, SC, General), match caste category
+                if ($casteCategory && strtoupper($casteCategory) === $categoryUpper) {
+                    $casteMatch = true;
+                }
             }
 
-            if ($hasMatch) {
-                $eligibleApps[] = $app;
+            // Match service category (EWS, LIG, MIG, GOVT, SOLDIER)
+            // If admin did not specify a service category (direct-run buttons), accept all.
+            $serviceMatch = true;
+            if (!empty($serviceCategory) && $appServiceCategory) {
+                // Handle Soldier category variations
+                if (strtoupper($serviceCategory) === 'SOLDIER') {
+                    $soldierCategories = ['Soldier', 'Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category', 'Army'];
+                    $serviceMatch = in_array($appServiceCategory, $soldierCategories, true);
+                } else {
+                    $serviceMatch = strtoupper($appServiceCategory) === strtoupper($serviceCategory);
+                }
+            }
+
+            // For special reservation categories (Media, Transgender, Army), service category is always optional.
+            if (in_array(strtoupper($category), ['MEDIA', 'TRANSGENDER', 'ARMY'])) {
+                $serviceMatch = true;
+            }
+
+            // Match if caste category matches AND service category matches
+            if ($casteMatch && $serviceMatch) {
+                // Exclude applications that already have allotments
+                $existingAllotment = $db->table('allotments')
+                    ->where('application_id', $app['id'])
+                    ->get()
+                    ->getRowArray();
+                
+                if (!$existingAllotment) {
+                    $eligibleApps[] = $app;
+                }
             }
         }
 
-        if (! $eligibleApps) {
+        if (empty($eligibleApps)) {
             return $this->response->setStatusCode(400)
                 ->setJSON([
                     'success' => false,
-                    'message' => 'No eligible applications found with matching plot categories.',
+                    'message' => 'No eligible applications found for ' . $category . ' category with ' . $serviceCategory . ' service category.',
                 ]);
         }
 
-        // Pick a random eligible application
-        $winnerIndex = array_rand($eligibleApps);
-        $winner      = $eligibleApps[$winnerIndex];
+        // STEP 2: Get ALL Available Plots (allocation will be based on income group, not caste category)
+        $allAvailablePlots = $plotModel
+            ->where('status', 'available')
+            ->findAll();
 
-        // Decide which category we are using for this winner (primary category first, then service category)
-        $winnerCat = null;
-        if (! empty($winner['user_category']) && ! empty($plotsByCategory[$winner['user_category']])) {
-            $winnerCat = $winner['user_category'];
-        } elseif (! empty($winner['income_category']) && ! empty($plotsByCategory[$winner['income_category']])) {
-            $winnerCat = $winner['income_category'];
-        }
-
-        if (! $winnerCat) {
+        if (empty($allAvailablePlots)) {
             return $this->response->setStatusCode(400)
-                ->setJSON([
-                    'success' => false,
-                    'message' => 'Selected winner does not match any available plot category.',
-                ]);
+                ->setJSON(['success' => false, 'message' => 'No available plots found.']);
         }
 
-        // Pick a random plot from the winner's category
-        $plotsForCat = $plotsByCategory[$winnerCat];
-        $plotIndex   = array_rand($plotsForCat);
-        $plot        = $plotsForCat[$plotIndex];
+        // Total plots counts for quota calculations
+        $totalPlots = count($allAvailablePlots);
 
-        // Create allotment
-        // Create allotment using query builder to avoid model field-protection issues
-        $db = \Config\Database::connect();
-        $allotmentData = [
-            'application_id' => $winner['id'],
-            'plot_number'    => $plot['plot_number'],
-            'block_name'     => $plot['location'] ?? null,
-            'status'         => 'provisional',
-            'created_at'     => date('Y-m-d H:i:s'),
+        // STEP 3: Calculate Reservation Quotas
+        $quota = [
+            'disabled'     => floor($totalPlots * 5 / 100),      // 5% for disabled
+            'single_woman' => floor($totalPlots * 10 / 100),    // 10% for single woman/widow
+            'transgender'  => 0, // Will be calculated if needed
+            'army'         => 0, // Will be calculated if needed
+            'media'        => 0, // Will be calculated if needed
+            'govt'         => 0, // Will be calculated if needed
+            'general'      => 0, // Remaining seats
         ];
 
-        if (! $db->table('allotments')->insert($allotmentData)) {
-            $dbError = $db->error();
-            $msg = 'Failed to create allotment.';
-            if (! empty($dbError['message'])) {
-                $msg .= ' DB Error: ' . $dbError['message'];
+        // STEP 4: Divide Applicants Into Priority Buckets
+        $buckets = [
+            'disabled'     => [],
+            'single_woman' => [],
+            'transgender'  => [],
+            'army'         => [],
+            'media'        => [],
+            'govt'         => [],
+            'general'      => [],
+        ];
+
+        foreach ($eligibleApps as $app) {
+            // Priority 1: Disabled
+            if (!empty($app['is_disabled']) && $app['is_disabled'] == 1) {
+                $buckets['disabled'][] = $app;
+                continue;
             }
-            return $this->response->setStatusCode(500)
-                ->setJSON(['success' => false, 'message' => $msg]);
+
+            // Priority 2: Single Woman / Widow
+            if (!empty($app['is_single_woman']) && $app['is_single_woman'] == 1) {
+                $buckets['single_woman'][] = $app;
+                continue;
+            }
+
+            // Priority 3: Transgender
+            if (!empty($app['is_transgender']) && $app['is_transgender'] == 1) {
+                $buckets['transgender'][] = $app;
+                continue;
+            }
+
+            // Priority 4: Army / Ex-serviceman
+            if (!empty($app['is_army']) && $app['is_army'] == 1) {
+                $buckets['army'][] = $app;
+                continue;
+            }
+
+            // Priority 5: Media
+            if (!empty($app['is_media']) && $app['is_media'] == 1) {
+                $buckets['media'][] = $app;
+                continue;
+            }
+
+            // Priority 6: Govt Employee
+            if (!empty($app['is_govt_employee']) && $app['is_govt_employee'] == 1) {
+                $buckets['govt'][] = $app;
+                continue;
+            }
+
+            // Priority 7: General (remaining applicants)
+            $buckets['general'][] = $app;
         }
 
-        $allotmentId = $db->insertID();
+        // STEP 5: Allocate Seats Reservation-Wise with Random Selection
+        $winners = [];
+        $usedPlots = [];
+        $plotIndex = 0;
 
-        // Mark plot as allotted / decrement available quantity if tracked
-        if (array_key_exists('available_quantity', $plot) && $plot['available_quantity'] !== null) {
-            $newQty = max(0, (int) $plot['available_quantity'] - 1);
-            $update = ['available_quantity' => $newQty];
-            if ($newQty === 0) {
-                $update['status'] = 'allotted';
+        // Helper function to randomly select applicants
+        $randomPick = function($applicants, $count) {
+            if (empty($applicants) || $count <= 0) {
+                return [];
             }
-            if (! $plotModel->update($plot['id'], $update)) {
-                $dbError = $plotModel->db->error();
-                $msg = 'Failed to update plot availability.';
-                if (! empty($dbError['message'])) {
-                    $msg .= ' DB Error: ' . $dbError['message'];
-                }
-                return $this->response->setStatusCode(500)
-                    ->setJSON(['success' => false, 'message' => $msg]);
-            }
-        } else {
-            if (! $plotModel->update($plot['id'], ['status' => 'allotted'])) {
-                $dbError = $plotModel->db->error();
-                $msg = 'Failed to update plot status.';
-                if (! empty($dbError['message'])) {
-                    $msg .= ' DB Error: ' . $dbError['message'];
-                }
-                return $this->response->setStatusCode(500)
-                    ->setJSON(['success' => false, 'message' => $msg]);
-            }
+            shuffle($applicants); // Random shuffle
+            return array_slice($applicants, 0, min($count, count($applicants)));
+        };
+
+        // Priority 1: Disabled
+        $disabledWinners = $randomPick($buckets['disabled'], $quota['disabled']);
+        $winners = array_merge($winners, $disabledWinners);
+        $remainingDisabled = $quota['disabled'] - count($disabledWinners);
+
+        // Priority 2: Single Woman
+        $singleWomanWinners = $randomPick($buckets['single_woman'], $quota['single_woman']);
+        $winners = array_merge($winners, $singleWomanWinners);
+        $remainingSingleWoman = $quota['single_woman'] - count($singleWomanWinners);
+
+        // Priority 3: Transgender (if quota exists)
+        if ($quota['transgender'] > 0) {
+            $transgenderWinners = $randomPick($buckets['transgender'], $quota['transgender']);
+            $winners = array_merge($winners, $transgenderWinners);
         }
 
-        // Optionally update application status to selected
-        $this->applicationModel->update($winner['id'], ['status' => 'selected']);
+        // Priority 4: Army (if quota exists)
+        if ($quota['army'] > 0) {
+            $armyWinners = $randomPick($buckets['army'], $quota['army']);
+            $winners = array_merge($winners, $armyWinners);
+        }
+
+        // Priority 5: Media (if quota exists)
+        if ($quota['media'] > 0) {
+            $mediaWinners = $randomPick($buckets['media'], $quota['media']);
+            $winners = array_merge($winners, $mediaWinners);
+        }
+
+        // Priority 6: Govt Employee (if quota exists)
+        if ($quota['govt'] > 0) {
+            $govtWinners = $randomPick($buckets['govt'], $quota['govt']);
+            $winners = array_merge($winners, $govtWinners);
+        }
+
+        // Priority 7: General (remaining seats + overflow from special categories)
+        $allocatedSeats = count($winners);
+        $remainingSeats = $totalPlots - $allocatedSeats;
+        $remainingSeats += $remainingDisabled + $remainingSingleWoman; // Add overflow from special categories
+
+        if ($remainingSeats > 0) {
+            // Remove already selected winners from general bucket
+            $winnerIds = array_column($winners, 'id');
+            $generalApplicants = array_filter($buckets['general'], function($app) use ($winnerIds) {
+                return !in_array($app['id'], $winnerIds);
+            });
+            $generalWinners = $randomPick(array_values($generalApplicants), $remainingSeats);
+            $winners = array_merge($winners, $generalWinners);
+        }
+
+        if (empty($winners)) {
+            return $this->response->setStatusCode(400)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'No winners could be selected. Please check applicant data and reservations.',
+                ]);
+        }
+
+        // STEP 6: Create Allotments for All Winners
+        // We assign plots according to the applicant's income group (income_category).
+        // First randomize the global list of available plots, then pick best matches per winner.
+        $remainingPlots = $allAvailablePlots;
+        shuffle($remainingPlots);
+        $allotmentIds = [];
+        $allotmentDetails = [];
+
+        foreach ($winners as $index => $winner) {
+            if (empty($remainingPlots)) {
+                break; // No more plots available
+            }
+
+            // Try to find a plot whose category matches the winner's income category
+            $winnerIncomeCat = strtoupper($winner['income_category'] ?? '');
+            $chosenIndex = null;
+
+            if ($winnerIncomeCat !== '') {
+                foreach ($remainingPlots as $idx => $plotCandidate) {
+                    $plotCat = strtoupper($plotCandidate['category'] ?? '');
+                    if ($plotCat === $winnerIncomeCat) {
+                        $chosenIndex = $idx;
+                        break;
+                    }
+                }
+            }
+
+            // If no exact income group match is found, fall back to the first remaining plot
+            if ($chosenIndex === null) {
+                // Optional chaining helper for older PHP versions
+                $keys = array_keys($remainingPlots);
+                if (empty($keys)) {
+                    break;
+                }
+                $chosenIndex = $keys[0];
+            }
+
+            $plotIndex = (int) $chosenIndex;
+            if (!array_key_exists($plotIndex, $remainingPlots)) {
+                // Safety check – if index is missing, stop assigning further plots
+                break;
+            }
+
+            $plot = $remainingPlots[$plotIndex];
+            unset($remainingPlots[$plotIndex]);
+
+            // Create allotment
+            $allotmentData = [
+                'application_id' => $winner['id'],
+                'plot_number'    => $plot['plot_number'],
+                'block_name'     => $plot['location'] ?? null,
+                'status'         => 'provisional',
+                'created_at'     => date('Y-m-d H:i:s'),
+            ];
+
+            if ($db->table('allotments')->insert($allotmentData)) {
+                $allotmentId = $db->insertID();
+                $allotmentIds[] = $allotmentId;
+
+                // Mark plot as allotted
+                $plotModel->update($plot['id'], ['status' => 'allotted']);
+
+                // Update application status to selected
+                $this->applicationModel->update($winner['id'], ['status' => 'selected']);
+
+                $allotmentDetails[] = [
+                    'allotment_id' => $allotmentId,
+                    'winner' => [
+                        'application_id' => $winner['id'],
+                        'name'           => $winner['user_name'],
+                        'mobile'         => $winner['mobile'],
+                        'category'       => $category,
+                        'service_cat'    => $serviceCategory,
+                    ],
+                    'plot' => [
+                        'id'           => $plot['id'],
+                        'plot_number'  => $plot['plot_number'],
+                        'category'     => $plot['category'],
+                        'location'     => $plot['location'] ?? null,
+                    ],
+                ];
+            }
+        }
 
         return $this->response->setJSON([
             'success'       => true,
-            'message'       => 'Lottery run successfully.',
+            'message'       => 'Lottery run successfully. ' . count($allotmentDetails) . ' applicants selected.',
             'round_number'  => $roundNumber,
             'round_name'    => $roundName,
-            'winner'        => [
-                'application_id' => $winner['id'],
-                'name'           => $winner['user_name'],
-                'mobile'         => $winner['mobile'],
-                'category'       => $winner['user_category'],
-                'service_cat'    => $winner['income_category'] ?? null,
-            ],
-            'plot'          => [
-                'id'           => $plot['id'],
-                'plot_number'  => $plot['plot_number'],
-                'category'     => $plot['category'],
-                'location'     => $plot['location'] ?? null,
-            ],
-            'allotment_id'  => $allotmentId,
+            'category'      => $category,
+            'service_category' => $serviceCategory,
+            'total_plots'   => $totalPlots,
+            'total_winners' => count($allotmentDetails),
+            'quota'         => $quota,
+            'allotments'   => $allotmentDetails,
         ]);
     }
 
@@ -812,6 +997,39 @@ class AdminPortal extends BaseController
 
         return view('layout/admin_header')
             . view('admin/allotments', $data)
+            . view('layout/admin_footer');
+    }
+
+    public function allotmentDetail($id)
+    {
+        $allotmentModel = new AllotmentModel();
+        $plotModel = new PlotModel();
+
+        // Fetch allotment with application and user details
+        $allotment = $allotmentModel
+            ->select('allotments.*, applications.id as application_id, applications.full_name, applications.mobile, applications.aadhaar, applications.address, applications.tehsil, applications.district, applications.state, applications.income, applications.income_category, applications.status as application_status, users.name as user_name, users.mobile as user_mobile, users.email as user_email')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->join('users', 'users.id = applications.user_id', 'left')
+            ->where('allotments.id', $id)
+            ->first();
+
+        if (!$allotment) {
+            return redirect()->to('/admin/allotments')->with('error', 'Allotment not found');
+        }
+
+        // Fetch plot details if plot_number exists
+        $plot = null;
+        if (!empty($allotment['plot_number'])) {
+            $plot = $plotModel
+                ->where('plot_number', $allotment['plot_number'])
+                ->first();
+        }
+
+        $data['allotment'] = $allotment;
+        $data['plot'] = $plot;
+
+        return view('layout/admin_header')
+            . view('admin/allotment_detail', $data)
             . view('layout/admin_footer');
     }
 
@@ -922,13 +1140,57 @@ class AdminPortal extends BaseController
     public function plots()
     {
         $plotModel = new PlotModel();
-        $data['plots'] = $plotModel->orderBy('created_at', 'DESC')->findAll();
         
-        // Get category-wise counts
+        // Get filter parameters
+        $category = $this->request->getGet('category');
+        $status = $this->request->getGet('status');
+        $search = $this->request->getGet('search');
+        $perPage = (int) ($this->request->getGet('per_page') ?? 25);
+        
+        // Validate per_page value (only allow 25 to 500, default to 25)
+        if ($perPage < 25 || $perPage > 500) {
+            $perPage = 25;
+        }
+        
+        // Build query with filters
+        $query = $plotModel->orderBy('created_at', 'DESC');
+        
+        if (!empty($category)) {
+            $query->where('category', $category);
+        }
+        
+        if (!empty($status)) {
+            $query->where('status', $status);
+        }
+        
+        if (!empty($search)) {
+            $query->groupStart()
+                  ->like('plot_name', $search)
+                  ->orLike('plot_number', $search)
+                  ->orLike('location', $search)
+                  ->groupEnd();
+        }
+        
+        // Paginate results with configurable per page - use default group
+        $data['plots'] = $query->paginate($perPage);
+        $data['pager'] = $plotModel->pager;
+        
+        // Set pagination path to preserve filters
+        if ($data['pager']) {
+            $data['pager']->setPath('/admin/plots');
+        }
+        
+        // Get category-wise counts (for all plots, not just current page)
         $categories = $plotModel->select('category, SUM(quantity) as total_quantity, SUM(available_quantity) as total_available')
                                 ->groupBy('category')
                                 ->findAll();
         $data['categoryStats'] = $categories;
+        
+        // Pass filter values back to view
+        $data['filterCategory'] = $category;
+        $data['filterStatus'] = $status;
+        $data['filterSearch'] = $search;
+        $data['filterPerPage'] = $perPage;
         
         return view('layout/admin_header')
             . view('admin/plots', $data)

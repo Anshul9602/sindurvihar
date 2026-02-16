@@ -1,6 +1,13 @@
     </main>
 
     <footer class="mt-12 border-t relative overflow-hidden">
+
+<style>
+    .debug-bar-dinlineBlock{
+display: none !important;
+    }
+</style>
+
         <!-- Background image -->
         <div class="absolute inset-0 w-full h-full z-0">
             <img

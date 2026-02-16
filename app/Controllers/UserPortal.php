@@ -26,12 +26,13 @@ class UserPortal extends BaseController
     }
 
     /**
-     * Return list of required annexure forms (JPGs) based on applicant category.
+     * Return list of required annexure forms (JPGs) based on applicant category, caste category, and reservation categories.
      * This mirrors the summary table from the Sindoor Vihar booklet.
      */
-    private function resolveFormsForCategory(?string $category): array
+    private function resolveFormsForCategory(?string $category = null, ?string $casteCategory = null, array $reservationCategories = []): array
     {
-        $category   = trim((string) $category);
+        $category   = trim((string) ($category ?? ''));
+        $casteCategory = trim((string) ($casteCategory ?? ''));
         $formsBase  = base_url('assets/documentform/') . '/';
 
         // Base annexures (I–VII) we currently have as JPGs
@@ -43,51 +44,30 @@ class UserPortal extends BaseController
         $annexVI = ['label' => 'Annexure VI – Soldier Undertaking (Soldier)',                  'url' => $formsBase . 'BookLet Sindoor Vihar_page-0020.jpg'];
         $annexVII= ['label' => 'Annexure VII – Disability Certificate (Divyang / PwD)',        'url' => $formsBase . 'BookLet Sindoor Vihar_page-0021.jpg'];
 
-        // Categories where only general annexures (I & II) apply
-        $generalOnly = [
-            'General',
-            'EWS',
-            'LIG',
-            'MIG-A',
-            'MIG-B',
-            'HIG',
-            'Central Govt Employee',
-            'State Govt Employee',
-            'PSU Employee',
-            'Destitute Woman',
-            'Landless Woman',
-            'Single Woman/Widow',
-        ];
+        // Use associative array to avoid duplicates
+        $required = [];
+        $required['annexure-i'] = $annexI;
+        $required['annexure-ii'] = $annexII;
 
-        // Start with common annexures for "All"
-        $required = [$annexI, $annexII];
-
-        if (in_array($category, $generalOnly, true) || $category === '') {
-            return $required;
+        // SC / ST from caste category
+        if ($casteCategory === 'SC' || $casteCategory === 'ST') {
+            $required['annexure-iii'] = $annexIII;
         }
 
-        // SC / ST additional certificate
-        if ($category === 'SC' || $category === 'ST') {
-            $required[] = $annexIII;
-            return $required;
+        // Soldier related categories from income category
+        if (in_array($category, ['Soldier', 'Soldier Category', 'Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Army'], true)) {
+            $required['annexure-iv'] = $annexIV;
+            $required['annexure-v'] = $annexV;
+            $required['annexure-vi'] = $annexVI;
         }
 
-        // Soldier related categories
-        if (in_array($category, ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category'], true)) {
-            $required[] = $annexIV;
-            $required[] = $annexV;
-            $required[] = $annexVI;
-            return $required;
+        // Disabled reservation category
+        if (!empty($reservationCategories['is_disabled'])) {
+            $required['annexure-vii'] = $annexVII;
         }
 
-        // Divyang
-        if ($category === 'Divyang (PwD)') {
-            $required[] = $annexVII;
-            return $required;
-        }
-
-        // Accredited Journalist, Transgender, etc. currently only need general forms
-        return $required;
+        // Return as indexed array
+        return array_values($required);
     }
 
     public function dashboard()
@@ -102,26 +82,33 @@ class UserPortal extends BaseController
         // Get user's application if exists
         $application = $this->applicationModel->where('user_id', $userId)->orderBy('created_at', 'DESC')->first();
 
-        // Determine step completion based on DB records
-        $eligibilityDone = (bool) $this->eligibilityModel
+        // Get eligibility data
+        $eligibility = $this->eligibilityModel
             ->where('user_id', $userId)
             ->where('is_eligible', 1)
             ->first();
+        $eligibilityDone = (bool) $eligibility;
 
+        // Get payment and documents data
         $documentsDone = false;
         $paymentDone   = false;
+        $payment = null;
+        $documents = null;
 
         if ($application) {
-            $documentsDone = (bool) $this->documentModel
+            $documents = $this->documentModel
                 ->where('user_id', $userId)
                 ->where('application_id', $application['id'])
                 ->first();
+            $documentsDone = (bool) $documents;
 
-            $paymentDone = (bool) $this->paymentModel
+            $payment = $this->paymentModel
                 ->where('user_id', $userId)
                 ->where('application_id', $application['id'])
                 ->where('status', 'success')
+                ->orderBy('created_at', 'DESC')
                 ->first();
+            $paymentDone = (bool) $payment;
         }
         
         $data['user'] = [
@@ -131,6 +118,9 @@ class UserPortal extends BaseController
             'email' => session()->get('user_email')
         ];
         $data['application'] = $application;
+        $data['eligibility'] = $eligibility;
+        $data['payment'] = $payment;
+        $data['documents'] = $documents;
         $data['steps'] = [
             'eligibility' => [
                 'completed' => $eligibilityDone,
@@ -252,14 +242,74 @@ class UserPortal extends BaseController
             return redirect()->to('/user/eligibility')->with('error', 'Please complete eligibility check before filling the application form.');
         }
 
-        // Load latest application (if any) for pre-filling the form
+        // Check if user already has an application - redirect to edit if exists
         $application = $this->applicationModel
             ->where('user_id', $userId)
             ->orderBy('created_at', 'DESC')
             ->first();
 
+        // If application exists and can be edited, redirect to edit page
+        if ($application && in_array($application['status'], ['draft', 'submitted', 'paid', 'under_verification', 'clarification'])) {
+            return redirect()->to('/user/application/edit');
+        }
+
+        // Get user's category from registration
+        $user = $this->userModel->find($userId);
+        $userCategory = $user['category'] ?? null;
+
+        // New application form - no existing application or cannot edit
+        $data = [
+            'application' => null,
+            'isEditMode' => false,
+            'userCategory' => $userCategory,
+        ];
+
+        return view('layout/header')
+            . view('user/application', $data)
+            . view('layout/footer');
+    }
+
+    public function editApplication()
+    {
+        // Check if user is logged in
+        if (!session()->has('user_id')) {
+            return redirect()->to('/auth/login')->with('error', 'Please login to edit application');
+        }
+
+        // Require eligibility to be completed and successful
+        $userId = session()->get('user_id');
+        $eligible = $this->eligibilityModel
+            ->where('user_id', $userId)
+            ->where('is_eligible', 1)
+            ->first();
+
+        if (! $eligible) {
+            return redirect()->to('/user/eligibility')->with('error', 'Please complete eligibility check before editing the application form.');
+        }
+
+        // Load latest application for editing
+        $application = $this->applicationModel
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'DESC')
+            ->first();
+
+        if (!$application) {
+            return redirect()->to('/user/application')->with('error', 'No application found. Please create a new application first.');
+        }
+
+        // Check if application can be edited
+        if (!in_array($application['status'], ['draft', 'submitted', 'paid', 'under_verification', 'clarification'])) {
+            return redirect()->to('/user/dashboard')->with('error', 'Application cannot be edited in its current status.');
+        }
+
+        // Get user's category from registration (use it if application doesn't have caste_category)
+        $user = $this->userModel->find($userId);
+        $userCategory = $user['category'] ?? null;
+
         $data = [
             'application' => $application,
+            'isEditMode' => true,
+            'userCategory' => $userCategory,
         ];
 
         return view('layout/header')
@@ -277,8 +327,10 @@ class UserPortal extends BaseController
             return redirect()->to('/auth/login')->with('error', 'Please login to submit application');
         }
 
+        $userId = session()->get('user_id');
+        $applicationId = $this->request->getPost('application_id');
+
         $data = [
-            'user_id'                  => session()->get('user_id'),
             'full_name'                => (string) $this->request->getPost('full_name'),
             'aadhaar'                  => (string) $this->request->getPost('aadhaar'),
             'father_husband_name'      => (string) $this->request->getPost('father_husband_name'),
@@ -291,21 +343,103 @@ class UserPortal extends BaseController
             'state'                    => (string) ($this->request->getPost('state') ?: 'Rajasthan'),
             'income'                   => (string) $this->request->getPost('income'),
             'income_category'          => (string) $this->request->getPost('income_category'),
+            'caste_category'           => (string) ($this->request->getPost('caste_category') ?: null),
+            'is_disabled'              => $this->request->getPost('is_disabled') ? 1 : 0,
+            'is_single_woman'          => $this->request->getPost('is_single_woman') ? 1 : 0,
+            'is_transgender'           => $this->request->getPost('is_transgender') ? 1 : 0,
+            'is_army'                  => $this->request->getPost('is_army') ? 1 : 0,
+            'is_media'                 => $this->request->getPost('is_media') ? 1 : 0,
+            'is_govt_employee'         => $this->request->getPost('is_govt_employee') ? 1 : 0,
             'declaration_truth'        => $this->request->getPost('declaration_truth') ? 1 : 0,
             'declaration_cancellation' => $this->request->getPost('declaration_cancellation') ? 1 : 0,
-            'status'                   => 'draft',
         ];
 
-        // Prevent multiple applications with same mobile or Aadhaar
+        // If application_id is provided, this is an update
+        if (!empty($applicationId)) {
+            $existingApp = $this->applicationModel
+                ->where('id', $applicationId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$existingApp) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Application not found or you do not have permission to edit it.');
+            }
+
+            // Only allow editing for certain statuses
+            // Allow editing for: draft, submitted, paid, under_verification, clarification
+            if (!in_array($existingApp['status'], ['draft', 'submitted', 'paid', 'under_verification', 'clarification'])) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Application cannot be edited in its current status.');
+            }
+
+            // If status was 'submitted' or later, keep it as 'submitted' after update
+            // This ensures the application doesn't go backwards in the workflow
+            if (in_array($existingApp['status'], ['submitted', 'paid', 'under_verification', 'clarification'])) {
+                $data['status'] = 'submitted'; // Keep as submitted after edit
+            }
+
+            // Check for duplicates (excluding current application) - only Aadhaar must be unique
+            $duplicate = $this->applicationModel
+                ->where('id !=', $applicationId)
+                ->where('aadhaar', $data['aadhaar'])
+                ->first();
+
+            if ($duplicate) {
+                $errorMsg = 'An application has already been submitted with this Aadhaar number.';
+
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => $errorMsg,
+                    ]);
+                }
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $errorMsg);
+            }
+
+            // Update existing application
+            if ($this->applicationModel->update($applicationId, $data)) {
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => 'Application updated successfully',
+                        'application_id' => $applicationId
+                    ]);
+                }
+                return redirect()->to('/user/application')->with('success', 'Application updated successfully.');
+            } else {
+                $dbError  = $this->applicationModel->db->error();
+                $errorMsg = $dbError['message'] ?? 'Failed to update application';
+
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => $errorMsg,
+                    ]);
+                }
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $errorMsg);
+            }
+        }
+
+        // New application submission
+        $data['user_id'] = $userId;
+        $data['status'] = 'draft';
+
+        // Prevent multiple applications with same Aadhaar (only Aadhaar must be unique)
         $existing = $this->applicationModel
-            ->groupStart()
-                ->where('mobile', $data['mobile'])
-                ->orWhere('aadhaar', $data['aadhaar'])
-            ->groupEnd()
+            ->where('aadhaar', $data['aadhaar'])
             ->first();
 
         if ($existing) {
-            $errorMsg = 'An application has already been submitted with this mobile number or Aadhaar number.';
+            $errorMsg = 'An application has already been submitted with this Aadhaar number.';
 
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON([
@@ -554,8 +688,21 @@ class UserPortal extends BaseController
             ->where('application_id', $application['id'])
             ->first();
 
-        // Determine required downloadable forms based on application category.
-        $requiredForms = $this->resolveFormsForCategory($application['income_category'] ?? null);
+        // Determine required downloadable forms based on application category, caste category, and reservation categories
+        $reservationCategories = [
+            'is_disabled' => !empty($application['is_disabled']),
+            'is_single_woman' => !empty($application['is_single_woman']),
+            'is_transgender' => !empty($application['is_transgender']),
+            'is_army' => !empty($application['is_army']),
+            'is_media' => !empty($application['is_media']),
+            'is_govt_employee' => !empty($application['is_govt_employee']),
+        ];
+        
+        $requiredForms = $this->resolveFormsForCategory(
+            $application['income_category'] ?? null,
+            $application['caste_category'] ?? null,
+            $reservationCategories
+        );
 
         $data = [
             'documents'     => $documents,

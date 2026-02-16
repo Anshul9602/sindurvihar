@@ -132,6 +132,95 @@ $canVerify = $hasPayment && ($paymentStatus === 'completed' || $paymentStatus ==
             </div>
         </div>
 
+        <!-- Lottery & Reservation Details Section -->
+        <div class="border-t pt-6 mt-6">
+            <h2 class="text-lg font-semibold mb-4" style="color: #0F1F3F;">
+                <?= esc(lang('App.appLotterySection') ?? 'Lottery & Reservation Details') ?>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appCasteCategoryLabel') ?? 'Caste Category') ?>
+                    </label>
+                    <p class="text-base" style="color: #111827;">
+                        <?= esc($application['caste_category'] ?? 'N/A') ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appDisabledLabel') ?? 'Disabled') ?>
+                    </label>
+                    <p class="text-base">
+                        <?php if ($application['is_disabled'] ?? 0): ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">Yes</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-800">No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appSingleWomanLabel') ?? 'Single Woman/Widow') ?>
+                    </label>
+                    <p class="text-base">
+                        <?php if ($application['is_single_woman'] ?? 0): ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">Yes</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-800">No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appTransgenderLabel') ?? 'Transgender') ?>
+                    </label>
+                    <p class="text-base">
+                        <?php if ($application['is_transgender'] ?? 0): ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">Yes</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-800">No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appArmyLabel') ?? 'Army/Ex-serviceman') ?>
+                    </label>
+                    <p class="text-base">
+                        <?php if ($application['is_army'] ?? 0): ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">Yes</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-800">No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appMediaLabel') ?? 'Media') ?>
+                    </label>
+                    <p class="text-base">
+                        <?php if ($application['is_media'] ?? 0): ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">Yes</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-800">No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: #6B7280;">
+                        <?= esc(lang('App.appGovtEmployeeLabel') ?? 'Government Employee') ?>
+                    </label>
+                    <p class="text-base">
+                        <?php if ($application['is_govt_employee'] ?? 0): ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">Yes</span>
+                        <?php else: ?>
+                            <span class="px-3 py-1 rounded text-sm font-semibold bg-gray-100 text-gray-800">No</span>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Documents Section -->
         <?php if (!empty($documents)): ?>
         <div class="border-t pt-6 mt-6">

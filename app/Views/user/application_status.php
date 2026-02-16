@@ -84,19 +84,19 @@
                     <li class="flex items-center justify-between">
                         <span><?= esc(lang('App.dashboardStep2')) ?></span>
                         <span class="font-semibold" style="color:<?= $applicationDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $applicationDone ? '✓ Completed' : 'Pending' ?>
+                            <?= $applicationDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
                         </span>
                     </li>
                     <li class="flex items-center justify-between">
                         <span><?= esc(lang('App.dashboardStep3')) ?></span>
                         <span class="font-semibold" style="color:<?= $paymentDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $paymentDone ? '✓ Completed' : 'Pending' ?>
+                            <?= $paymentDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
                         </span>
                     </li>
                     <li class="flex items-center justify-between">
                         <span><?= esc(lang('App.dashboardStep4')) ?></span>
                         <span class="font-semibold" style="color:<?= $documentsDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $documentsDone ? '✓ Completed' : 'Pending' ?>
+                            <?= $documentsDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
                         </span>
                     </li>
                 </ul>

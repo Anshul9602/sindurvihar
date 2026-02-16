@@ -19,7 +19,7 @@
         </div>
     </div>
     <div id="filters-content" class="p-4">
-        <form id="filter-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form id="filter-form" method="GET" action="/admin/plots" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label class="block text-sm font-medium mb-2" style="color: #374151;">
                     <?= esc(lang('App.adminPlotCategory')) ?>
@@ -27,14 +27,15 @@
                 <select name="category" id="filter-category" 
                         class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value=""><?= esc(lang('App.adminFilterAllStatus')) ?></option>
-                    <option value="General">General</option>
-                    <option value="EWS">EWS</option>
-                    <option value="LIG">LIG</option>
-                    <option value="MIG-A">MIG-A</option>
-                    <option value="MIG-B">MIG-B</option>
-                    <option value="HIG">HIG</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
+                    <option value="EWS" <?= (isset($filterCategory) && $filterCategory === 'EWS') ? 'selected' : '' ?>>EWS</option>
+                    <option value="LIG" <?= (isset($filterCategory) && $filterCategory === 'LIG') ? 'selected' : '' ?>>LIG</option>
+                    <option value="Residential" <?= (isset($filterCategory) && $filterCategory === 'Residential') ? 'selected' : '' ?>>Residential</option>
+                    <option value="General" <?= (isset($filterCategory) && $filterCategory === 'General') ? 'selected' : '' ?>>General</option>
+                    <option value="MIG-A" <?= (isset($filterCategory) && $filterCategory === 'MIG-A') ? 'selected' : '' ?>>MIG-A</option>
+                    <option value="MIG-B" <?= (isset($filterCategory) && $filterCategory === 'MIG-B') ? 'selected' : '' ?>>MIG-B</option>
+                    <option value="HIG" <?= (isset($filterCategory) && $filterCategory === 'HIG') ? 'selected' : '' ?>>HIG</option>
+                    <option value="SC" <?= (isset($filterCategory) && $filterCategory === 'SC') ? 'selected' : '' ?>>SC</option>
+                    <option value="ST" <?= (isset($filterCategory) && $filterCategory === 'ST') ? 'selected' : '' ?>>ST</option>
                 </select>
             </div>
             <div>
@@ -44,9 +45,9 @@
                 <select name="status" id="filter-status" 
                         class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value=""><?= esc(lang('App.adminFilterAllStatus')) ?></option>
-                    <option value="available"><?= esc(lang('App.adminPlotAvailableStatus')) ?></option>
-                    <option value="allocated"><?= esc(lang('App.adminPlotAllocatedStatus')) ?></option>
-                    <option value="reserved"><?= esc(lang('App.adminPlotReservedStatus')) ?></option>
+                    <option value="available" <?= (isset($filterStatus) && $filterStatus === 'available') ? 'selected' : '' ?>><?= esc(lang('App.adminPlotAvailableStatus')) ?></option>
+                    <option value="allocated" <?= (isset($filterStatus) && $filterStatus === 'allocated') ? 'selected' : '' ?>><?= esc(lang('App.adminPlotAllocatedStatus')) ?></option>
+                    <option value="reserved" <?= (isset($filterStatus) && $filterStatus === 'reserved') ? 'selected' : '' ?>><?= esc(lang('App.adminPlotReservedStatus')) ?></option>
                 </select>
             </div>
             <div>
@@ -54,18 +55,34 @@
                     <?= esc(lang('App.adminFilterSearch')) ?>
                 </label>
                 <input type="text" name="search" id="filter-search" 
+                       value="<?= esc($filterSearch ?? '') ?>"
                        placeholder="<?= esc(lang('App.adminFilterSearchPlaceholder')) ?>"
                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-            <div class="flex items-end gap-2 md:col-span-3">
-                <button type="button" onclick="applyFilters()" 
+            <div>
+                <label class="block text-sm font-medium mb-2" style="color: #374151;">
+                    <?= esc(lang('App.adminPerPage')) ?>
+                </label>
+                <select name="per_page" id="filter-per-page" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="25" <?= (isset($filterPerPage) && $filterPerPage == 25) ? 'selected' : '' ?>>25</option>
+                    <option value="50" <?= (isset($filterPerPage) && $filterPerPage == 50) ? 'selected' : '' ?>>50</option>
+                    <option value="100" <?= (isset($filterPerPage) && $filterPerPage == 100) ? 'selected' : '' ?>>100</option>
+                    <option value="200" <?= (isset($filterPerPage) && $filterPerPage == 200) ? 'selected' : '' ?>>200</option>
+                    <option value="300" <?= (isset($filterPerPage) && $filterPerPage == 300) ? 'selected' : '' ?>>300</option>
+                    <option value="400" <?= (isset($filterPerPage) && $filterPerPage == 400) ? 'selected' : '' ?>>400</option>
+                    <option value="500" <?= (isset($filterPerPage) && $filterPerPage == 500) ? 'selected' : '' ?>>500</option>
+                </select>
+            </div>
+            <div class="flex items-end gap-2 md:col-span-4">
+                <button type="submit" 
                         class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 transition">
                     <?= esc(lang('App.adminFilterButton')) ?>
                 </button>
-                <button type="button" onclick="resetFilters()" 
-                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-300 transition">
+                <a href="/admin/plots" 
+                   class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-300 transition">
                     <?= esc(lang('App.adminFilterReset')) ?>
-                </button>
+                </a>
             </div>
         </form>
     </div>
@@ -87,7 +104,7 @@
                 <?= esc(lang('App.adminAddPlot')) ?>
             </a>
             <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold" id="plots-total">
-                <?= esc(count($plots ?? [])) ?> <?= esc(lang('App.adminTotal')) ?>
+                <?= esc($pager->getTotal() ?? count($plots ?? [])) ?> <?= esc(lang('App.adminTotal')) ?>
             </span>
         </div>
     </div>
@@ -239,11 +256,35 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Pagination -->
+    <?php if (isset($pager) && $pager && $pager->getTotal() > 0): ?>
+    <div class="p-4 border-t border-gray-200">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="text-sm" style="color: #6B7280;">
+                <?php 
+                $total = $pager->getTotal() ?? 0;
+                $currentPage = $pager->getCurrentPage() ?? 1;
+                $perPage = $pager->getPerPage() ?? 20;
+                $start = ($currentPage - 1) * $perPage + 1;
+                $end = min($currentPage * $perPage, $total);
+                ?>
+                Showing <?= $start ?> 
+                to <?= $end ?> 
+                of <?= $total ?> results
+            </div>
+            <div class="flex items-center gap-2">
+                <?php if ($pager->getPageCount() > 1): ?>
+                    <?= $pager->links('default', 'admin_plots') ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>
 let filtersVisible = true;
-let allPlots = <?= json_encode($plots ?? []) ?>;
 
 function toggleFilters() {
     const content = document.getElementById('filters-content');
@@ -258,54 +299,8 @@ function toggleFilters() {
     }
 }
 
-function applyFilters() {
-    const category = document.getElementById('filter-category').value;
-    const status = document.getElementById('filter-status').value;
-    const search = document.getElementById('filter-search').value.toLowerCase();
-    const rows = document.querySelectorAll('#plots-table-body tr');
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-        if (row.querySelector('td[colspan]')) {
-            return;
-        }
-
-        const rowCategory = row.querySelector('td:nth-child(4) span')?.textContent.trim() || '';
-        const rowStatus = row.querySelector('td:nth-child(8) span')?.textContent.toLowerCase().trim() || '';
-        const rowName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-        const rowLocation = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
-
-        const categoryMatch = !category || rowCategory.toLowerCase() === category.toLowerCase();
-        const statusMatch = !status || rowStatus.includes(status.toLowerCase());
-        const searchMatch = !search || rowName.includes(search) || rowLocation.includes(search);
-
-        if (categoryMatch && statusMatch && searchMatch) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    const totalBadge = document.getElementById('plots-total');
-    if (totalBadge) {
-        totalBadge.textContent = visibleCount + ' <?= esc(lang('App.adminTotal')) ?>';
-    }
-}
-
-function resetFilters() {
-    document.getElementById('filter-category').value = '';
-    document.getElementById('filter-status').value = '';
-    document.getElementById('filter-search').value = '';
-    const rows = document.querySelectorAll('#plots-table-body tr');
-    rows.forEach(row => {
-        row.style.display = '';
-    });
-    const totalBadge = document.getElementById('plots-total');
-    if (totalBadge) {
-        totalBadge.textContent = '<?= esc(count($plots ?? [])) ?> <?= esc(lang('App.adminTotal')) ?>';
-    }
-}
+// Filters are now handled server-side via form submission
+// No client-side filtering needed
 
 function deletePlot(id) {
     if (confirm('Are you sure you want to delete this plot?')) {

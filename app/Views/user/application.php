@@ -9,7 +9,7 @@
         </a>
     </div>
     <h1 class="text-3xl font-bold mb-4 text-center" style="color: #0F1F3F;">
-        <?= esc(lang('App.appTitle')) ?>
+        <?= $isEditMode ? esc(lang('App.appEditTitle') ?? 'Edit Application') : esc(lang('App.appTitle')) ?>
     </h1>
 
     <?php if (session()->getFlashdata('error')): ?>
@@ -24,12 +24,19 @@
         </div>
     <?php endif; ?>
 
-    <?php $application = $application ?? null; ?>
+    <?php 
+    $application = $application ?? null;
+    $isEditMode = $isEditMode ?? false;
+    $userCategory = $userCategory ?? null;
+    ?>
 
     <form id="application-form"
           action="<?= site_url('user/application/submit') ?>"
           method="POST"
           class="bg-white shadow-md rounded-lg p-6 space-y-4">
+        <?php if ($isEditMode && $application): ?>
+            <input type="hidden" name="application_id" value="<?= esc($application['id']) ?>">
+        <?php endif; ?>
         <h2 class="text-xl font-semibold mb-2" style="color: #0F1F3F;"><?= esc(lang('App.appIdentitySection')) ?></h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -89,7 +96,9 @@
                 </div>
                 <div>
                     <label for="app-state" class="block text-sm font-medium mb-1"><?= esc(lang('App.appStateLabel')) ?></label>
-                    <input id="app-state" name="state" type="text" value="Rajasthan" readonly
+                    <input id="app-state" name="state" type="text" 
+                           value="<?= esc(old('state', $application['state'] ?? 'Rajasthan')) ?>" 
+                           readonly
                            class="w-full border rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring focus:border-blue-500">
                 </div>
             </div>
@@ -105,18 +114,82 @@
             </div>
             <div>
                 <label for="app-category" class="block text-sm font-medium mb-1"><?= esc(lang('App.appCategoryLabel')) ?></label>
-                <?php $currentCat = old('income_category', $application['income_category'] ?? 'Central Govt Employee'); ?>
+                <?php $currentCat = old('income_category', $application['income_category'] ?? 'EWS'); ?>
                 <?php
-                    $soldierCategories = ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category'];
+                    $soldierCategories = ['Serving Soldier', 'Ex-Serviceman', 'Soldier Widow/Dependent', 'Soldier Category', 'Soldier', 'Army'];
                     $soldierSelected   = in_array($currentCat, $soldierCategories, true);
                 ?>
                 <select id="app-category" name="income_category"
                         class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-                    <option value="Central Govt Employee" <?= $currentCat === 'Central Govt Employee' ? 'selected' : '' ?>>Central Govt Employee</option>
-                    <option value="State Govt Employee" <?= $currentCat === 'State Govt Employee' ? 'selected' : '' ?>>State Govt Employee</option>
-                    <option value="PSU Employee" <?= $currentCat === 'PSU Employee' ? 'selected' : '' ?>>PSU Employee</option>
-                    <option value="Soldier Category" <?= $soldierSelected ? 'selected' : '' ?>>Soldier (Serving / Ex-Serviceman / Widow/Dependent)</option>
+                    <option value="EWS" <?= $currentCat === 'EWS' ? 'selected' : '' ?>>EWS</option>
+                    <option value="LIG" <?= $currentCat === 'LIG' ? 'selected' : '' ?>>LIG</option>
+                    <option value="MIG" <?= $currentCat === 'MIG' ? 'selected' : '' ?>>MIG</option>
+                    <option value="Govt" <?= $currentCat === 'Govt' ? 'selected' : '' ?>>Govt</option>
+                    <option value="Soldier" <?= $soldierSelected ? 'selected' : '' ?>>Soldier</option>
                 </select>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-semibold mt-4 mb-2" style="color: #0F1F3F;"><?= esc(lang('App.appLotterySection') ?? 'Lottery & Reservation Details') ?></h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="app-caste-category" class="block text-sm font-medium mb-1"><?= esc(lang('App.appCasteCategoryLabel') ?? 'Caste Category') ?></label>
+                <?php 
+                    // Pre-select from application if exists, otherwise from user registration, otherwise empty
+                    $currentCaste = old('caste_category', $application['caste_category'] ?? ($userCategory ?? ''));
+                    // Map user category to caste category if needed (ST, SC, etc. match directly)
+                    if (!empty($currentCaste) && !in_array($currentCaste, ['SC', 'ST', 'OBC', 'GENERAL'])) {
+                        // If user category doesn't match, try to map it
+                        $categoryMap = [
+                            'ST' => 'ST',
+                            'SC' => 'SC',
+                            'OBC' => 'OBC',
+                            'General' => 'GENERAL',
+                            'GENERAL' => 'GENERAL',
+                        ];
+                        $currentCaste = $categoryMap[$currentCaste] ?? '';
+                    }
+                ?>
+                <select id="app-caste-category" name="caste_category"
+                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                    <option value=""><?= esc(lang('App.selectOption') ?? 'Select') ?></option>
+                    <option value="SC" <?= $currentCaste === 'SC' ? 'selected' : '' ?>>SC</option>
+                    <option value="ST" <?= $currentCaste === 'ST' ? 'selected' : '' ?>>ST</option>
+                    <option value="OBC" <?= $currentCaste === 'OBC' ? 'selected' : '' ?>>OBC</option>
+                    <option value="GENERAL" <?= $currentCaste === 'GENERAL' ? 'selected' : '' ?>>GENERAL</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4 space-y-3">
+            <p class="text-sm font-medium mb-2" style="color: #0F1F3F;"><?= esc(lang('App.appReservationCategoriesLabel') ?? 'Reservation Categories (Select all that apply)') ?></p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_disabled" value="1"
+                           <?= old('is_disabled', $application['is_disabled'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appDisabledLabel') ?? 'Disabled ') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_single_woman" value="1"
+                           <?= old('is_single_woman', $application['is_single_woman'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appSingleWomanLabel') ?? 'Single Woman/Widow ') ?></span>
+                </label>
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_transgender" value="1"
+                           <?= old('is_transgender', $application['is_transgender'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appTransgenderLabel') ?? 'Transgender') ?></span>
+                </label>
+                
+                <label class="inline-flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_media" value="1"
+                           <?= old('is_media', $application['is_media'] ?? 0) ? 'checked' : '' ?>
+                           class="mt-1">
+                    <span class="text-sm" style="color:#4B5563;"><?= esc(lang('App.appMediaLabel') ?? 'Media') ?></span>
+                </label>
+                
             </div>
         </div>
 
@@ -130,11 +203,13 @@
         <div class="mt-4 space-y-2 text-sm" style="color:#4B5563;">
             <label class="inline-flex items-start gap-2">
                 <input type="checkbox" name="declaration_truth" value="1" required
+                       <?= old('declaration_truth', $application['declaration_truth'] ?? 0) ? 'checked' : '' ?>
                        class="mt-1">
                 <span><?= esc(lang('App.appDeclarationTruth')) ?></span>
             </label>
             <label class="inline-flex items-start gap-2">
                 <input type="checkbox" name="declaration_cancellation" value="1" required
+                       <?= old('declaration_cancellation', $application['declaration_cancellation'] ?? 0) ? 'checked' : '' ?>
                        class="mt-1">
                 <span><?= esc(lang('App.appDeclarationCancellation')) ?></span>
             </label>
@@ -144,8 +219,15 @@
             <button type="submit"
                     class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold text-white"
                     style="background-color: #0747A6;">
-                <?= esc(lang('App.appSubmitButton')) ?>
+                <?= $isEditMode ? esc(lang('App.appUpdateButton') ?? 'Update Application') : esc(lang('App.appSubmitButton')) ?>
             </button>
+            <?php if ($isEditMode): ?>
+                <a href="/user/dashboard"
+                   class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold border-2 text-center"
+                   style="border-color: #6B7280; color: #6B7280; hover:bg-gray-50;">
+                    <?= esc(lang('App.cancel') ?? 'Cancel') ?>
+                </a>
+            <?php endif; ?>
         </div>
     </form>
 </div>
@@ -153,77 +235,100 @@
 <script>
     (function () {
         var categorySelect = document.getElementById("app-category");
+        var casteCategorySelect = document.getElementById("app-caste-category");
         var box = document.getElementById("category-forms-box");
         var linksContainer = document.getElementById("category-forms-links");
         var bookletBase = "/BookLet%20Sindoor%20Vihar.pdf";
+        
+        // Reservation category checkboxes
+        var isDisabledCheckbox = document.querySelector('input[name="is_disabled"]');
+        var isSingleWomanCheckbox = document.querySelector('input[name="is_single_woman"]');
+        var isTransgenderCheckbox = document.querySelector('input[name="is_transgender"]');
+        var isMediaCheckbox = document.querySelector('input[name="is_media"]');
 
-        function getFormsForCategory(cat) {
+        function getFormsForCategory(cat, casteCat, reservationCategories) {
             // Map categories to scanned JPG forms under /assets/documentform
             var forms = [];
             var imgBase = "/assets/documentform/";
-
-            if (!cat) {
-                return forms;
-            }
+            var formMap = {}; // Use object to avoid duplicates
 
             // Base annexures (I & II) always required
-            forms.push({
+            formMap["annexure-i"] = {
                 label: "Annexure I – Self Declaration / Affidavit (All)",
                 url: imgBase + "BookLet Sindoor Vihar_page-0015.jpg"
-            });
-            forms.push({
+            };
+            formMap["annexure-ii"] = {
                 label: "Annexure II – Income Certificate (All)",
                 url: imgBase + "BookLet Sindoor Vihar_page-0016.jpg"
-            });
+            };
 
             // Normalise category string
-            var c = String(cat).trim();
+            var c = String(cat || "").trim();
+            var caste = String(casteCat || "").trim();
 
-            // SC/ST
-            if (c === "SC" || c === "ST") {
-                forms.push({
+            // SC/ST from caste category
+            if (caste === "SC" || caste === "ST") {
+                formMap["annexure-iii"] = {
                     label: "Annexure III – SC/ST Certificate (SC/ST)",
                     url: imgBase + "BookLet Sindoor Vihar_page-0017.jpg"
-                });
-                return forms;
+                };
             }
 
             // Soldier related categories
-            if (c === "Soldier Category" || c === "Serving Soldier" || c === "Ex-Serviceman" || c === "Soldier Widow/Dependent") {
-                forms.push({
+            if (c === "Soldier" || c === "Soldier Category" || c === "Serving Soldier" || c === "Ex-Serviceman" || c === "Soldier Widow/Dependent" || c === "Army") {
+                formMap["annexure-iv"] = {
                     label: "Annexure IV – Soldier Certificate (Soldier)",
                     url: imgBase + "BookLet Sindoor Vihar_page-0018.jpg"
-                });
-                forms.push({
+                };
+                formMap["annexure-v"] = {
                     label: "Annexure V – Soldier Family Affidavit (Soldier)",
                     url: imgBase + "BookLet Sindoor Vihar_page-0019.jpg"
-                });
-                forms.push({
+                };
+                formMap["annexure-vi"] = {
                     label: "Annexure VI – Soldier Undertaking (Soldier)",
                     url: imgBase + "BookLet Sindoor Vihar_page-0020.jpg"
-                });
-                return forms;
-        }
-
-            // Divyang
-            if (c === "Divyang (PwD)") {
-                forms.push({
-                    label: "Annexure VII – Disability Certificate (Divyang)",
-                    url: imgBase + "BookLet Sindoor Vihar_page-0021.jpg"
-                });
-                return forms;
+                };
             }
 
-            // Other categories (General, EWS, LIG, MIG, Govt Employee, Journalist, Transgender,
-            // Destitute/Landless/Single woman etc.) only need Annexure I & II for now.
-            return forms;
+            // Reservation category forms
+            if (reservationCategories.isDisabled) {
+                formMap["annexure-vii"] = {
+                    label: "Annexure VII – Disability Certificate (Divyang / PwD)",
+                    url: imgBase + "BookLet Sindoor Vihar_page-0021.jpg"
+                };
+            }
+
+            // Convert object to array
+            var formArray = [];
+            for (var key in formMap) {
+                if (formMap.hasOwnProperty(key)) {
+                    formArray.push(formMap[key]);
+                }
+            }
+
+            return formArray;
         }
 
-        function renderForms(cat) {
+        function renderForms() {
             if (!box || !linksContainer) return;
             
-            var forms = getFormsForCategory(cat);
+            var cat = categorySelect ? categorySelect.value : "";
+            var casteCat = casteCategorySelect ? casteCategorySelect.value : "";
+            
+            var reservationCategories = {
+                isDisabled: isDisabledCheckbox ? isDisabledCheckbox.checked : false,
+                isSingleWoman: isSingleWomanCheckbox ? isSingleWomanCheckbox.checked : false,
+                isTransgender: isTransgenderCheckbox ? isTransgenderCheckbox.checked : false,
+                isMedia: isMediaCheckbox ? isMediaCheckbox.checked : false
+            };
+            
+            var forms = getFormsForCategory(cat, casteCat, reservationCategories);
             linksContainer.innerHTML = "";
+
+            if (forms.length === 0) {
+                box.classList.add("hidden");
+                return;
+            }
 
             forms.forEach(function (f) {
                 var row = document.createElement("div");
@@ -249,13 +354,31 @@
             box.classList.remove("hidden");
         }
 
+        // Listen to income category changes
         if (categorySelect) {
-            categorySelect.addEventListener("change", function () {
-                renderForms(this.value);
-            });
-
-            // Initial render for default/loaded value
-            renderForms(categorySelect.value);
+            categorySelect.addEventListener("change", renderForms);
         }
+
+        // Listen to caste category changes
+        if (casteCategorySelect) {
+            casteCategorySelect.addEventListener("change", renderForms);
+        }
+
+        // Listen to reservation category checkbox changes
+        if (isDisabledCheckbox) {
+            isDisabledCheckbox.addEventListener("change", renderForms);
+        }
+        if (isSingleWomanCheckbox) {
+            isSingleWomanCheckbox.addEventListener("change", renderForms);
+        }
+        if (isTransgenderCheckbox) {
+            isTransgenderCheckbox.addEventListener("change", renderForms);
+        }
+        if (isMediaCheckbox) {
+            isMediaCheckbox.addEventListener("change", renderForms);
+        }
+
+        // Initial render
+        renderForms();
     })();
 </script>
