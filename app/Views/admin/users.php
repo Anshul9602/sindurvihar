@@ -1,3 +1,8 @@
+<?php
+    $session = session();
+    $errorMessage = $session->getFlashdata('error') ?? null;
+?>
+
 <!-- Title Section -->
 <div class="mb-6">
     <h1 class="text-2xl font-bold mb-2" style="color:#0F1F3F;">
@@ -52,6 +57,14 @@
         </form>
     </div>
 </div>
+
+<?php if ($errorMessage): ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            alert(<?= json_encode($errorMessage) ?>);
+        });
+    </script>
+<?php endif; ?>
 
 <!-- Users List Section -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200">

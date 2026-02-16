@@ -8,6 +8,7 @@ use App\Models\UserModel;
 use App\Models\PaymentModel;
 use App\Models\PlotModel;
 use App\Models\AllotmentModel;
+use App\Models\ApplicationDocumentModel;
 
 class AdminPortal extends BaseController
 {
@@ -285,13 +286,36 @@ class AdminPortal extends BaseController
      */
     public function deleteUser($id)
     {
-        $userModel = new UserModel();
+        $userModel        = new UserModel();
+        $applicationModel = new ApplicationModel();
+        $allotmentModel   = new AllotmentModel();
+
         $user = $userModel->find($id);
 
         if (! $user) {
             return redirect()->to('/admin/users')->with('error', 'User not found');
         }
 
+        // Check if user is a lottery winner (has any allotment)
+        $winnerAllotment = $allotmentModel
+            ->select('allotments.id')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->where('applications.user_id', $id)
+            ->first();
+
+        if ($winnerAllotment) {
+            return redirect()->to('/admin/users')
+                ->with('error', 'This user cannot be deleted because they are a lottery winner and have an allotment.');
+        }
+
+        // Check if user has any application records
+        $hasApplication = $applicationModel->where('user_id', $id)->first();
+        if ($hasApplication) {
+            return redirect()->to('/admin/users')
+                ->with('error', 'This user cannot be deleted because they have submitted an application linked to the database.');
+        }
+
+        // Safe to delete (no dependent records)
         $userModel->delete($id);
 
         return redirect()->to('/admin/users')->with('success', 'User deleted successfully.');
@@ -1080,8 +1104,241 @@ class AdminPortal extends BaseController
 
     public function schemes()
     {
+        $plotModel      = new PlotModel();
+        $applicationModel = $this->applicationModel;
+        $documentModel  = new ApplicationDocumentModel();
+
+        // 1) Scheme basic info (using real data where possible)
+        $plots = $plotModel->findAll();
+        $totalPlots = count($plots);
+
+        $incomeGroups = [
+            'EWS' => 0,
+            'LIG' => 0,
+            'MIG' => 0,
+            'HIG' => 0,
+        ];
+
+        // Count plots by income group (EWS/LIG/MIG/HIG). MIG aggregates MIG-A and MIG-B.
+        foreach ($plots as $plot) {
+            $cat = strtoupper($plot['category'] ?? '');
+            if ($cat === 'EWS') {
+                $incomeGroups['EWS']++;
+            } elseif ($cat === 'LIG') {
+                $incomeGroups['LIG']++;
+            } elseif ($cat === 'MIG' || $cat === 'MIG-A' || $cat === 'MIG-B') {
+                $incomeGroups['MIG']++;
+            } elseif ($cat === 'HIG') {
+                $incomeGroups['HIG']++;
+            }
+        }
+
+        $data['scheme'] = [
+            'name'          => 'Sindoor Vihar',
+            'total_plots'   => $totalPlots,
+            'income_groups' => $incomeGroups,
+            // These dates could later come from a config table; for now keep placeholders
+            'last_date'     => '12 Feb 2026',
+            'lottery_date'  => null,
+            'status'        => 'closed',
+        ];
+
+        // 2) Reservation summary per lottery category using current plot counts
+        $lotteryCategories = ['Govt', 'ST', 'SC', 'Media', 'Transgender', 'Army', 'General'];
+        $categoryPlotCounts = array_fill_keys($lotteryCategories, 0);
+        foreach ($plots as $plot) {
+            $cat = $plot['category'] ?? '';
+            if (isset($categoryPlotCounts[$cat])) {
+                $categoryPlotCounts[$cat]++;
+            } elseif (strtoupper($cat) === 'RESIDENTIAL') {
+                // Treat residential plots as General for summary
+                $categoryPlotCounts['General']++;
+            }
+        }
+
+        // Reservation Summary (booklet-based, not dynamic)
+        $reservationSummary = [
+            [
+                'category'    => 'Govt',
+                'total_plots' => 15,
+                'disabled'    => 1,
+                'single'      => 1,
+                'general'     => 13,
+            ],
+            [
+                'category'    => 'ST',
+                'total_plots' => 10,
+                'disabled'    => 1,
+                'single'      => 1,
+                'general'     => 8,
+            ],
+            [
+                'category'    => 'SC',
+                'total_plots' => 13,
+                'disabled'    => 1,
+                'single'      => 1,
+                'general'     => 11,
+            ],
+            [
+                'category'    => 'Media',
+                'total_plots' => 3,
+                'disabled'    => 0,
+                'single'      => 0,
+                'general'     => 3,
+            ],
+            [
+                'category'    => 'Transgender',
+                'total_plots' => 3,
+                'disabled'    => 0,
+                'single'      => 0,
+                'general'     => 3,
+            ],
+            [
+                'category'    => 'Army',
+                'total_plots' => 15,
+                'disabled'    => 1,
+                'single'      => 2,
+                'general'     => 12,
+            ],
+            [
+                'category'    => 'General',
+                'total_plots' => 93,
+                'disabled'    => 5,
+                'single'      => 9,
+                'general'     => 79,
+            ],
+            [
+                'category'    => 'Total',
+                'total_plots' => 152,
+                'disabled'    => 9,
+                'single'      => 14,
+                'general'     => 129,
+            ],
+        ];
+        $data['reservationSummary'] = $reservationSummary;
+
+        // 3) Application Status Summary by income group
+        $applicationSummary = [];
+        foreach ($incomeGroups as $group => $dummy) {
+            $total     = $applicationModel->where('income_category', $group)->countAllResults();
+            $verified  = $applicationModel->where('income_category', $group)->where('status', 'verified')->countAllResults();
+            $rejected  = $applicationModel->where('income_category', $group)->where('status', 'rejected')->countAllResults();
+            $applicationSummary[] = [
+                'group'     => $group,
+                'total'     => $total,
+                'verified'  => $verified,
+                'rejected'  => $rejected,
+            ];
+        }
+        $data['applicationSummary'] = $applicationSummary;
+
+        // 4) Category-wise applicant count for selected lottery category
+        $selectedCategory = $this->request->getGet('category') ?? 'General';
+        $catUpper = strtoupper($selectedCategory);
+
+        $applications = $applicationModel
+            ->select('applications.*, users.name as user_name, users.mobile, users.category as user_category')
+            ->join('users', 'users.id = applications.user_id', 'left')
+            ->where('applications.status', 'verified')
+            ->findAll();
+
+        $eligibleApps = [];
+        foreach ($applications as $app) {
+            $userCategory     = $app['user_category'] ?? null;
+            $casteCategory    = $app['caste_category'] ?? $userCategory;
+            $appServiceCat    = $app['income_category'] ?? null;
+
+            $casteMatch = false;
+            if ($catUpper === 'MEDIA') {
+                $casteMatch = !empty($app['is_media']) && $app['is_media'] == 1;
+            } elseif ($catUpper === 'TRANSGENDER') {
+                $casteMatch = !empty($app['is_transgender']) && $app['is_transgender'] == 1;
+            } elseif ($catUpper === 'ARMY') {
+                $casteMatch = ($casteCategory && strtoupper($casteCategory) === 'ARMY') ||
+                              (!empty($app['is_army']) && $app['is_army'] == 1);
+            } elseif ($catUpper === 'GOVT') {
+                $casteMatch = ($casteCategory && strtoupper($casteCategory) === 'GOVT') ||
+                              ($appServiceCat && strtoupper($appServiceCat) === 'GOVT');
+            } else {
+                if ($casteCategory && strtoupper($casteCategory) === $catUpper) {
+                    $casteMatch = true;
+                }
+            }
+
+            if (! $casteMatch) {
+                continue;
+            }
+
+            // Service category is not restrictive here (we just want counts)
+            $eligibleApps[] = $app;
+        }
+
+        $bucketCounts = [
+            'disabled'     => 0,
+            'single_woman' => 0,
+            'transgender'  => 0,
+            'army'         => 0,
+            'general'      => 0,
+        ];
+        foreach ($eligibleApps as $app) {
+            if (!empty($app['is_disabled'])) {
+                $bucketCounts['disabled']++;
+            } elseif (!empty($app['is_single_woman'])) {
+                $bucketCounts['single_woman']++;
+            } elseif (!empty($app['is_transgender'])) {
+                $bucketCounts['transgender']++;
+            } elseif (!empty($app['is_army'])) {
+                $bucketCounts['army']++;
+            } else {
+                $bucketCounts['general']++;
+            }
+        }
+
+        $data['categorySummary'] = [
+            'category'         => $selectedCategory,
+            'buckets'          => $bucketCounts,
+            'total_eligible'   => array_sum($bucketCounts),
+            'quota_plots'      => $categoryPlotCounts[$selectedCategory] ?? 0,
+        ];
+
+        // 5) Lottery readiness indicator
+        $verifiedApps = $applicationModel->where('status', 'verified')->findAll();
+        $verifiedCount = count($verifiedApps);
+
+        $verifiedWithDocs = 0;
+        if ($verifiedCount > 0) {
+            foreach ($verifiedApps as $app) {
+                $doc = $documentModel
+                    ->where('application_id', $app['id'])
+                    ->first();
+                if ($doc && (
+                    !empty($doc['has_identity_proof']) ||
+                    !empty($doc['has_income_proof']) ||
+                    !empty($doc['has_residence_proof'])
+                )) {
+                    $verifiedWithDocs++;
+                }
+            }
+        }
+
+        $allDocsVerified = ($verifiedCount > 0 && $verifiedWithDocs === $verifiedCount);
+        $plotsAvailable  = $totalPlots > 0;
+        $reservationsCalculated = $totalPlots > 0; // since we calculated summary from plots
+        $aadhaarPending = $applicationModel->where('status', 'under_verification')->countAllResults();
+
+        $lotteryReady = $plotsAvailable && $verifiedCount > 0 && $reservationsCalculated && $allDocsVerified && ($aadhaarPending === 0);
+
+        $data['readiness'] = [
+            'plots_available'        => $plotsAvailable,
+            'verified_applications'  => $verifiedCount,
+            'all_docs_verified'      => $allDocsVerified,
+            'reservations_calculated'=> $reservationsCalculated,
+            'aadhaar_pending'        => $aadhaarPending,
+            'ready'                  => $lotteryReady,
+        ];
+
         return view('layout/admin_header')
-            . view('admin/schemes')
+            . view('admin/schemes', $data)
             . view('layout/admin_footer');
     }
 

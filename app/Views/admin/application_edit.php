@@ -13,7 +13,7 @@
         <?= esc(lang('App.adminEditApplication')) ?>
     </h1>
     <p class="text-sm" style="color: #6B7280;">
-        Application ID: <?= esc($application['id']) ?>
+        <?= esc(lang('App.statusApplicationId')) ?> <?= esc($application['id']) ?>
     </p>
 </div>
 
@@ -238,11 +238,11 @@
             <?php $currentStatus = old('status', $application['status'] ?? 'draft'); ?>
             <select id="status" name="status"
                     class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="draft" <?= $currentStatus === 'draft' ? 'selected' : '' ?>>Draft</option>
-                <option value="submitted" <?= $currentStatus === 'submitted' ? 'selected' : '' ?>>Submitted</option>
-                <option value="under_verification" <?= $currentStatus === 'under_verification' ? 'selected' : '' ?>>Under Verification</option>
-                <option value="verified" <?= $currentStatus === 'verified' ? 'selected' : '' ?>>Verified</option>
-                <option value="rejected" <?= $currentStatus === 'rejected' ? 'selected' : '' ?>>Rejected</option>
+                <option value="draft" <?= $currentStatus === 'draft' ? 'selected' : '' ?>><?= esc(lang('App.statusDraft')) ?></option>
+                <option value="submitted" <?= $currentStatus === 'submitted' ? 'selected' : '' ?>><?= esc(lang('App.statusSubmitted')) ?></option>
+                <option value="under_verification" <?= $currentStatus === 'under_verification' ? 'selected' : '' ?>><?= esc(lang('App.statusUnderVerification')) ?></option>
+                <option value="verified" <?= $currentStatus === 'verified' ? 'selected' : '' ?>><?= esc(lang('App.statusVerified')) ?></option>
+                <option value="rejected" <?= $currentStatus === 'rejected' ? 'selected' : '' ?>><?= esc(lang('App.statusRejected')) ?></option>
             </select>
         </div>
     </div>

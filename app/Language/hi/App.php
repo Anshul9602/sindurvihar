@@ -69,16 +69,16 @@ return [
     'statusLotteryParticipation' => 'आप लॉटरी राउंड में भाग ले रहे हैं।',
     'statusFooterText'           => 'आप इस पृष्ठ या डैशबोर्ड से आगे की सभी अद्यतन जानकारी देख सकते हैं।',
 
-    // Status labels
-    'statusSubmitted'            => 'प्रेषित',
-    'statusPaid'                 => 'भुगतान किया गया',
-    'statusUnderVerification'    => 'सत्यापनाधीन',
-    'statusVerified'             => 'सत्यापित',
-    'statusRejected'             => 'अस्वीकृत',
-    'statusSelected'             => 'लॉटरी में चयनित',
-    'statusAllotted'             => 'आवंटित',
-    'statusPossession'           => 'कब्जा प्रदान',
-    'statusDraft'                => 'प्रारूप',
+    // Status labels (bilingual: English / Hindi)
+    'statusSubmitted'            => 'Submitted / प्रेषित',
+    'statusPaid'                 => 'Paid / भुगतान किया गया',
+    'statusUnderVerification'    => 'Under Verification / सत्यापनाधीन',
+    'statusVerified'             => 'Verified / सत्यापित',
+    'statusRejected'             => 'Rejected / अस्वीकृत',
+    'statusSelected'             => 'Selected in Lottery / लॉटरी में चयनित',
+    'statusAllotted'             => 'Allotted / आवंटित',
+    'statusPossession'           => 'Possession Granted / कब्जा प्रदान',
+    'statusDraft'                => 'Draft / प्रारूप',
 
     // Eligibility page
     'eligibilityTitle'           => 'पात्रता जाँच (सिन्दूर विहार)',
@@ -428,6 +428,7 @@ return [
     'adminNoUsersFound'           => 'कोई उपयोगकर्ता नहीं मिला।',
     'adminUserEmailLabel'         => 'ईमेल',
     'adminUserLanguageLabel'      => 'भाषा',
+    'adminUserCategoryLabel'      => 'उपयोगकर्ता श्रेणी',
     'adminUserDetailTitle'        => 'उपयोगकर्ता विवरण',
     'adminUserDetailSubtitle'     => 'पंजीकृत उपयोगकर्ता प्रोफ़ाइल का संक्षिप्त विवरण।',
 

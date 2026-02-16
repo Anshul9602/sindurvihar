@@ -70,16 +70,16 @@ return [
     'statusLotteryParticipation' => 'You are participating in the lottery round.',
     'statusFooterText'           => 'You can track further updates from this page or the dashboard.',
 
-    // Status labels
-    'statusSubmitted'            => 'Submitted',
-    'statusPaid'                 => 'Paid',
-    'statusUnderVerification'    => 'Under Verification',
-    'statusVerified'             => 'Verified',
-    'statusRejected'             => 'Rejected',
-    'statusSelected'             => 'Selected in Lottery',
-    'statusAllotted'             => 'Allotted',
-    'statusPossession'           => 'Possession Granted',
-    'statusDraft'                => 'Draft',
+    // Status labels (bilingual: English / Hindi)
+    'statusSubmitted'            => 'Submitted / प्रेषित',
+    'statusPaid'                 => 'Paid / भुगतान किया गया',
+    'statusUnderVerification'    => 'Under Verification / सत्यापनाधीन',
+    'statusVerified'             => 'Verified / सत्यापित',
+    'statusRejected'             => 'Rejected / अस्वीकृत',
+    'statusSelected'             => 'Selected in Lottery / लॉटरी में चयनित',
+    'statusAllotted'             => 'Allotted / आवंटित',
+    'statusPossession'           => 'Possession Granted / कब्जा प्रदान',
+    'statusDraft'                => 'Draft / प्रारूप',
 
     // Eligibility page
     'eligibilityTitle'           => 'Eligibility Check (Sindoor Vihar)',
@@ -461,6 +461,7 @@ return [
     'adminNoUsersFound'           => 'No users found.',
     'adminUserEmailLabel'         => 'Email',
     'adminUserLanguageLabel'      => 'Language',
+    'adminUserCategoryLabel'      => 'User Category',
     'adminUserDetailTitle'        => 'User Detail',
     'adminUserDetailSubtitle'     => 'Overview of the registered user profile.',
 
@@ -627,6 +628,37 @@ return [
     'adminPlotNotFound'              => 'Plot not found',
     'adminBackToPlots'               => 'Back to Plots',
     'adminPlotTotalQuantityMismatch' => 'Total quantity must equal the sum of all category quantities.',
+
+    // Admin schemes / lottery readiness
+    'adminSchemesTitle'                => 'Schemes',
+    'adminSchemeManageTitle'           => 'Manage Schemes',
+    'adminSchemeInfoTitle'             => 'Scheme Information',
+    'adminSchemeName'                  => 'Scheme Name',
+    'adminSchemeTotalPlots'           => 'Total Plots',
+    'adminSchemeIncomeGroup'          => 'Income Group',
+    'adminSchemeLastDate'             => 'Application Last Date',
+    'adminSchemeLotteryDate'          => 'Lottery Date',
+    'adminSchemeStatus'               => 'Status',
+    'adminSchemeStatusOpen'           => 'Applications Open',
+    'adminSchemeStatusClosed'         => 'Applications Closed',
+    'adminReservationSummaryTitle'    => 'Reservation Summary',
+    'adminReservationCategory'        => 'Category',
+    'adminReservationTotalPlots'      => 'Total Plots',
+    'adminReservationDisabled'        => '5% Disabled',
+    'adminReservationSingleWoman'     => '10% Single Woman/Widow',
+    'adminReservationGeneral'         => 'General',
+    'adminApplicationSummaryTitle'    => 'Application Status Summary',
+    'adminLotteryCategorySummaryTitle'=> 'Category-wise Applicant Count',
+    'adminLotteryReadinessTitle'      => 'Lottery Readiness',
+    'adminLotteryReady'               => 'READY',
+    'adminLotteryNotReady'            => 'NOT READY',
+    'adminLotteryCheckDocuments'      => 'All documents verified',
+    'adminLotteryCheckReservations'   => 'Reservation calculated',
+    'adminLotteryCheckPlots'          => 'Plots available',
+    'adminLotteryCheckAadhaarPending' => 'Aadhaar verification pending: {count} users',
+    'adminLotteryCannotRun'           => 'Lottery cannot be run until all critical checks are green.',
+    'adminLotteryCanRun'              => 'Lottery can be run. Please proceed when ready.',
+    'adminLotteryRunFromHere'         => 'Go to Lottery Page',
 ];
 
 
