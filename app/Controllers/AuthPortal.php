@@ -4,16 +4,19 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 use App\Models\ForgotOtpModel;
+use App\Models\AadhaarOtpModel;
 
 class AuthPortal extends BaseController
 {
     protected $userModel;
     protected $forgotOtpModel;
+    protected $aadhaarOtpModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
         $this->forgotOtpModel = new ForgotOtpModel();
+        $this->aadhaarOtpModel = new AadhaarOtpModel();
     }
 
     /**
@@ -124,6 +127,38 @@ class AuthPortal extends BaseController
                 return redirect()->back()->withInput()->with('error', 'Password must be at least 6 characters long');
             }
 
+            // Check Aadhaar verification (required for registration)
+            $aadhaar = trim((string) $this->request->getPost('aadhaar'));
+            $aadhaar = preg_replace('/[\s\-]/', '', $aadhaar);
+
+            if (empty($aadhaar)) {
+                return redirect()->back()->withInput()->with('error', 'Aadhaar number is required for registration');
+            }
+
+            if (!preg_match('/^[0-9]{12}$/', $aadhaar)) {
+                return redirect()->back()->withInput()->with('error', 'Please enter a valid 12-digit Aadhaar number');
+            }
+
+            // Check if Aadhaar is verified (check by aadhaar number, user_id will be 0 or session-based)
+            // For registration, we check if Aadhaar is verified (user_id can be 0 or from session if user verified while logged in)
+            $verifiedAadhaar = $this->aadhaarOtpModel
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 1)
+                ->orderBy('updated_at', 'DESC')
+                ->first();
+
+            if (!$verifiedAadhaar) {
+                return redirect()->back()->withInput()->with('error', 'Please verify your Aadhaar number before completing registration.');
+            }
+
+            // Check if Aadhaar is already linked to a different registered user
+            if ($verifiedAadhaar['user_id'] > 0) {
+                $existingUser = $this->userModel->find($verifiedAadhaar['user_id']);
+                if ($existingUser) {
+                    return redirect()->back()->withInput()->with('error', 'This Aadhaar number is already registered by another user. Please use a different Aadhaar number or login with your existing account.');
+                }
+            }
+
             // Create user
             $data = [
                 'mobile'        => $mobile,
@@ -136,6 +171,22 @@ class AuthPortal extends BaseController
 
             if ($this->userModel->insert($data)) {
                 $userId = $this->userModel->getInsertID();
+
+                // Link verified Aadhaar to this new user
+                $this->aadhaarOtpModel->update($verifiedAadhaar['id'], [
+                    'user_id' => $userId
+                ]);
+
+                // Auto-fill user name from KYC if available and name is empty or different
+                if (!empty($verifiedAadhaar['kyc_name'])) {
+                    // Use KYC name if it's more complete or if user name is empty
+                    if (empty($name) || strlen($verifiedAadhaar['kyc_name']) > strlen($name)) {
+                        $this->userModel->update($userId, [
+                            'name' => $verifiedAadhaar['kyc_name']
+                        ]);
+                        $data['name'] = $verifiedAadhaar['kyc_name'];
+                    }
+                }
 
                 // Auto-login after registration
                 session()->set([

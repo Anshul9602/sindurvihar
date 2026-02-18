@@ -629,10 +629,21 @@ class AdminPortal extends BaseController
             }
         }
 
+        // Get all allotted plots (winners)
+        $allotmentModel = new AllotmentModel();
+        $allottedPlots = $allotmentModel
+            ->select('allotments.*, applications.id as application_id, applications.full_name, applications.mobile as application_mobile, users.name as user_name, users.mobile as user_mobile, plots.plot_number, plots.category as plot_category, plots.area, plots.location')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->join('users', 'users.id = applications.user_id', 'left')
+            ->join('plots', 'plots.plot_number = allotments.plot_number', 'left')
+            ->orderBy('allotments.created_at', 'DESC')
+            ->findAll();
+
         $data = [
             'applications'     => $applications,
             'plots'            => $availablePlots,
             'plotsByCategory'  => $plotsByCategory,
+            'allottedPlots'    => $allottedPlots,
         ];
 
         return view('layout/admin_header')

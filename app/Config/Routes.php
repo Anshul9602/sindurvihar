@@ -31,6 +31,9 @@ $routes->group('user', static function ($routes) {
     $routes->get('application/status', 'UserPortal::applicationStatus');
     $routes->get('application', 'UserPortal::application');
     $routes->post('application/submit', 'UserPortal::submitApplication');
+    $routes->post('application/aadhaar/generate-otp', 'UserPortal::generateAadhaarOtp');
+    $routes->post('application/aadhaar/verify-otp', 'UserPortal::verifyAadhaarOtp');
+    $routes->post('application/aadhaar/check-verification', 'UserPortal::checkAadhaarVerification');
     $routes->match(['get', 'post'], 'documents', 'UserPortal::documents');
     // Payment: allow GET (summary) + POST (record payment)
     $routes->match(['get', 'post'], 'payment', 'UserPortal::payment');

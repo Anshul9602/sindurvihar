@@ -28,6 +28,23 @@
     $application = $application ?? null;
     $isEditMode = $isEditMode ?? false;
     $userCategory = $userCategory ?? null;
+    $user = $user ?? null;
+    $eligibility = $eligibility ?? null;
+    $verifiedAadhaar = $verifiedAadhaar ?? null;
+    
+    // Auto-fill values: Priority: application data > verified Aadhaar KYC > user/eligibility data
+    // Name: application > Aadhaar KYC > user registration
+    $autoFullName = old('full_name', $application['full_name'] ?? ($verifiedAadhaar['kyc_name'] ?? ($user['name'] ?? '')));
+    // Mobile: application > user registration
+    $autoMobile = old('mobile', $application['mobile'] ?? ($user['mobile'] ?? ''));
+    // Age: application > eligibility (Aadhaar doesn't have age, calculate from DOB if needed)
+    $autoAge = old('age', $application['age'] ?? ($eligibility['age'] ?? ''));
+    // Income: application > eligibility
+    $autoIncome = old('income', $application['income'] ?? ($eligibility['income'] ?? ''));
+    // Address: application > Aadhaar KYC
+    $autoAddress = old('address', $application['address'] ?? ($verifiedAadhaar['kyc_address'] ?? ''));
+    // Aadhaar: application > verified Aadhaar (last 4 digits + full if available)
+    $autoAadhaar = old('aadhaar', $application['aadhaar'] ?? ($verifiedAadhaar ? $verifiedAadhaar['aadhaar_number'] : ''));
     ?>
 
     <form id="application-form"
@@ -42,14 +59,51 @@
             <div>
                 <label for="app-name" class="block text-sm font-medium mb-1"><?= esc(lang('App.appFullNameLabel')) ?></label>
                 <input id="app-name" name="full_name" type="text" required
-                       value="<?= esc(old('full_name', $application['full_name'] ?? '')) ?>"
+                       value="<?= esc($autoFullName) ?>"
                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
             </div>
             <div>
                 <label for="app-aadhaar" class="block text-sm font-medium mb-1"><?= esc(lang('App.appAadhaarLabel')) ?></label>
-                <input id="app-aadhaar" name="aadhaar" type="text" required
-                       value="<?= esc(old('aadhaar', $application['aadhaar'] ?? '')) ?>"
-                       class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                <div class="flex gap-2 items-center">
+                    <input id="app-aadhaar" name="aadhaar" type="text" required maxlength="12" pattern="[0-9]{12}"
+                           value="<?= esc($autoAadhaar) ?>"
+                           class="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                           placeholder="Enter 12-digit Aadhaar number" <?= !empty($verifiedAadhaar) && $verifiedAadhaar['verified'] == 1 ? 'readonly' : '' ?>>
+                    <button type="button" id="generate-otp-btn" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 transition whitespace-nowrap">
+                        <?= esc(lang('App.appAadhaarVerifyButton')) ?>
+                    </button>
+                    <div id="aadhaar-verified-icon" class="hidden flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500"><?= esc(lang('App.appAadhaarVerificationMandatory')) ?></p>
+            </div>
+        </div>
+
+        <!-- Aadhaar OTP Verification Section -->
+        <div id="aadhaar-otp-section" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h3 class="text-sm font-semibold mb-3" style="color:#1D4ED8;"><?= esc(lang('App.appAadhaarOtpVerification')) ?></h3>
+            <div id="otp-generate-status" class="mb-3 text-sm"></div>
+            <div id="otp-input-section" class="hidden">
+                <div class="flex gap-2 mb-2">
+                    <input id="aadhaar-otp" type="text" maxlength="6" pattern="[0-9]{6}"
+                           placeholder="<?= esc(lang('App.appAadhaarOtpPlaceholder')) ?>"
+                           class="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
+                    <button type="button" id="verify-otp-btn"
+                            class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700 transition">
+                        <?= esc(lang('App.appAadhaarVerifyOtp')) ?>
+                    </button>
+                </div>
+                <button type="button" id="resend-otp-btn" 
+                        class="text-sm text-blue-600 hover:underline">
+                    <?= esc(lang('App.appAadhaarResendOtp')) ?>
+                </button>
+            </div>
+            <div id="aadhaar-verified-status" class="hidden mt-2 p-2 bg-green-100 border border-green-300 rounded text-sm text-green-800">
+                ✓ <?= esc(lang('App.appAadhaarVerifiedSuccess')) ?>
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -62,13 +116,13 @@
             <div>
                 <label for="app-age" class="block text-sm font-medium mb-1"><?= esc(lang('App.appAgeLabel')) ?></label>
                 <input id="app-age" name="age" type="number" min="18" max="70" required
-                       value="<?= esc(old('age', $application['age'] ?? '')) ?>"
+                       value="<?= esc($autoAge) ?>"
                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
             </div>
             <div>
                 <label for="app-mobile" class="block text-sm font-medium mb-1"><?= esc(lang('App.appMobileLabel')) ?></label>
                 <input id="app-mobile" name="mobile" type="text" required
-                       value="<?= esc(old('mobile', $application['mobile'] ?? '')) ?>"
+                       value="<?= esc($autoMobile) ?>"
                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
             </div>
         </div>
@@ -78,7 +132,7 @@
             <div>
                 <label for="app-address" class="block text-sm font-medium mb-1"><?= esc(lang('App.appAddressLabel')) ?></label>
                 <input id="app-address" name="address" type="text" required
-                       value="<?= esc(old('address', $application['address'] ?? '')) ?>"
+                       value="<?= esc($autoAddress) ?>"
                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -109,7 +163,7 @@
             <div>
                 <label for="app-income" class="block text-sm font-medium mb-1"><?= esc(lang('App.appAnnualIncomeLabel')) ?></label>
                 <input id="app-income" name="income" type="number" required
-                       value="<?= esc(old('income', $application['income'] ?? '')) ?>"
+                       value="<?= esc($autoIncome) ?>"
                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
             </div>
             <div>
@@ -216,11 +270,14 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 mt-4">
-            <button type="submit"
-                    class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold text-white"
-                    style="background-color: #0747A6;">
+            <button type="submit" id="submit-application-btn"
+                    class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background-color: #0747A6;" disabled>
                 <?= $isEditMode ? esc(lang('App.appUpdateButton') ?? 'Update Application') : esc(lang('App.appSubmitButton')) ?>
             </button>
+            <div id="aadhaar-verification-required" class="text-sm text-red-600 mt-2 hidden">
+                Please verify your Aadhaar number before submitting the application.
+            </div>
             <?php if ($isEditMode): ?>
                 <a href="/user/dashboard"
                    class="w-full sm:w-auto px-6 py-2 rounded-md font-semibold border-2 text-center"
@@ -380,5 +437,249 @@
 
         // Initial render
         renderForms();
+    })();
+
+    // Aadhaar OTP Verification
+    (function() {
+        var aadhaarInput = document.getElementById('app-aadhaar');
+        var generateOtpBtn = document.getElementById('generate-otp-btn');
+        var otpSection = document.getElementById('aadhaar-otp-section');
+        var otpInputSection = document.getElementById('otp-input-section');
+        var otpGenerateStatus = document.getElementById('otp-generate-status');
+        var otpInput = document.getElementById('aadhaar-otp');
+        var verifyOtpBtn = document.getElementById('verify-otp-btn');
+        var resendOtpBtn = document.getElementById('resend-otp-btn');
+        var verifiedStatus = document.getElementById('aadhaar-verified-status');
+        var submitBtn = document.getElementById('submit-application-btn');
+        var verificationRequiredMsg = document.getElementById('aadhaar-verification-required');
+        var verifiedIcon = document.getElementById('aadhaar-verified-icon');
+        var isAadhaarVerified = false;
+
+        // Check if Aadhaar is already verified (on input change or page load)
+        function checkExistingVerification() {
+            var aadhaar = aadhaarInput.value.trim().replace(/[\s\-]/g, '');
+            if (aadhaar.length === 12 && /^[0-9]{12}$/.test(aadhaar)) {
+                fetch('<?= site_url("user/application/aadhaar/check-verification") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ aadhaar: aadhaar })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.verified) {
+                        // Already verified - show tick directly and hide verification section
+                        isAadhaarVerified = true;
+                        otpSection.classList.add('hidden'); // Hide entire verification section
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (verificationRequiredMsg) verificationRequiredMsg.classList.add('hidden');
+                        
+                        // Replace verify button with green checkmark
+                        if (generateOtpBtn) {
+                            generateOtpBtn.classList.add('hidden');
+                        }
+                        if (verifiedIcon) {
+                            verifiedIcon.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.error('Error checking verification:', err));
+            }
+        }
+
+        // Check on page load if Aadhaar is already filled and verified
+        <?php if (!empty($verifiedAadhaar) && $verifiedAadhaar['verified'] == 1): ?>
+        // Aadhaar already verified from registration - auto-show verified status
+        if (aadhaarInput && aadhaarInput.value.length === 12) {
+            isAadhaarVerified = true;
+            if (otpSection) otpSection.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
+            if (verificationRequiredMsg) verificationRequiredMsg.classList.add('hidden');
+            if (generateOtpBtn) generateOtpBtn.classList.add('hidden');
+            if (verifiedIcon) verifiedIcon.classList.remove('hidden');
+        }
+        <?php endif; ?>
+
+        // Generate OTP
+        if (generateOtpBtn) {
+            generateOtpBtn.addEventListener('click', function() {
+                var aadhaar = aadhaarInput.value.trim();
+                
+                if (aadhaar.length !== 12 || !/^[0-9]{12}$/.test(aadhaar)) {
+                    alert('Please enter a valid 12-digit Aadhaar number');
+                    return;
+                }
+
+                generateOtpBtn.disabled = true;
+                generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarOtpSending')) ?>';
+                otpGenerateStatus.innerHTML = '<span class="text-blue-600"><?= esc(lang('App.appAadhaarOtpSending')) ?></span>';
+
+                fetch('<?= site_url("user/application/aadhaar/generate-otp") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ aadhaar: aadhaar })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Network error');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    generateOtpBtn.disabled = false;
+                    generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyButton')) ?>';
+                    
+                    if (data.success) {
+                        // Check if already verified by same user
+                        if (data.verified && data.same_user) {
+                            // Already verified by same user - show tick directly and hide verification section
+                            isAadhaarVerified = true;
+                            otpSection.classList.add('hidden'); // Hide entire verification section
+                            submitBtn.disabled = false;
+                            verificationRequiredMsg.classList.add('hidden');
+                            
+                            // Replace verify button with green checkmark
+                            if (generateOtpBtn) {
+                                generateOtpBtn.classList.add('hidden');
+                            }
+                            if (verifiedIcon) {
+                                verifiedIcon.classList.remove('hidden');
+                            }
+                        } else {
+                            // Generate new OTP
+                            otpSection.classList.remove('hidden');
+                            otpInputSection.classList.remove('hidden');
+                            otpGenerateStatus.innerHTML = '<span class="text-green-600">✓ ' + data.message + '</span>';
+                            if (data.otp) {
+                                otpGenerateStatus.innerHTML += '<br><span class="text-xs text-gray-600">Demo OTP: ' + data.otp + '</span>';
+                            }
+                            if (otpInput) otpInput.focus();
+                        }
+                    } else {
+                        // Check if Aadhaar is already used by different user
+                        if (data.already_used) {
+                            alert(data.message);
+                            // Clear the Aadhaar input
+                            aadhaarInput.value = '';
+                            aadhaarInput.focus();
+                        } else {
+                            otpSection.classList.remove('hidden');
+                            otpGenerateStatus.innerHTML = '<span class="text-red-600">✗ ' + (data.message || 'Failed to generate OTP') + '</span>';
+                            if (data.debug) {
+                                console.error('Debug info:', data.debug);
+                            }
+                        }
+                    }
+                })
+                .catch(err => {
+                    generateOtpBtn.disabled = false;
+                    generateOtpBtn.textContent = 'Verify';
+                    otpSection.classList.remove('hidden');
+                    otpGenerateStatus.innerHTML = '<span class="text-red-600">✗ Error: ' + err.message + '</span>';
+                    console.error('Error generating OTP:', err);
+                });
+            });
+        }
+
+        // Verify OTP
+        if (verifyOtpBtn) {
+            verifyOtpBtn.addEventListener('click', function() {
+                var aadhaar = aadhaarInput.value.trim();
+                var otp = otpInput.value.trim();
+
+                if (otp.length !== 6 || !/^[0-9]{6}$/.test(otp)) {
+                    alert('Please enter a valid 6-digit OTP');
+                    return;
+                }
+
+                verifyOtpBtn.disabled = true;
+                verifyOtpBtn.textContent = '<?= esc(lang('App.appAadhaarOtpVerifying')) ?>';
+
+                fetch('<?= site_url("user/application/aadhaar/verify-otp") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ aadhaar: aadhaar, otp: otp })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    verifyOtpBtn.disabled = false;
+                    verifyOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyOtp')) ?>';
+
+                    if (data.success && data.verified) {
+                        isAadhaarVerified = true;
+                        otpSection.classList.add('hidden'); // Hide entire verification section after successful verification
+                        submitBtn.disabled = false;
+                        verificationRequiredMsg.classList.add('hidden');
+                        
+                        // Replace verify button with green checkmark
+                        if (generateOtpBtn) {
+                            generateOtpBtn.classList.add('hidden');
+                        }
+                        if (verifiedIcon) {
+                            verifiedIcon.classList.remove('hidden');
+                        }
+                    } else {
+                        alert(data.message || 'Invalid OTP. Please try again.');
+                    }
+                })
+                .catch(err => {
+                    verifyOtpBtn.disabled = false;
+                    verifyOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyOtp')) ?>';
+                    alert('Error verifying OTP. Please try again.');
+                    console.error('Error verifying OTP:', err);
+                });
+            });
+        }
+
+        // Resend OTP
+        if (resendOtpBtn) {
+            resendOtpBtn.addEventListener('click', function() {
+                if (generateOtpBtn) generateOtpBtn.click();
+            });
+        }
+
+        // Block form submission if Aadhaar not verified
+        var form = document.getElementById('application-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!isAadhaarVerified) {
+                    e.preventDefault();
+                    if (verificationRequiredMsg) verificationRequiredMsg.classList.remove('hidden');
+                    alert('Please verify your Aadhaar number before submitting the application.');
+                    return false;
+                }
+            });
+        }
+
+        // Check existing verification on page load
+        if (aadhaarInput && aadhaarInput.value.trim().length === 12) {
+            checkExistingVerification();
+        }
+
+        // Check when Aadhaar input changes (on blur)
+        if (aadhaarInput) {
+            aadhaarInput.addEventListener('blur', function() {
+                var aadhaar = this.value.trim().replace(/[\s\-]/g, '');
+                if (aadhaar.length === 12 && /^[0-9]{12}$/.test(aadhaar)) {
+                    checkExistingVerification();
+                }
+            });
+        }
+
+        // Allow Enter key to submit OTP
+        if (otpInput) {
+            otpInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && verifyOtpBtn) {
+                    verifyOtpBtn.click();
+                }
+            });
+        }
     })();
 </script>

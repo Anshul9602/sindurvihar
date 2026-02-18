@@ -119,6 +119,80 @@
         </div>
     <?php endif; ?>
 
+    <!-- Win Plots Section -->
+    <?php if (!empty($allottedPlots)): ?>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="font-semibold text-sm" style="color:#374151;">
+                <?= esc(lang('App.adminWinPlotsTitle') ?? 'Win Plots (Allotted Plots)') ?>
+            </h2>
+            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                <?= count($allottedPlots) ?> <?= esc(lang('App.adminTotal')) ?>
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminPlotNumber') ?? 'Plot Number') ?></th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminWinnerName') ?? 'Winner Name') ?></th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminApplicationMobile')) ?></th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminApplicationId') ?? 'Application ID') ?></th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminPlotCategory') ?? 'Category') ?></th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminAllottedDate') ?? 'Allotted Date') ?></th>
+                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminStatus') ?? 'Status') ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($allottedPlots as $allotment): ?>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="px-4 py-3">
+                                <span class="font-semibold" style="color:#10B981;"><?= esc($allotment['plot_number'] ?? 'N/A') ?></span>
+                            </td>
+                            <td class="px-4 py-3" style="color:#111827;">
+                                <?= esc($allotment['full_name'] ?? $allotment['user_name'] ?? 'N/A') ?>
+                            </td>
+                            <td class="px-4 py-3" style="color:#111827;">
+                                <?= esc($allotment['application_mobile'] ?? $allotment['user_mobile'] ?? 'N/A') ?>
+                            </td>
+                            <td class="px-4 py-3" style="color:#111827;">
+                                #<?= esc($allotment['application_id'] ?? 'N/A') ?>
+                            </td>
+                            <td class="px-4 py-3">
+                                <?php if (!empty($allotment['plot_category'])): ?>
+                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
+                                        <?= esc($allotment['plot_category']) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-xs" style="color:#9CA3AF;"><?= esc(lang('App.notProvided') ?? 'Not set') ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3 text-xs" style="color:#6B7280;">
+                                <?= isset($allotment['created_at']) ? esc(date('d M Y', strtotime($allotment['created_at']))) : '—' ?>
+                            </td>
+                            <td class="px-4 py-3">
+                                <?php 
+                                $status = $allotment['status'] ?? 'provisional';
+                                $statusColors = [
+                                    'provisional' => ['bg-yellow-50', 'text-yellow-700'],
+                                    'confirmed' => ['bg-green-50', 'text-green-700'],
+                                    'cancelled' => ['bg-red-50', 'text-red-700'],
+                                ];
+                                $colors = $statusColors[$status] ?? ['bg-gray-50', 'text-gray-700'];
+                                ?>
+                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold <?= $colors[0] ?> <?= $colors[1] ?>">
+                                    <?= esc(ucfirst($status)) ?>
+                                </span>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Verified applications table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -563,7 +637,7 @@
                         const msg = result.message || 'No eligible applications found for this category.';
                         showWinnersPopup([], msg);
                     }
-                }, 60000);
+                }, 30000); // 30 seconds
             }).catch(function () {
                 // Network / server error: stop animation immediately and show error
                 stopLotteryAnimation();
@@ -632,7 +706,7 @@
         }
 
         function showCountdown() {
-            let countdown = 60;
+            let countdown = 30;
             const countdownEl = document.createElement('div');
             countdownEl.className = 'lottery-countdown';
             countdownEl.id = 'lottery-countdown';
@@ -817,7 +891,7 @@
             const plotCards = document.querySelectorAll('.plot-card');
             if (!plotCards.length) return;
 
-            const totalDuration = 60000; // match countdown / lottery duration
+            const totalDuration = 30000; // 30 seconds - match countdown / lottery duration
             const startedAt = Date.now();
 
             function tick() {
@@ -926,7 +1000,7 @@
                             const msg = result.message || 'No eligible applications found for this category.';
                             showWinnersPopup([], msg);
                         }
-                    }, 60000); // 60 seconds delay
+                    }, 30000); // 30 seconds delay
                 }).catch(function () {
                     stopLotteryAnimation();
                     if (errorBox) {

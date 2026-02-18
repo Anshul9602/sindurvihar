@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use App\Models\EligibilityModel;
 use App\Models\PaymentModel;
 use App\Models\ApplicationDocumentModel;
+use App\Models\AadhaarOtpModel;
 
 class UserPortal extends BaseController
 {
@@ -15,6 +16,7 @@ class UserPortal extends BaseController
     protected $eligibilityModel;
     protected $paymentModel;
     protected $documentModel;
+    protected $aadhaarOtpModel;
 
     public function __construct()
     {
@@ -23,6 +25,7 @@ class UserPortal extends BaseController
         $this->eligibilityModel = new EligibilityModel();
         $this->paymentModel = new PaymentModel();
         $this->documentModel = new ApplicationDocumentModel();
+        $this->aadhaarOtpModel = new AadhaarOtpModel();
     }
 
     /**
@@ -253,15 +256,26 @@ class UserPortal extends BaseController
             return redirect()->to('/user/application/edit');
         }
 
-        // Get user's category from registration
+        // Get user's data from registration
         $user = $this->userModel->find($userId);
         $userCategory = $user['category'] ?? null;
 
+        // Get verified Aadhaar KYC data for auto-filling
+        $verifiedAadhaar = $this->aadhaarOtpModel
+            ->where('user_id', $userId)
+            ->where('verified', 1)
+            ->orderBy('updated_at', 'DESC')
+            ->first();
+
         // New application form - no existing application or cannot edit
+        // Pass user and eligibility data for auto-filling
         $data = [
             'application' => null,
             'isEditMode' => false,
             'userCategory' => $userCategory,
+            'user' => $user, // For auto-filling name and mobile
+            'eligibility' => $eligible, // For auto-filling age and income
+            'verifiedAadhaar' => $verifiedAadhaar, // For auto-filling from Aadhaar KYC
         ];
 
         return view('layout/header')
@@ -302,14 +316,24 @@ class UserPortal extends BaseController
             return redirect()->to('/user/dashboard')->with('error', 'Application cannot be edited in its current status.');
         }
 
-        // Get user's category from registration (use it if application doesn't have caste_category)
+        // Get user's data from registration (use it if application doesn't have caste_category)
         $user = $this->userModel->find($userId);
         $userCategory = $user['category'] ?? null;
+
+        // Get verified Aadhaar KYC data for auto-filling
+        $verifiedAadhaar = $this->aadhaarOtpModel
+            ->where('user_id', $userId)
+            ->where('verified', 1)
+            ->orderBy('updated_at', 'DESC')
+            ->first();
 
         $data = [
             'application' => $application,
             'isEditMode' => true,
             'userCategory' => $userCategory,
+            'user' => $user, // For auto-filling name and mobile
+            'eligibility' => $eligible, // For auto-filling age and income
+            'verifiedAadhaar' => $verifiedAadhaar, // For auto-filling from Aadhaar KYC
         ];
 
         return view('layout/header')
@@ -329,10 +353,30 @@ class UserPortal extends BaseController
 
         $userId = session()->get('user_id');
         $applicationId = $this->request->getPost('application_id');
+        $aadhaar = (string) $this->request->getPost('aadhaar');
+
+        // Verify Aadhaar is verified before allowing submission
+        if (!empty($aadhaar)) {
+            $verified = $this->aadhaarOtpModel
+                ->where('user_id', $userId)
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 1)
+                ->first();
+
+            if (!$verified) {
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Please verify your Aadhaar number before submitting the application.'
+                    ]);
+                }
+                return redirect()->back()->withInput()->with('error', 'Please verify your Aadhaar number before submitting the application.');
+            }
+        }
 
         $data = [
             'full_name'                => (string) $this->request->getPost('full_name'),
-            'aadhaar'                  => (string) $this->request->getPost('aadhaar'),
+            'aadhaar'                  => $aadhaar,
             'father_husband_name'      => (string) $this->request->getPost('father_husband_name'),
             'age'                      => (int) $this->request->getPost('age'),
             'mobile'                   => (string) $this->request->getPost('mobile'),
@@ -596,10 +640,37 @@ class UserPortal extends BaseController
                 mkdir($uploadBasePath, 0775, true);
             }
 
+            // Check existing documents to see if files already exist
+            $existing = $this->documentModel
+                ->where('user_id', $userId)
+                ->where('application_id', $application['id'])
+                ->first();
+
+            $existingIdentityFiles = [];
+            $existingIncomeFiles = [];
+            $existingResidenceFiles = [];
+
+            if ($existing) {
+                if (!empty($existing['identity_files'])) {
+                    $existingIdentityFiles = json_decode($existing['identity_files'], true) ?? [];
+                }
+                if (!empty($existing['income_files'])) {
+                    $existingIncomeFiles = json_decode($existing['income_files'], true) ?? [];
+                }
+                if (!empty($existing['residence_files'])) {
+                    $existingResidenceFiles = json_decode($existing['residence_files'], true) ?? [];
+                }
+            }
+
             $identityFiles  = [];
             $incomeFiles    = [];
             $residenceFiles = [];
             $annexureFiles  = [];
+
+            // Validate: If checkbox is checked, must have files (either new uploads or existing)
+            $hasIdentityProof = $this->request->getPost('has_identity_proof') ? 1 : 0;
+            $hasIncomeProof = $this->request->getPost('has_income_proof') ? 1 : 0;
+            $hasResidenceProof = $this->request->getPost('has_residence_proof') ? 1 : 0;
 
             $identityUploads = $this->request->getFileMultiple('identity_files');
             if ($identityUploads) {
@@ -634,14 +705,38 @@ class UserPortal extends BaseController
                 }
             }
 
-            if (! empty($identityFiles)) {
-                $data['identity_files'] = json_encode($identityFiles);
+            // Validation: If checkbox is checked, must have files (new or existing)
+            if ($hasIdentityProof && empty($identityFiles) && empty($existingIdentityFiles)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', lang('App.docIdentityFileRequired') ?? 'Please upload at least one file for identity proof.');
             }
-            if (! empty($incomeFiles)) {
-                $data['income_files'] = json_encode($incomeFiles);
+
+            if ($hasIncomeProof && empty($incomeFiles) && empty($existingIncomeFiles)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', lang('App.docIncomeFileRequired') ?? 'Please upload at least one file for income proof.');
             }
-            if (! empty($residenceFiles)) {
-                $data['residence_files'] = json_encode($residenceFiles);
+
+            if ($hasResidenceProof && empty($residenceFiles) && empty($existingResidenceFiles)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', lang('App.docResidenceFileRequired') ?? 'Please upload at least one file for residence proof.');
+            }
+
+            // Merge new files with existing files
+            $allIdentityFiles = array_merge($existingIdentityFiles, $identityFiles);
+            $allIncomeFiles = array_merge($existingIncomeFiles, $incomeFiles);
+            $allResidenceFiles = array_merge($existingResidenceFiles, $residenceFiles);
+
+            if (! empty($allIdentityFiles)) {
+                $data['identity_files'] = json_encode($allIdentityFiles);
+            }
+            if (! empty($allIncomeFiles)) {
+                $data['income_files'] = json_encode($allIncomeFiles);
+            }
+            if (! empty($allResidenceFiles)) {
+                $data['residence_files'] = json_encode($allResidenceFiles);
             }
 
             $annexureUploads = $this->request->getFileMultiple('annexure_files');
@@ -659,11 +754,7 @@ class UserPortal extends BaseController
                 $data['annexure_files'] = json_encode($annexureFiles);
             }
 
-            $existing = $this->documentModel
-                ->where('user_id', $userId)
-                ->where('application_id', $application['id'])
-                ->first();
-
+            // Use the $existing variable we already fetched above
             if ($existing) {
                 $ok = $this->documentModel->update($existing['id'], $data);
             } else {
@@ -945,6 +1036,433 @@ class UserPortal extends BaseController
         return view('layout/header')
             . view('user/refund_status')
             . view('layout/footer');
+    }
+
+    /**
+     * Generate Aadhaar OTP via TruthScreen API
+     */
+    public function generateAadhaarOtp()
+    {
+        // Allow Aadhaar verification for both logged-in users and registration flow
+        $userId = session()->has('user_id') ? session()->get('user_id') : 0; // 0 for registration flow
+        
+        // Get Aadhaar from POST or JSON
+        $jsonData = $this->request->getJSON(true);
+        $aadhaar = trim((string) ($this->request->getPost('aadhaar') ?? $jsonData['aadhaar'] ?? ''));
+
+        // Remove any spaces or dashes from Aadhaar
+        $aadhaar = preg_replace('/[\s\-]/', '', $aadhaar);
+
+        // Validate Aadhaar number (12 digits)
+        if (empty($aadhaar)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Aadhaar number is required'
+            ]);
+        }
+
+        if (!preg_match('/^[0-9]{12}$/', $aadhaar)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please enter a valid 12-digit Aadhaar number (You entered ' . strlen($aadhaar) . ' digits)'
+            ]);
+        }
+
+        // Check if Aadhaar is already verified by any user
+        $existingVerified = $this->aadhaarOtpModel
+            ->where('aadhaar_number', $aadhaar)
+            ->where('verified', 1)
+            ->first();
+
+        if ($existingVerified) {
+            // For registration flow (userId = 0), check if Aadhaar is already linked to a registered user
+            if ($userId == 0) {
+                // Registration flow - check if Aadhaar is already linked to a registered user
+                if ($existingVerified['user_id'] > 0) {
+                    $existingUser = $this->userModel->find($existingVerified['user_id']);
+                    if ($existingUser) {
+                        // Aadhaar already registered by another user
+                        return $this->response->setJSON([
+                            'success' => false,
+                            'message' => lang('App.appAadhaarAlreadyUsed'),
+                            'already_used' => true
+                        ]);
+                    }
+                }
+                // Aadhaar verified but not linked to a user - allow registration
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => lang('App.appAadhaarAlreadyVerified'),
+                    'verified' => true,
+                    'same_user' => true
+                ]);
+            } else {
+                // Logged-in user flow
+                if ($existingVerified['user_id'] == $userId) {
+                    // Same user - allow and show as verified
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => lang('App.appAadhaarAlreadyVerified'),
+                        'verified' => true,
+                        'same_user' => true
+                    ]);
+                } else {
+                    // Different user - show error
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => lang('App.appAadhaarAlreadyUsed'),
+                        'already_used' => true
+                    ]);
+                }
+            }
+        }
+
+        // Check if current user/registration has unverified OTP for this Aadhaar
+        // For registration (userId = 0), check by aadhaar_number only
+        if ($userId == 0) {
+            $existing = $this->aadhaarOtpModel
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 0)
+                ->where('user_id', 0) // Only unverified records with user_id = 0 (registration flow)
+                ->first();
+        } else {
+            $existing = $this->aadhaarOtpModel
+                ->where('user_id', $userId)
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 0)
+                ->first();
+        }
+
+        // Check if table exists
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('aadhaar_otps')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Database table not found. Please run migration: php spark migrate',
+            ]);
+        }
+
+        // Call TruthScreen API (or fallback to demo mode if not configured)
+        $clientId     = getenv('TRUTHSCREEN_CLIENT_ID');
+        $clientSecret = getenv('TRUTHSCREEN_CLIENT_SECRET');
+        $baseUrl      = rtrim(getenv('TRUTHSCREEN_BASE_URL') ?? 'https://api.truthscreen.com', '/');
+
+        try {
+            if (empty($clientId) || empty($clientSecret)) {
+                // DEMO MODE: No credentials configured – behave like before (fixed OTP, not sent to UIDAI)
+                $otpValue    = '123456';
+                $apiResponse = [
+                    'status'  => 'success',
+                    'message' => 'Demo mode: OTP generated locally.',
+                ];
+                $requestId = null;
+            } else {
+                $url  = $baseUrl . '/eaadhaar/otp';
+                $data = [
+                    'aadhaar_number' => $aadhaar,
+                    'consent'        => 'Y',
+                    'purpose'        => 'Housing Lottery Verification',
+                ];
+
+                $headers = [
+                    'client-id: ' . $clientId,
+                    'client-secret: ' . $clientSecret,
+                    'Content-Type: application/json',
+                ];
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                $response  = curl_exec($ch);
+                $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlError = curl_error($ch);
+                curl_close($ch);
+
+                if ($curlError) {
+                    log_message('error', 'TruthScreen Aadhaar OTP curl error: ' . $curlError);
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to contact Aadhaar verification service. Please try again later.',
+                    ]);
+                }
+
+                $apiResponse = json_decode($response, true) ?? [];
+
+                if ($httpCode !== 200 || ($apiResponse['status'] ?? '') !== 'success') {
+                    $msg = $apiResponse['message'] ?? 'Unable to send OTP. Please try again later.';
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => $msg,
+                    ]);
+                }
+
+                // TruthScreen returns a request_id that must be used on verify
+                $requestId = $apiResponse['request_id'] ?? null;
+                if (empty($requestId)) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'OTP could not be initiated: missing request reference.',
+                    ]);
+                }
+
+                // In real mode we NEVER know or store the OTP value – it's sent directly to Aadhaar-linked mobile.
+                $otpValue = null;
+            }
+
+            // Store request + (optional demo OTP) in database (upsert - one record per user per Aadhaar)
+            // Use the $existing variable we already found above (unverified record for this user)
+            $existingRecord = $existing;
+
+            $otpData = [
+                'user_id'        => $userId,
+                'aadhaar_number' => $aadhaar,
+                'otp'            => $otpValue,          // null in real mode
+                'verified'       => 0,
+                'request_id'     => $requestId,
+                'api_response'   => json_encode($apiResponse),
+            ];
+
+            // Skip validation to avoid issues
+            $this->aadhaarOtpModel->skipValidation(true);
+
+            if ($existingRecord) {
+                $result = $this->aadhaarOtpModel->update($existingRecord['id'], $otpData);
+                if (!$result) {
+                    $dbError = $this->aadhaarOtpModel->db->error();
+                    log_message('error', 'Aadhaar OTP Update Failed: ' . json_encode($dbError));
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to update OTP in database. Error: ' . ($dbError['message'] ?? 'Unknown error'),
+                    ]);
+                }
+            } else {
+                $result = $this->aadhaarOtpModel->insert($otpData);
+                if (!$result) {
+                    $dbError = $this->aadhaarOtpModel->db->error();
+                    log_message('error', 'Aadhaar OTP Insert Failed: ' . json_encode($dbError));
+                    log_message('error', 'OTP Data: ' . json_encode($otpData));
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Failed to save OTP in database. Error: ' . ($dbError['message'] ?? 'Unknown error'),
+                        'debug' => $dbError, // Remove in production
+                    ]);
+                }
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => lang('App.appAadhaarOtpGenerated'),
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Aadhaar OTP Exception: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Verify Aadhaar OTP
+     */
+    public function verifyAadhaarOtp()
+    {
+        // Allow Aadhaar verification for both logged-in users and registration flow
+        $userId = session()->has('user_id') ? session()->get('user_id') : 0; // 0 for registration flow
+        $json   = $this->request->getJSON(true);
+
+        $aadhaar = trim((string) ($this->request->getPost('aadhaar') ?? $json['aadhaar'] ?? ''));
+        $otp     = trim((string) ($this->request->getPost('otp') ?? $json['otp'] ?? ''));
+
+        if ($aadhaar === '' || $otp === '') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Aadhaar number and OTP are required'
+            ]);
+        }
+
+        // Find OTP record (for registration, check by aadhaar_number only with user_id = 0)
+        if ($userId == 0) {
+            $record = $this->aadhaarOtpModel
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 0)
+                ->where('user_id', 0) // Registration flow
+                ->orderBy('created_at', 'DESC')
+                ->first();
+        } else {
+            $record = $this->aadhaarOtpModel
+                ->where('user_id', $userId)
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 0)
+                ->orderBy('created_at', 'DESC')
+                ->first();
+        }
+
+        if (!$record) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'OTP not found or already verified. Please generate a new OTP.'
+            ]);
+        }
+
+        // Check if OTP is expired (15 minutes)
+        $createdAt = strtotime($record['created_at']);
+        $now = time();
+        if (($now - $createdAt) > 900) { // 15 minutes
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'OTP has expired. Please generate a new OTP.'
+            ]);
+        }
+
+        // Prepare TruthScreen verify-OTP call
+        $clientId     = getenv('TRUTHSCREEN_CLIENT_ID');
+        $clientSecret = getenv('TRUTHSCREEN_CLIENT_SECRET');
+        $baseUrl      = rtrim(getenv('TRUTHSCREEN_BASE_URL') ?? 'https://api.truthscreen.com', '/');
+
+        if (empty($clientId) || empty($clientSecret)) {
+            // DEMO MODE: fall back to local OTP compare
+            if ($otp !== (string) ($record['otp'] ?? '')) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Invalid OTP entered. Please try again.'
+                ]);
+            }
+
+            $kycData = [];
+        } else {
+            $requestId = $record['request_id'] ?? null;
+            if (empty($requestId)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'OTP session expired. Please generate a new OTP.'
+                ]);
+            }
+
+            $url  = $baseUrl . '/eaadhaar/verifyOtp';
+            $data = [
+                'request_id' => $requestId,
+                'otp'        => $otp,
+            ];
+
+            $headers = [
+                'client-id: ' . $clientId,
+                'client-secret: ' . $clientSecret,
+                'Content-Type: application/json',
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            $response  = curl_exec($ch);
+            $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlError) {
+                log_message('error', 'TruthScreen Aadhaar verifyOtp curl error: ' . $curlError);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to contact Aadhaar verification service. Please try again later.',
+                ]);
+            }
+
+            $apiResponse = json_decode($response, true) ?? [];
+
+            if ($httpCode !== 200 || ($apiResponse['status'] ?? '') !== 'success') {
+                $msg = $apiResponse['message'] ?? 'Invalid OTP entered. Please try again.';
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => $msg,
+                ]);
+            }
+
+            $kycData = $apiResponse['data'] ?? [];
+        }
+
+        // Build KYC fields – store only allowed data (no full Aadhaar)
+        $aadhaarLast4 = substr($aadhaar, -4);
+
+        $updateData = [
+            'verified'      => 1,
+            'aadhaar_last4' => $aadhaarLast4,
+            'user_id'      => $userId, // Update user_id (0 for registration, actual user_id for logged-in users)
+        ];
+
+        if (!empty($kycData)) {
+            $updateData['kyc_name']    = $kycData['name']    ?? null;
+            $updateData['kyc_dob']     = $kycData['dob']     ?? null;
+            $updateData['kyc_gender']  = $kycData['gender']  ?? null;
+            $updateData['kyc_address'] = $kycData['address'] ?? null;
+            $updateData['kyc_pincode'] = $kycData['pincode'] ?? null;
+        }
+
+        $this->aadhaarOtpModel->update($record['id'], $updateData);
+
+        // Store verification in session for form submission (only if logged in)
+        if ($userId > 0) {
+            session()->set('aadhaar_verified', true);
+            session()->set('aadhaar_number', $aadhaar);
+        }
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'message'  => lang('App.appAadhaarVerifiedSuccess'),
+            'verified' => true,
+            'kyc'      => $kycData ?? [],
+        ]);
+    }
+
+    /**
+     * Check Aadhaar verification status
+     */
+    public function checkAadhaarVerification()
+    {
+        // Allow check for both logged-in users and registration flow
+        $userId = session()->has('user_id') ? session()->get('user_id') : 0; // 0 for registration flow
+        $jsonData = $this->request->getJSON(true);
+        $aadhaar = trim((string) ($this->request->getPost('aadhaar') ?? $jsonData['aadhaar'] ?? ''));
+        $aadhaar = preg_replace('/[\s\-]/', '', $aadhaar);
+
+        if (empty($aadhaar) || !preg_match('/^[0-9]{12}$/', $aadhaar)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'verified' => false,
+            ]);
+        }
+
+        // Check if verified by any user
+        $verified = $this->aadhaarOtpModel
+            ->where('aadhaar_number', $aadhaar)
+            ->where('verified', 1)
+            ->first();
+
+        if ($verified) {
+            // Check if same user
+            if ($verified['user_id'] == $userId) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'verified' => true,
+                    'same_user' => true,
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'verified' => false,
+                    'already_used' => true,
+                    'message' => 'This Aadhaar number is already submitted by another user.',
+                ]);
+            }
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'verified' => false,
+        ]);
     }
 }
 

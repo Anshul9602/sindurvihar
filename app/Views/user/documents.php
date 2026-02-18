@@ -50,15 +50,22 @@
             <?= esc(lang('App.docIntro') ?? 'Please indicate which documents you have prepared and upload them below.') ?>
         </p>
 
-        <form action="<?= site_url('user/documents') ?>" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <form id="documents-form" action="<?= site_url('user/documents') ?>" method="POST" enctype="multipart/form-data" class="space-y-4">
             <div class="flex items-center">
                 <input id="doc-identity" type="checkbox" name="has_identity_proof" value="1"
                        class="mr-2" <?= !empty($documents['has_identity_proof']) ? 'checked' : '' ?>>
                 <label for="doc-identity" class="text-sm" style="color:#4B5563;"><?= esc(lang('App.docIdentityLabel') ?? 'Identity proof (Aadhaar etc.)') ?></label>
             </div>
             <div class="ml-6">
-                <input type="file" name="identity_files[]" multiple
+                <input type="file" id="identity-files" name="identity_files[]" multiple
                        class="text-xs text-gray-600">
+                <div id="identity-error" class="text-red-600 text-xs mt-1 hidden"></div>
+                <?php if (!empty($documents['identity_files'])): 
+                    $existingIdentityFiles = json_decode($documents['identity_files'], true);
+                    if (!empty($existingIdentityFiles)):
+                ?>
+                    <p class="text-xs text-gray-500 mt-1"><?= esc(lang('App.docExistingFiles') ?? 'Existing files uploaded') ?>: <?= count($existingIdentityFiles) ?></p>
+                <?php endif; endif; ?>
             </div>
             <div class="flex items-center">
                 <input id="doc-income" type="checkbox" name="has_income_proof" value="1"
@@ -66,8 +73,15 @@
                 <label for="doc-income" class="text-sm" style="color:#4B5563;"><?= esc(lang('App.docIncomeLabel') ?? 'Income certificate') ?></label>
             </div>
             <div class="ml-6">
-                <input type="file" name="income_files[]" multiple
+                <input type="file" id="income-files" name="income_files[]" multiple
                        class="text-xs text-gray-600">
+                <div id="income-error" class="text-red-600 text-xs mt-1 hidden"></div>
+                <?php if (!empty($documents['income_files'])): 
+                    $existingIncomeFiles = json_decode($documents['income_files'], true);
+                    if (!empty($existingIncomeFiles)):
+                ?>
+                    <p class="text-xs text-gray-500 mt-1"><?= esc(lang('App.docExistingFiles') ?? 'Existing files uploaded') ?>: <?= count($existingIncomeFiles) ?></p>
+                <?php endif; endif; ?>
             </div>
             <div class="flex items-center">
                 <input id="doc-residence" type="checkbox" name="has_residence_proof" value="1"
@@ -75,8 +89,15 @@
                 <label for="doc-residence" class="text-sm" style="color:#4B5563;"><?= esc(lang('App.docResidenceLabel') ?? 'Residence proof') ?></label>
             </div>
             <div class="ml-6">
-                <input type="file" name="residence_files[]" multiple
+                <input type="file" id="residence-files" name="residence_files[]" multiple
                        class="text-xs text-gray-600">
+                <div id="residence-error" class="text-red-600 text-xs mt-1 hidden"></div>
+                <?php if (!empty($documents['residence_files'])): 
+                    $existingResidenceFiles = json_decode($documents['residence_files'], true);
+                    if (!empty($existingResidenceFiles)):
+                ?>
+                    <p class="text-xs text-gray-500 mt-1"><?= esc(lang('App.docExistingFiles') ?? 'Existing files uploaded') ?>: <?= count($existingResidenceFiles) ?></p>
+                <?php endif; endif; ?>
             </div>
 
             <div class="pt-2 border-t mt-4">
@@ -105,4 +126,74 @@
     </div>
 </div>
 
+<script>
+(function() {
+    var form = document.getElementById('documents-form');
+    if (!form) return;
+
+    // Get existing file counts from PHP
+    var existingFiles = {
+        identity: <?= !empty($documents['identity_files']) ? count(json_decode($documents['identity_files'], true)) : 0 ?>,
+        income: <?= !empty($documents['income_files']) ? count(json_decode($documents['income_files'], true)) : 0 ?>,
+        residence: <?= !empty($documents['residence_files']) ? count(json_decode($documents['residence_files'], true)) : 0 ?>
+    };
+
+    form.addEventListener('submit', function(e) {
+        var identityCheckbox = document.getElementById('doc-identity');
+        var incomeCheckbox = document.getElementById('doc-income');
+        var residenceCheckbox = document.getElementById('doc-residence');
+        
+        var identityFiles = document.getElementById('identity-files');
+        var incomeFiles = document.getElementById('income-files');
+        var residenceFiles = document.getElementById('residence-files');
+
+        var identityError = document.getElementById('identity-error');
+        var incomeError = document.getElementById('income-error');
+        var residenceError = document.getElementById('residence-error');
+
+        var hasError = false;
+
+        // Clear previous errors
+        identityError.classList.add('hidden');
+        incomeError.classList.add('hidden');
+        residenceError.classList.add('hidden');
+
+        // Validate Identity Proof
+        if (identityCheckbox.checked) {
+            var identityFileCount = identityFiles.files.length;
+            if (identityFileCount === 0 && existingFiles.identity === 0) {
+                identityError.textContent = '<?= esc(lang('App.docFileRequired') ?? 'Please upload at least one file for identity proof') ?>';
+                identityError.classList.remove('hidden');
+                hasError = true;
+            }
+        }
+
+        // Validate Income Proof
+        if (incomeCheckbox.checked) {
+            var incomeFileCount = incomeFiles.files.length;
+            if (incomeFileCount === 0 && existingFiles.income === 0) {
+                incomeError.textContent = '<?= esc(lang('App.docFileRequired') ?? 'Please upload at least one file for income proof') ?>';
+                incomeError.classList.remove('hidden');
+                hasError = true;
+            }
+        }
+
+        // Validate Residence Proof
+        if (residenceCheckbox.checked) {
+            var residenceFileCount = residenceFiles.files.length;
+            if (residenceFileCount === 0 && existingFiles.residence === 0) {
+                residenceError.textContent = '<?= esc(lang('App.docFileRequired') ?? 'Please upload at least one file for residence proof') ?>';
+                residenceError.classList.remove('hidden');
+                hasError = true;
+            }
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            alert('<?= esc(lang('App.docValidationError') ?? 'Please upload files for all checked document types') ?>');
+            return false;
+        }
+    });
+})();
+</script>
 
