@@ -15,6 +15,27 @@
             <?php
             $overallStatus = $overallStatus ?? 'pending';
             switch ($overallStatus) {
+                case 'lottery_won':
+                    $plotNum  = $userAllotment['plot_number'] ?? null;
+                    $plotArea = $userAllotment['plot_area'] ?? null;
+                    $allotmentStatus = strtolower((string)($userAllotment['allotment_status'] ?? ''));
+                    $isAllotted = in_array($allotmentStatus, ['allotted', 'alloted'], true);
+                    if ($plotNum && $plotArea) {
+                        $statusLabel = $isAllotted
+                            ? sprintf(lang('App.statusPlotAllottedSize') ?? 'Plot Allotted! Plot: %s (%s sq ft)', $plotNum, $plotArea)
+                            : sprintf(lang('App.dashboardCongratulationsPlotSize') ?? 'Congratulations! You won the lottery! Plot: %s (%s sq ft)', $plotNum, $plotArea);
+                    } elseif ($plotNum) {
+                        $statusLabel = $isAllotted
+                            ? sprintf(lang('App.statusPlotAllotted') ?? 'Plot Allotted! Plot: %s', $plotNum)
+                            : sprintf(lang('App.dashboardCongratulationsPlot') ?? 'Congratulations! You won the lottery! Plot: %s', $plotNum);
+                    } else {
+                        $statusLabel = $isAllotted
+                            ? (lang('App.statusAllotted') ?? 'Plot Allotted!')
+                            : (lang('App.dashboardCongratulations') ?? 'Congratulations! You won the lottery!');
+                    }
+                    $statusBg    = '#D1FAE5';
+                    $statusColor = '#065F46';
+                    break;
                 case 'verified':
                     $statusLabel = lang('App.dashboardStatusVerified') ?? 'Verified';
                     $statusBg    = '#D1FAE5';
@@ -63,44 +84,32 @@
                 <?= esc(lang('App.statusFooterText')) ?>
             </p>
 
-            <?php
-            $eligibilityDone = $steps['eligibility']['completed'] ?? false;
-            $applicationDone = $steps['application']['completed'] ?? false;
-            $documentsDone   = $steps['documents']['completed'] ?? false;
-            $paymentDone     = $steps['payment']['completed'] ?? false;
-            ?>
-
+            <?php if (!empty($chalans)): ?>
             <div class="border-t pt-4 mt-4">
                 <h2 class="text-lg font-semibold mb-3" style="color:#0F1F3F;">
-                    <?= esc(lang('App.dashboardFlowTitle')) ?>
+                    <?= esc(lang('App.chalanDetails') ?? 'Chalan Details') ?>
                 </h2>
-                <ul class="space-y-2 text-sm">
-                    <li class="flex items-center justify-between">
-                        <span><?= esc(lang('App.dashboardStep1')) ?></span>
-                        <span class="font-semibold" style="color:<?= $eligibilityDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $eligibilityDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
+                <?php foreach ($chalans as $ch): ?>
+                <div class="mb-3 p-4 rounded-lg border" style="background-color: <?= ($ch['status'] ?? '') === 'paid' ? '#D1FAE5' : '#FEF3C7' ?>; border-color: <?= ($ch['status'] ?? '') === 'paid' ? '#10B981' : '#F59E0B' ?>;">
+                    <p class="text-sm mb-2" style="color: #374151;">
+                        <strong><?= esc(lang('App.chalanNumber') ?? 'Chalan No') ?>:</strong> <?= esc($ch['chalan_number']) ?><br>
+                        <strong><?= esc(lang('App.amount') ?? 'Amount') ?>:</strong> ₹<?= number_format($ch['amount']) ?><br>
+                        <strong><?= esc(lang('App.adminStatus') ?? 'Status') ?>:</strong>
+                        <span class="px-2 py-0.5 rounded text-xs font-semibold <?= ($ch['status'] ?? '') === 'paid' ? 'bg-green-200 text-green-900' : 'bg-yellow-200 text-yellow-900' ?>">
+                            <?= esc(ucfirst($ch['status'] ?? 'pending')) ?>
                         </span>
-                    </li>
-                    <li class="flex items-center justify-between">
-                        <span><?= esc(lang('App.dashboardStep2')) ?></span>
-                        <span class="font-semibold" style="color:<?= $applicationDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $applicationDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
-                        </span>
-                    </li>
-                    <li class="flex items-center justify-between">
-                        <span><?= esc(lang('App.dashboardStep3')) ?></span>
-                        <span class="font-semibold" style="color:<?= $paymentDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $paymentDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
-                        </span>
-                    </li>
-                    <li class="flex items-center justify-between">
-                        <span><?= esc(lang('App.dashboardStep4')) ?></span>
-                        <span class="font-semibold" style="color:<?= $documentsDone ? '#16A34A' : '#92400E' ?>;">
-                            <?= $documentsDone ? esc(lang('App.statusCompleted')) : esc(lang('App.statusPending')) ?>
-                        </span>
-                    </li>
-                </ul>
+                    </p>
+                    <?php if (($ch['status'] ?? '') === 'pending'): ?>
+                    <a href="<?= site_url('user/chalan/' . $ch['id'] . '/pay') ?>" 
+                       class="inline-block px-4 py-2 rounded-md font-semibold text-white"
+                       style="background-color: #10B981;">
+                        <?= esc(lang('App.chalanPayButton') ?? 'Pay Now') ?>
+                    </a>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
             </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>

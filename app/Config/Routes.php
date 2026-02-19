@@ -40,6 +40,7 @@ $routes->group('user', static function ($routes) {
     $routes->match(['get','post'], 'profile', 'UserPortal::profile');
     $routes->get('lottery-results', 'UserPortal::lotteryResults');
     $routes->get('allotment', 'UserPortal::allotment');
+    $routes->match(['get', 'post'], 'chalan/(:segment)/pay', 'UserPortal::chalanPay/$1');
     $routes->get('refund-status', 'UserPortal::refundStatus');
 });
 
@@ -64,7 +65,15 @@ $routes->group('admin', static function ($routes) {
     $routes->post('lottery/run', 'AdminPortal::runLottery');
     $routes->get('allotments', 'AdminPortal::allotments');
     $routes->get('allotments/(:segment)', 'AdminPortal::allotmentDetail/$1');
+    $routes->post('allotments/(:segment)/generate-chalan', 'AdminPortal::generateChalan/$1');
+    $routes->post('allotments/(:segment)/mark-allotted', 'AdminPortal::markAllotted/$1');
     $routes->get('payments', 'AdminPortal::payments');
+    $routes->get('chalans', 'AdminPortal::chalans');
+    $routes->get('chalans/(:segment)', 'AdminPortal::chalanDetail/$1');
+    $routes->post('chalans/(:segment)/verify', 'AdminPortal::verifyChalan/$1');
+    $routes->post('chalans/(:segment)/mark-allotted', 'AdminPortal::markAllottedFromChalan/$1');
+    $routes->post('payment-account/save', 'AdminPortal::savePaymentAccount');
+    $routes->post('payment-account/(:num)/delete', 'AdminPortal::deletePaymentAccount/$1');
     $routes->get('schemes', 'AdminPortal::schemes');
     $routes->get('reports', 'AdminPortal::reports');
     $routes->match(['get', 'post'], 'settings', 'AdminPortal::settings');

@@ -12,7 +12,7 @@ class AllotmentModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['application_id', 'plot_number', 'block_name', 'status'];
+    protected $allowedFields    = ['application_id', 'plot_number', 'block_name', 'status', 'lottery_round', 'lottery_category'];
 
     // Dates
     protected $useTimestamps = true;

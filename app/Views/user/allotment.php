@@ -48,15 +48,23 @@
                 <?php endif; ?>
             </div>
 
+            <?php
+            $allotmentStatus = strtolower((string)($allotment['status'] ?? ''));
+            $isAllotted = in_array($allotmentStatus, ['allotted', 'alloted'], true);
+            ?>
             <p class="font-semibold mb-4 text-sm" style="color:#111827;">
-                Subject: Provisional Allotment of Plot
+                Subject: <?= $isAllotted ? 'Final Allotment of Plot' : 'Provisional Allotment of Plot' ?>
             </p>
 
             <div class="space-y-3 text-sm leading-relaxed" style="color:#111827;">
                 <p>
                     This is with reference to your application for the Sindoor Vihar housing scheme.
+                    <?php if ($isAllotted): ?>
+                    We are pleased to confirm that you have been allotted the following plot:
+                    <?php else: ?>
                     We are pleased to inform you that you have been selected in the lottery for
                     provisional allotment of the following plot:
+                    <?php endif; ?>
                 </p>
                 <p>
                     <strong>Plot No:</strong> <?= esc($allotment['plot_number'] ?? 'N/A') ?><?php if (!empty($allotment['plot_category'])): ?>,
@@ -64,11 +72,17 @@
                     <?php if (!empty($allotment['dimensions'])): ?>,
                     <strong>Size:</strong> <?= esc($allotment['dimensions']) ?><?php endif; ?>
                 </p>
+                <?php if ($isAllotted): ?>
+                <p>
+                    All formalities have been completed and your plot allotment is hereby confirmed.
+                </p>
+                <?php else: ?>
                 <p>
                     You are requested to complete the required formalities and make payment as per
                     the scheme guidelines within the stipulated time. A duly signed final allotment
                     letter will be issued after completion of all formalities.
                 </p>
+                <?php endif; ?>
                 <p>
                     This letter is generated electronically and does not require a physical signature.
                 </p>
@@ -80,6 +94,28 @@
                 <p>Sindoor Vihar, Chaksu Nagar Palika</p>
             </div>
 
+            <?php if (!empty($chalan) && ($chalan['status'] ?? '') === 'pending'): ?>
+            <div class="mt-6 p-4 rounded-lg print:hidden" style="background-color: #FEF3C7; border: 2px solid #F59E0B;">
+                <h3 class="font-semibold mb-2" style="color: #92400E;">
+                    <?= esc(lang('App.chalanFinalPayment') ?? 'Final Payment Chalan') ?>
+                </h3>
+                <p class="text-sm mb-3" style="color: #92400E;">
+                    <strong><?= esc(lang('App.chalanNumber') ?? 'Chalan No') ?>:</strong> <?= esc($chalan['chalan_number']) ?><br>
+                    <strong><?= esc(lang('App.amount') ?? 'Amount') ?>:</strong> ₹<?= number_format($chalan['amount']) ?>
+                </p>
+                <a href="/user/chalan/<?= esc($chalan['id']) ?>/pay"
+                   class="inline-block px-6 py-2 rounded-md font-semibold text-white"
+                   style="background-color:#10B981;">
+                    <?= esc(lang('App.chalanPayButton') ?? 'Pay Now') ?>
+                </a>
+            </div>
+            <?php elseif (!empty($chalan) && ($chalan['status'] ?? '') === 'paid'): ?>
+            <div class="mt-6 p-4 rounded-lg print:hidden" style="background-color: #D1FAE5; border: 2px solid #10B981;">
+                <p class="text-sm" style="color: #065F46;">
+                    <strong>✓ <?= esc(lang('App.chalanPaid') ?? 'Chalan Paid') ?></strong> – <?= esc($chalan['chalan_number']) ?>
+                </p>
+            </div>
+            <?php endif; ?>
             <div class="mt-6 flex flex-wrap gap-3 print:hidden">
                 <button type="button"
                         onclick="window.print()"

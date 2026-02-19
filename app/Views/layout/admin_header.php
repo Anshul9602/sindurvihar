@@ -137,6 +137,10 @@
                 <span>💳</span>
                 <span><?= esc(lang('App.adminPaymentsTitle')) ?></span>
             </a>
+            <a href="/admin/chalans" class="admin-nav-item <?= $isActive('admin/chalans') ?>">
+                <span>📝</span>
+                <span><?= esc(lang('App.adminChalansTitle') ?? 'Chalans') ?></span>
+            </a>
         </div>
 
         <div class="admin-nav-section">

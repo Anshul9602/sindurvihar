@@ -607,11 +607,25 @@ class AdminPortal extends BaseController
 
         // Get all available plots
         $plotModel = new PlotModel();
-        $availablePlots = $plotModel
+        $allPlotsFromDb = $plotModel
             ->where('status', 'available')
             ->orderBy('category', 'ASC')
             ->orderBy('plot_number', 'ASC')
             ->findAll();
+
+        // Exclude plots that have been won/allotted (any allotment = plot is out of lottery)
+        $allotmentModel = new AllotmentModel();
+        $allottedPlotNumbers = $allotmentModel
+            ->select('plot_number')
+            ->findColumn('plot_number');
+        $allottedPlotNumbers = $allottedPlotNumbers ? array_flip($allottedPlotNumbers) : [];
+        $availablePlots = [];
+        foreach ($allPlotsFromDb as $plot) {
+            $pn = $plot['plot_number'] ?? null;
+            if ($pn === null || ! isset($allottedPlotNumbers[$pn])) {
+                $availablePlots[] = $plot;
+            }
+        }
 
         // Also get grouped by category for summary
         $plotsByCategory = [];
@@ -629,21 +643,85 @@ class AdminPortal extends BaseController
             }
         }
 
-        // Get all allotted plots (winners)
+        // Get all allotted plots (winners) - include chalan_id to show View Chalan when paid
         $allotmentModel = new AllotmentModel();
         $allottedPlots = $allotmentModel
-            ->select('allotments.*, applications.id as application_id, applications.full_name, applications.mobile as application_mobile, users.name as user_name, users.mobile as user_mobile, plots.plot_number, plots.category as plot_category, plots.area, plots.location')
+            ->select('allotments.*, applications.id as application_id, applications.full_name, applications.mobile as application_mobile, users.name as user_name, users.mobile as user_mobile, chalans.id as chalan_id')
             ->join('applications', 'applications.id = allotments.application_id', 'left')
             ->join('users', 'users.id = applications.user_id', 'left')
-            ->join('plots', 'plots.plot_number = allotments.plot_number', 'left')
+            ->join('chalans', 'chalans.allotment_id = allotments.id', 'left')
             ->orderBy('allotments.created_at', 'DESC')
             ->findAll();
 
+        // Add plot details by lookup (avoids utf8mb4_unicode_ci vs utf8mb4_general_ci join error)
+        $allPlots = $plotModel->findAll();
+        $plotsByNumber = [];
+        foreach ($allPlots as $p) {
+            $plotsByNumber[$p['plot_number']] = $p;
+        }
+        // Deduplicate (join with chalans can produce multiple rows per allotment)
+        $byAllotmentId = [];
+        foreach ($allottedPlots as $row) {
+            $aid = $row['id'] ?? 0;
+            if (!isset($byAllotmentId[$aid]) || (!empty($row['chalan_id']) && empty($byAllotmentId[$aid]['chalan_id']))) {
+                $byAllotmentId[$aid] = $row;
+            }
+        }
+        $allottedPlots = array_values($byAllotmentId);
+
+        foreach ($allottedPlots as &$row) {
+            $pn = $row['plot_number'] ?? null;
+            $plot = $plotsByNumber[$pn] ?? null;
+            $row['plot_category'] = $plot['category'] ?? null;
+            $row['area'] = $plot['area'] ?? null;
+            $row['location'] = $plot['location'] ?? null;
+        }
+        unset($row);
+
+        // Group allotted plots by lottery round for display
+        $allottedPlotsByRound = [];
+        foreach ($allottedPlots as $a) {
+            $roundKey = $a['lottery_round'] ?? $a['lottery_category'] ?? 'Other';
+            if ($roundKey === null || $roundKey === '') {
+                $roundKey = 'Other';
+            }
+            if (! isset($allottedPlotsByRound[$roundKey])) {
+                $allottedPlotsByRound[$roundKey] = [];
+            }
+            $allottedPlotsByRound[$roundKey][] = $a;
+        }
+        krsort($allottedPlotsByRound, SORT_NATURAL);
+
+        // Categories that have already run a lottery (disable their buttons)
+        $categoriesAlreadyRun = [];
+        try {
+            $db = \Config\Database::connect();
+            if ($db->fieldExists('lottery_category', 'allotments')) {
+                $rows = $db->table('allotments')
+                    ->select('lottery_category')
+                    ->distinct()
+                    ->where('lottery_category !=', '')
+                    ->where('lottery_category IS NOT NULL', null, false)
+                    ->get()
+                    ->getResultArray();
+                foreach ($rows as $r) {
+                    $c = trim((string) ($r['lottery_category'] ?? ''));
+                    if ($c !== '') {
+                        $categoriesAlreadyRun[$c] = true;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Column may not exist
+        }
+
         $data = [
-            'applications'     => $applications,
-            'plots'            => $availablePlots,
-            'plotsByCategory'  => $plotsByCategory,
-            'allottedPlots'    => $allottedPlots,
+            'applications'           => $applications,
+            'plots'                  => $availablePlots,
+            'plotsByCategory'        => $plotsByCategory,
+            'allottedPlots'          => $allottedPlots,
+            'allottedPlotsByRound'   => $allottedPlotsByRound,
+            'categoriesAlreadyRun'   => $categoriesAlreadyRun,
         ];
 
         return view('layout/admin_header')
@@ -724,8 +802,11 @@ class AdminPortal extends BaseController
                 // Match if: caste category is GOVT OR income_category is Govt
                 $casteMatch = ($casteCategory && strtoupper($casteCategory) === 'GOVT') ||
                              ($appServiceCategory && strtoupper($appServiceCategory) === 'GOVT');
+            } elseif ($categoryUpper === 'GENERAL') {
+                // General includes both General and OBC applicants
+                $casteMatch = $casteCategory && in_array(strtoupper($casteCategory), ['GENERAL', 'OBC']);
             } else {
-                // For caste-based categories (ST, SC, General), match caste category
+                // For caste-based categories (ST, SC, etc.), match caste category
                 if ($casteCategory && strtoupper($casteCategory) === $categoryUpper) {
                     $casteMatch = true;
                 }
@@ -771,20 +852,36 @@ class AdminPortal extends BaseController
                 ]);
         }
 
-        // STEP 2: Get ALL Available Plots (allocation will be based on income group, not caste category)
-        $allAvailablePlots = $plotModel
+        // STEP 2: Get ALL Available Plots (exclude plots already allotted/won)
+        $allPlotsFromDb = $plotModel
             ->where('status', 'available')
             ->findAll();
+        $allottedPlotNumbers = $allotmentModel
+            ->findColumn('plot_number');
+        $allottedPlotNumbers = $allottedPlotNumbers ? array_flip($allottedPlotNumbers) : [];
+        $allAvailablePlots = [];
+        foreach ($allPlotsFromDb as $plot) {
+            $pn = $plot['plot_number'] ?? null;
+            if ($pn !== null && ! isset($allottedPlotNumbers[$pn])) {
+                $allAvailablePlots[] = $plot;
+            }
+        }
 
         if (empty($allAvailablePlots)) {
             return $this->response->setStatusCode(400)
-                ->setJSON(['success' => false, 'message' => 'No available plots found.']);
+                ->setJSON(['success' => false, 'message' => 'No available plots found. All plots have been allotted.']);
         }
 
         // Total plots counts for quota calculations
         $totalPlots = count($allAvailablePlots);
+        $eligibleCount = count($eligibleApps);
 
-        // STEP 3: Calculate Reservation Quotas
+        // If eligible applicants < available plots: allocate to ALL (no randomization)
+        if ($eligibleCount < $totalPlots) {
+            $winners = $eligibleApps;
+            $quota = ['mode' => 'all_allocated', 'eligible' => $eligibleCount, 'plots' => $totalPlots];
+        } else {
+        // STEP 3: Calculate Reservation Quotas (eligible >= plots: use random selection)
         $quota = [
             'disabled'     => floor($totalPlots * 5 / 100),      // 5% for disabled
             'single_woman' => floor($totalPlots * 10 / 100),    // 10% for single woman/widow
@@ -918,6 +1015,8 @@ class AdminPortal extends BaseController
                 ]);
         }
 
+        } // end else (eligible >= plots)
+
         // STEP 6: Create Allotments for All Winners
         // We assign plots according to the applicant's income group (income_category).
         // First randomize the global list of available plots, then pick best matches per winner.
@@ -966,11 +1065,13 @@ class AdminPortal extends BaseController
 
             // Create allotment
             $allotmentData = [
-                'application_id' => $winner['id'],
-                'plot_number'    => $plot['plot_number'],
-                'block_name'     => $plot['location'] ?? null,
-                'status'         => 'provisional',
-                'created_at'     => date('Y-m-d H:i:s'),
+                'application_id'   => $winner['id'],
+                'plot_number'      => $plot['plot_number'],
+                'block_name'       => $plot['location'] ?? null,
+                'status'           => 'provisional',
+                'lottery_round'    => $roundName ?: ('Round ' . $roundNumber),
+                'lottery_category' => $category,
+                'created_at'       => date('Y-m-d H:i:s'),
             ];
 
             if ($db->table('allotments')->insert($allotmentData)) {
@@ -1022,13 +1123,19 @@ class AdminPortal extends BaseController
 
         // Fetch allotments with application and user details
         $allotments = $allotmentModel
-            ->select('allotments.*, applications.id as application_id, applications.full_name, users.name as user_name')
+            ->select('allotments.*, applications.id as application_id, applications.full_name, users.name as user_name, chalans.id as chalan_id')
             ->join('applications', 'applications.id = allotments.application_id', 'left')
             ->join('users', 'users.id = applications.user_id', 'left')
+            ->join('chalans', 'chalans.allotment_id = allotments.id', 'left')
             ->orderBy('allotments.created_at', 'DESC')
             ->findAll();
 
-        $data['allotments'] = $allotments;
+        $paModel = new \App\Models\PaymentAccountModel();
+        $activeBanks = $paModel->getAllActive();
+        $hasBankAccount = ! empty($activeBanks);
+
+        $data['allotments']      = $allotments;
+        $data['hasBankAccount']  = $hasBankAccount;
 
         return view('layout/admin_header')
             . view('admin/allotments', $data)
@@ -1042,7 +1149,7 @@ class AdminPortal extends BaseController
 
         // Fetch allotment with application and user details
         $allotment = $allotmentModel
-            ->select('allotments.*, applications.id as application_id, applications.full_name, applications.mobile, applications.aadhaar, applications.address, applications.tehsil, applications.district, applications.state, applications.income, applications.income_category, applications.status as application_status, users.name as user_name, users.mobile as user_mobile, users.email as user_email')
+            ->select('allotments.*, applications.id as application_id, applications.user_id as application_user_id, applications.full_name, applications.mobile, applications.aadhaar, applications.address, applications.tehsil, applications.district, applications.state, applications.income, applications.income_category, applications.status as application_status, users.name as user_name, users.mobile as user_mobile, users.email as user_email')
             ->join('applications', 'applications.id = allotments.application_id', 'left')
             ->join('users', 'users.id = applications.user_id', 'left')
             ->where('allotments.id', $id)
@@ -1060,12 +1167,273 @@ class AdminPortal extends BaseController
                 ->first();
         }
 
+        // Fetch existing chalan for this allotment
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalan = $chalanModel->where('allotment_id', $id)->orderBy('created_at', 'DESC')->first();
+
         $data['allotment'] = $allotment;
         $data['plot'] = $plot;
+        $data['chalan'] = $chalan;
 
         return view('layout/admin_header')
             . view('admin/allotment_detail', $data)
             . view('layout/admin_footer');
+    }
+
+    public function generateChalan($allotmentId)
+    {
+        $returnToList = (string) $this->request->getPost('return_to') === 'list';
+        $toAllotment  = fn () => redirect()->to(site_url('admin/allotments/' . $allotmentId));
+        $toAllotments = fn () => redirect()->to(site_url('admin/allotments'));
+
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return $toAllotments()->with('error', 'Invalid request');
+        }
+
+        $paModel = new \App\Models\PaymentAccountModel();
+        if (empty($paModel->getAllActive())) {
+            $msg = lang('App.adminChalanNoBankAccount') ?? 'Cannot generate chalan. Please add a bank account first from Chalans page.';
+            return ($returnToList ? $toAllotments() : $toAllotment())->with('error', $msg);
+        }
+
+        $amount = (int) $this->request->getPost('amount');
+        if ($amount <= 0) {
+            return ($returnToList ? $toAllotments() : $toAllotment())->with('error', 'Please enter a valid amount');
+        }
+
+        $allotmentModel = new AllotmentModel();
+        $allotment = $allotmentModel
+            ->select('allotments.*, applications.id as application_id, applications.user_id')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->where('allotments.id', $allotmentId)
+            ->first();
+
+        if (! $allotment || empty($allotment['application_id']) || empty($allotment['user_id'])) {
+            return $toAllotments()->with('error', 'Allotment not found');
+        }
+
+        $chalanModel = new \App\Models\ChalanModel();
+        $existing = $chalanModel->where('allotment_id', $allotmentId)->where('status', 'pending')->first();
+        if ($existing) {
+            return ($returnToList ? $toAllotments() : $toAllotment())->with('error', 'A pending chalan already exists for this allotment.');
+        }
+
+        $chalanNumber = $chalanModel->generateChalanNumber();
+        $data = [
+            'allotment_id'   => (int) $allotmentId,
+            'application_id' => (int) $allotment['application_id'],
+            'user_id'        => (int) $allotment['user_id'],
+            'chalan_number'  => $chalanNumber,
+            'amount'         => $amount,
+            'status'         => 'pending',
+        ];
+
+        try {
+            if (! $chalanModel->insert($data)) {
+                $err   = $chalanModel->errors();
+                $dbErr = $chalanModel->db->error();
+                $msg   = 'Failed to generate chalan. ' . (is_array($err) ? implode(' ', $err) : '') . ($dbErr['message'] ?? '');
+                return ($returnToList ? $toAllotments() : $toAllotment())->with('error', trim($msg));
+            }
+        } catch (\Throwable $e) {
+            return ($returnToList ? $toAllotments() : $toAllotment())->with('error', 'Chalan insert failed: ' . $e->getMessage());
+        }
+
+        $msg = 'Chalan ' . $chalanNumber . ' generated successfully. Amount: ₹' . number_format($amount);
+        return ($returnToList ? $toAllotments() : $toAllotment())->with('success', $msg);
+    }
+
+    public function chalans()
+    {
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalans = $chalanModel
+            ->select('chalans.*, applications.full_name, applications.mobile, allotments.plot_number, allotments.id as allotment_id, allotments.status as allotment_status')
+            ->join('applications', 'applications.id = chalans.application_id', 'left')
+            ->join('allotments', 'allotments.id = chalans.allotment_id', 'left')
+            ->orderBy('chalans.created_at', 'DESC')
+            ->findAll();
+
+        $paymentAccountModel = new \App\Models\PaymentAccountModel();
+        $paymentAccounts     = $paymentAccountModel->getAll();
+        $editId              = (int) $this->request->getGet('edit');
+        $paymentAccountToEdit = $editId > 0 ? $paymentAccountModel->find($editId) : null;
+
+        $data['chalans']              = $chalans;
+        $data['paymentAccounts']      = $paymentAccounts;
+        $data['paymentAccountToEdit'] = $paymentAccountToEdit;
+
+        return view('layout/admin_header')
+            . view('admin/chalans', $data)
+            . view('layout/admin_footer');
+    }
+
+    public function chalanDetail($chalanId)
+    {
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalan = $chalanModel
+            ->select('chalans.*, applications.full_name, applications.mobile, allotments.plot_number, allotments.id as allotment_id, allotments.status as allotment_status')
+            ->join('applications', 'applications.id = chalans.application_id', 'left')
+            ->join('allotments', 'allotments.id = chalans.allotment_id', 'left')
+            ->where('chalans.id', $chalanId)
+            ->first();
+
+        if (! $chalan) {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Chalan not found');
+        }
+
+        $payment = null;
+        $paymentAccount = null;
+        if (! empty($chalan['payment_id'])) {
+            $payment = (new PaymentModel())->find($chalan['payment_id']);
+        }
+        if (! empty($chalan['payment_account_id'])) {
+            $paymentAccount = (new \App\Models\PaymentAccountModel())->find($chalan['payment_account_id']);
+        }
+
+        $data['chalan']         = $chalan;
+        $data['chalanId']       = $chalanId;
+        $data['payment']        = $payment;
+        $data['paymentAccount'] = $paymentAccount;
+
+        return view('layout/admin_header')
+            . view('admin/chalan_detail', $data)
+            . view('layout/admin_footer');
+    }
+
+    public function verifyChalan($chalanId)
+    {
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Invalid request');
+        }
+
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalan = $chalanModel->find($chalanId);
+        if (! $chalan) {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Chalan not found');
+        }
+
+        if (($chalan['status'] ?? '') !== 'paid') {
+            return redirect()->to(site_url('admin/chalans/' . $chalanId))->with('error', 'Chalan must be paid before verification.');
+        }
+
+        if (! empty($chalan['verified_at'])) {
+            return redirect()->to(site_url('admin/chalans/' . $chalanId))->with('success', 'Chalan is already verified.');
+        }
+
+        $db = \Config\Database::connect();
+        $verifiedAt = date('Y-m-d H:i:s');
+
+        if ($db->table('chalans')->where('id', (int) $chalanId)->update(['verified_at' => $verifiedAt])) {
+            $allotmentId = (int) ($chalan['allotment_id'] ?? 0);
+            if ($allotmentId > 0) {
+                $db->table('allotments')->where('id', $allotmentId)->update(['status' => 'allotted']);
+            }
+            return redirect()->to(site_url('admin/chalans/' . $chalanId))->with('success', 'Chalan verified successfully.');
+        }
+
+        return redirect()->to(site_url('admin/chalans/' . $chalanId))->with('error', 'Failed to verify chalan.');
+    }
+
+    public function savePaymentAccount()
+    {
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Invalid request');
+        }
+
+        $model = new \App\Models\PaymentAccountModel();
+        $id = (int) $this->request->getPost('id');
+        $data = [
+            'account_name'  => trim((string) $this->request->getPost('account_name')),
+            'bank_name'     => trim((string) $this->request->getPost('bank_name')),
+            'account_number'=> trim((string) $this->request->getPost('account_number')),
+            'ifsc_code'     => trim((string) $this->request->getPost('ifsc_code')),
+            'branch'        => trim((string) $this->request->getPost('branch')),
+            'upi_id'        => trim((string) $this->request->getPost('upi_id')),
+            'instructions'  => trim((string) $this->request->getPost('instructions')),
+            'is_active'     => (int) $this->request->getPost('is_active') ? 1 : 0,
+        ];
+
+        if ($id > 0) {
+            $model->update($id, $data);
+        } else {
+            $model->insert($data);
+        }
+
+        return redirect()->to(site_url('admin/chalans'))->with('success', 'Payment account details saved successfully.');
+    }
+
+    public function deletePaymentAccount($id)
+    {
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Invalid request');
+        }
+
+        $model = new \App\Models\PaymentAccountModel();
+        if ($model->delete($id)) {
+            return redirect()->to(site_url('admin/chalans'))->with('success', 'Payment account deleted.');
+        }
+
+        return redirect()->to(site_url('admin/chalans'))->with('error', 'Failed to delete payment account.');
+    }
+
+    /**
+     * Mark allotment as allotted (final) after chalan verification.
+     */
+    public function markAllotted($allotmentId)
+    {
+        return $this->doMarkAllotted($allotmentId, null);
+    }
+
+    /**
+     * Mark allotment as allotted from chalan detail (redirects to chalan page).
+     */
+    public function markAllottedFromChalan($chalanId)
+    {
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalan = $chalanModel->find($chalanId);
+        if (! $chalan || empty($chalan['allotment_id'])) {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Chalan or allotment not found');
+        }
+        return $this->doMarkAllotted($chalan['allotment_id'], $chalanId);
+    }
+
+    private function doMarkAllotted($allotmentId, $redirectChalanId = null)
+    {
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Invalid request');
+        }
+
+        $toChalan = $redirectChalanId ? fn () => redirect()->to(site_url('admin/chalans/' . $redirectChalanId)) : null;
+        $toAllotment = fn () => redirect()->to(site_url('admin/allotments/' . $allotmentId));
+        $redirect = $toChalan ?? $toAllotment;
+
+        $allotmentModel = new AllotmentModel();
+        $allotment = $allotmentModel->find($allotmentId);
+        if (! $allotment) {
+            return redirect()->to(site_url('admin/chalans'))->with('error', 'Allotment not found');
+        }
+
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalan = $chalanModel->where('allotment_id', $allotmentId)->first();
+        if (! $chalan || ($chalan['status'] ?? '') !== 'paid') {
+            return $redirect()->with('error', 'Chalan must be paid before marking as allotted.');
+        }
+
+        if (empty($chalan['verified_at'])) {
+            return $redirect()->with('error', 'Chalan must be verified before allocation.');
+        }
+
+        $allotmentStatus = strtolower((string)($allotment['status'] ?? 'provisional'));
+        if (in_array($allotmentStatus, ['allotted', 'alloted'], true)) {
+            return $redirect()->with('success', 'Allotment is already marked as allotted.');
+        }
+
+        $db = \Config\Database::connect();
+        if ($db->table('allotments')->where('id', (int) $allotmentId)->update(['status' => 'allotted']) !== false) {
+            return $redirect()->with('success', 'Allotment marked as Allotted successfully.');
+        }
+
+        return $redirect()->with('error', 'Failed to update allotment status.');
     }
 
     public function payments()
@@ -1270,6 +1638,8 @@ class AdminPortal extends BaseController
             } elseif ($catUpper === 'GOVT') {
                 $casteMatch = ($casteCategory && strtoupper($casteCategory) === 'GOVT') ||
                               ($appServiceCat && strtoupper($appServiceCat) === 'GOVT');
+            } elseif ($catUpper === 'GENERAL') {
+                $casteMatch = $casteCategory && in_array(strtoupper($casteCategory), ['GENERAL', 'OBC']);
             } else {
                 if ($casteCategory && strtoupper($casteCategory) === $catUpper) {
                     $casteMatch = true;

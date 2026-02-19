@@ -113,7 +113,28 @@ class UserPortal extends BaseController
                 ->first();
             $paymentDone = (bool) $payment;
         }
-        
+
+        // Get pending chalans (final payment) for this user
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalans = $chalanModel
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
+        // Check if user won the lottery (has an allotment)
+        $allotmentModel = new \App\Models\AllotmentModel();
+        $userAllotment = $allotmentModel
+            ->select('allotments.id, allotments.plot_number, allotments.status as allotment_status')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->where('applications.user_id', $userId)
+            ->first();
+        $lotteryWon = (bool) $userAllotment;
+        if ($userAllotment && ! empty($userAllotment['plot_number'])) {
+            $plotModel = new \App\Models\PlotModel();
+            $plot = $plotModel->where('plot_number', $userAllotment['plot_number'])->first();
+            $userAllotment['plot_area'] = $plot['area'] ?? null;
+        }
+
         $data['user'] = [
             'id' => session()->get('user_id'),
             'name' => session()->get('user_name'),
@@ -124,6 +145,9 @@ class UserPortal extends BaseController
         $data['eligibility'] = $eligibility;
         $data['payment'] = $payment;
         $data['documents'] = $documents;
+        $data['chalans'] = $chalans ?? [];
+        $data['lotteryWon'] = $lotteryWon;
+        $data['userAllotment'] = $userAllotment;
         $data['steps'] = [
             'eligibility' => [
                 'completed' => $eligibilityDone,
@@ -563,9 +587,32 @@ class UserPortal extends BaseController
 
         $applicationDone = (bool) $application;
 
+        // Check if user won the lottery (has an allotment)
+        $allotmentModel = new \App\Models\AllotmentModel();
+        $userAllotment = $allotmentModel
+            ->select('allotments.id, allotments.plot_number, allotments.status as allotment_status')
+            ->join('applications', 'applications.id = allotments.application_id', 'left')
+            ->where('applications.user_id', $userId)
+            ->first();
+        $lotteryWon = (bool) $userAllotment;
+        if ($userAllotment && ! empty($userAllotment['plot_number'])) {
+            $plotModel = new \App\Models\PlotModel();
+            $plot = $plotModel->where('plot_number', $userAllotment['plot_number'])->first();
+            $userAllotment['plot_area'] = $plot['area'] ?? null;
+        }
+
+        // Get chalans for this user
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalans = $chalanModel
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
         // Overall status label - check application status from database first
         if (! $application) {
             $overallStatus = 'none';
+        } elseif ($lotteryWon) {
+            $overallStatus = 'lottery_won';
         } elseif ($application['status'] === 'verified') {
             $overallStatus = 'verified';
         } elseif ($application['status'] === 'rejected') {
@@ -579,6 +626,9 @@ class UserPortal extends BaseController
         $data = [
             'application'     => $application,
             'overallStatus'   => $overallStatus,
+            'lotteryWon'      => $lotteryWon,
+            'userAllotment'   => $userAllotment,
+            'chalans'         => $chalans ?? [],
             'steps'           => [
                 'eligibility' => ['completed' => $eligibilityDone],
                 'application' => ['completed' => $applicationDone],
@@ -971,9 +1021,14 @@ class UserPortal extends BaseController
             $userAllotment = $allotmentModel
                 ->where('application_id', $userApplication['id'])
                 ->first();
-            $userWon = !empty($userAllotment);
+            $userWon = ! empty($userAllotment);
+            if ($userAllotment && ! empty($userAllotment['plot_number'])) {
+                $plotModel = new \App\Models\PlotModel();
+                $plot = $plotModel->where('plot_number', $userAllotment['plot_number'])->first();
+                $userAllotment['plot_area'] = $plot['area'] ?? null;
+            }
         }
-        
+
         $data = [
             'allAllotments' => $allAllotments,
             'userWon' => $userWon,
@@ -1021,8 +1076,135 @@ class UserPortal extends BaseController
 
         $data['allotment'] = $allotment;
 
+        // Get chalan for this allotment (if exists)
+        if ($allotment) {
+            $chalanModel = new \App\Models\ChalanModel();
+            $data['chalan'] = $chalanModel
+                ->where('allotment_id', $allotment['id'])
+                ->orderBy('created_at', 'DESC')
+                ->first();
+        } else {
+            $data['chalan'] = null;
+        }
+
         return view('layout/header')
             . view('user/allotment', $data)
+            . view('layout/footer');
+    }
+
+    public function chalanPay($chalanId)
+    {
+        if (!session()->has('user_id')) {
+            return redirect()->to('/auth/login')->with('error', 'Please login to pay chalan');
+        }
+
+        $userId = session()->get('user_id');
+        $chalanModel = new \App\Models\ChalanModel();
+        $chalan = $chalanModel->find($chalanId);
+
+        if (!$chalan || (int) $chalan['user_id'] !== (int) $userId) {
+            return redirect()->to('/user/dashboard')->with('error', 'Chalan not found');
+        }
+
+        if ($chalan['status'] === 'paid') {
+            return redirect()->to('/user/dashboard')->with('success', 'This chalan has already been paid.');
+        }
+
+        $isPost = strtolower((string) $this->request->getMethod()) === 'post' || $this->request->getPost('amount') !== null;
+        if ($isPost) {
+            $amount = (int) $this->request->getPost('amount');
+            $transactionRef = trim((string) $this->request->getPost('transaction_ref') ?? '');
+            $paymentAccountId = (int) $this->request->getPost('payment_account_id');
+
+            if ($amount <= 0 || $amount != (int) $chalan['amount']) {
+                return redirect()->back()->with('error', 'Please enter the correct chalan amount.');
+            }
+
+            $paModel = new \App\Models\PaymentAccountModel();
+            $activeAccounts = $paModel->getAllActive();
+            $validAccountIds = array_map(fn ($a) => (int) ($a['id'] ?? 0), $activeAccounts);
+
+            if (! empty($activeAccounts) && ($paymentAccountId <= 0 || ! in_array($paymentAccountId, $validAccountIds, true))) {
+                return redirect()->back()->with('error', 'Please select the bank account where you made the payment.');
+            }
+
+            $paymentProofPath = null;
+            $proofFile = $this->request->getFile('payment_proof');
+            if ($proofFile && $proofFile->isValid() && ! $proofFile->hasMoved()) {
+                $ext = strtolower($proofFile->getExtension());
+                $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+                if (! in_array($ext, $allowedExt, true)) {
+                    return redirect()->back()->with('error', 'Payment proof must be an image (JPG, PNG, GIF) or PDF.');
+                }
+                if ($proofFile->getSize() > 5 * 1024 * 1024) {
+                    return redirect()->back()->with('error', 'Payment proof file size must not exceed 5MB.');
+                }
+                $uploadPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'chalan_proofs' . DIRECTORY_SEPARATOR;
+                if (! is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0775, true);
+                }
+                $newName = $chalanId . '_' . $userId . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                $proofFile->move($uploadPath, $newName);
+                $paymentProofPath = 'uploads/chalan_proofs/' . $newName;
+            }
+
+            $db = \Config\Database::connect();
+            $db->transStart();
+
+            try {
+                $paymentId = $this->paymentModel->insert([
+                    'user_id'        => $userId,
+                    'application_id' => $chalan['application_id'],
+                    'amount'         => $amount,
+                    'status'         => 'success',
+                    'transaction_ref'=> $transactionRef ?: 'CHALAN-' . $chalan['chalan_number'],
+                ]);
+
+                if (!$paymentId) {
+                    throw new \Exception('Failed to record payment');
+                }
+
+                $chalanUpdate = [
+                    'status'     => 'paid',
+                    'payment_id' => $paymentId,
+                    'paid_at'    => date('Y-m-d H:i:s'),
+                ];
+                if ($paymentAccountId > 0) {
+                    $chalanUpdate['payment_account_id'] = $paymentAccountId;
+                }
+                if ($paymentProofPath) {
+                    $chalanUpdate['payment_proof'] = $paymentProofPath;
+                }
+                $chalanModel->update($chalanId, $chalanUpdate);
+
+                $allotmentId = (int) ($chalan['allotment_id'] ?? 0);
+                if ($allotmentId > 0) {
+                    $allotmentRow = $db->table('allotments')->select('status')->where('id', $allotmentId)->get()->getRowArray();
+                    if ($allotmentRow && strtolower((string)($allotmentRow['status'] ?? '')) === 'provisional') {
+                        $db->table('allotments')->where('id', $allotmentId)->update(['status' => 'final']);
+                    }
+                }
+
+                $db->transComplete();
+                if ($db->transStatus() === false) {
+                    throw new \Exception('Transaction failed');
+                }
+
+                return redirect()->to('/user/dashboard')->with('success', 'Chalan payment completed successfully!');
+            } catch (\Exception $e) {
+                $db->transRollback();
+                log_message('error', 'Chalan payment failed: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Payment failed: ' . $e->getMessage());
+            }
+        }
+
+        $paymentAccountModel = new \App\Models\PaymentAccountModel();
+        $paymentAccounts     = $paymentAccountModel->getAllActive();
+        $data['chalan'] = $chalan;
+        $data['paymentAccounts'] = $paymentAccounts;
+
+        return view('layout/header')
+            . view('user/chalan_pay', $data)
             . view('layout/footer');
     }
 

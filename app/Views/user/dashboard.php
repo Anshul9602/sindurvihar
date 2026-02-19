@@ -30,6 +30,27 @@
         $statusColor = '#991B1B';
         $statusBg    = '#FEE2E2';
         $statusPill  = true;
+    } elseif (!empty($lotteryWon)) {
+        $plotNum  = $userAllotment['plot_number'] ?? null;
+        $plotArea = $userAllotment['plot_area'] ?? null;
+        $allotmentStatus = strtolower((string)($userAllotment['allotment_status'] ?? ''));
+        $isAllotted = in_array($allotmentStatus, ['allotted', 'alloted'], true);
+        if ($plotNum && $plotArea) {
+            $statusLabel = $isAllotted
+                ? sprintf(lang('App.statusPlotAllottedSize') ?? 'Plot Allotted! Plot: %s (%s sq ft)', $plotNum, $plotArea)
+                : sprintf(lang('App.dashboardCongratulationsPlotSize') ?? 'Congratulations! You won the lottery! Plot: %s (%s sq ft)', $plotNum, $plotArea);
+        } elseif ($plotNum) {
+            $statusLabel = $isAllotted
+                ? sprintf(lang('App.statusPlotAllotted') ?? 'Plot Allotted! Plot: %s', $plotNum)
+                : sprintf(lang('App.dashboardCongratulationsPlot') ?? 'Congratulations! You won the lottery! Plot: %s', $plotNum);
+        } else {
+            $statusLabel = $isAllotted
+                ? (lang('App.statusAllotted') ?? 'Plot Allotted!')
+                : (lang('App.dashboardCongratulations') ?? 'Congratulations! You won the lottery!');
+        }
+        $statusColor = '#065F46';
+        $statusBg    = '#D1FAE5';
+        $statusPill  = true;
     } elseif ($eligibilityDone && $applicationDone && $documentsDone && $paymentDone) {
         $statusLabel = lang('App.dashboardStatusSubmitted') ?? 'Submitted';
         $statusColor = '#166534';
@@ -43,6 +64,103 @@
     }
     ?>
 
+    <?php
+    $pendingChalans = array_filter($chalans ?? [], function ($c) { return ($c['status'] ?? '') === 'pending'; });
+    $hasPendingChalan = ! empty($pendingChalans);
+    $hasChalans      = ! empty($chalans);
+    $showChalanCard  = $hasPendingChalan || (! empty($lotteryWon) && $hasChalans);
+    ?>
+
+    <?php if (! empty($lotteryWon)): ?>
+    <!-- Winners Dashboard Layout -->
+    <div class="space-y-6 mb-8">
+        <!-- Row 1: Congratulations + Chalan -->
+        <div class="grid grid-cols-1 <?= $showChalanCard ? 'lg:grid-cols-2' : '' ?> gap-6">
+            <div class="bg-white shadow-md rounded-lg p-6 border-l-4" style="border-color: #10B981;">
+                <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;">
+                    <?= esc(lang('App.dashboardApplicationStatus')) ?>
+                </h3>
+                <div class="py-2">
+                    <span class="inline-block px-4 py-2 rounded-lg text-base font-semibold"
+                          style="background-color: <?= esc($statusBg) ?>; color: <?= esc($statusColor) ?>;">
+                        <?= esc($statusLabel) ?>
+                    </span>
+                </div>
+            </div>
+            <?php if ($showChalanCard): ?>
+            <div class="bg-white shadow-md rounded-lg p-6 border-l-4" style="border-color: #F59E0B;">
+                <h3 class="text-lg font-semibold mb-3" style="color: #0F1F3F;">
+                    <?= esc(lang('App.chalanFinalPayment') ?? 'Final Payment Chalan') ?>
+                </h3>
+                <?php $chalansToShow = $chalans; ?>
+                <?php foreach ($chalansToShow as $ch): ?>
+                <div class="mb-3 p-4 rounded-lg" style="background-color: <?= ($ch['status'] ?? '') === 'paid' ? '#D1FAE5' : '#FEF3C7' ?>; border: 1px solid <?= ($ch['status'] ?? '') === 'paid' ? '#10B981' : '#F59E0B' ?>;">
+                    <p class="text-sm mb-3" style="color: #374151;">
+                        <strong><?= esc(lang('App.chalanNumber') ?? 'Chalan') ?>:</strong> <?= esc($ch['chalan_number']) ?><br>
+                        <strong><?= esc(lang('App.amount') ?? 'Amount') ?>:</strong> ₹<?= number_format($ch['amount']) ?><br>
+                        <strong><?= esc(lang('App.adminStatus') ?? 'Status') ?>:</strong>
+                        <span class="px-2 py-0.5 rounded text-xs font-semibold <?= ($ch['status'] ?? '') === 'paid' ? 'bg-green-200 text-green-900' : 'bg-yellow-200 text-yellow-900' ?>">
+                            <?= esc(ucfirst($ch['status'] ?? 'pending')) ?>
+                        </span>
+                    </p>
+                    <?php if (($ch['status'] ?? '') === 'pending'): ?>
+                    <a href="<?= site_url('user/chalan/' . $ch['id'] . '/pay') ?>"
+                       class="inline-block px-5 py-2.5 rounded-md font-semibold text-white"
+                       style="background-color: #10B981;">
+                        <?= esc(lang('App.chalanPayButton') ?? 'Pay Now') ?>
+                    </a>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <!-- Row 2: Quick Links (Steps 6, 7, 8) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="<?= site_url('user/lottery-results') ?>" class="block">
+                <div class="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition border border-gray-100 h-full">
+                    <h3 class="text-base font-semibold mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep6')) ?></h3>
+                    <span class="text-sm" style="color: #6B7280;"><?= esc(lang('App.dashboardLotteryResultsDesc') ?? 'View lottery results') ?></span>
+                    <span class="block mt-3 text-blue-600 font-semibold text-sm"><?= esc(lang('App.dashboardGo')) ?> →</span>
+                </div>
+            </a>
+            <a href="<?= site_url('user/allotment') ?>" class="block">
+                <div class="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition border border-gray-100 h-full">
+                    <h3 class="text-base font-semibold mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep7')) ?></h3>
+                    <span class="text-sm" style="color: #6B7280;"><?= esc(lang('App.dashboardAllotmentDesc') ?? 'View your plot details') ?></span>
+                    <span class="block mt-3 text-blue-600 font-semibold text-sm"><?= esc(lang('App.dashboardGo')) ?> →</span>
+                </div>
+            </a>
+            <a href="<?= site_url('user/refund-status') ?>" class="block">
+                <div class="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition border border-gray-100 h-full">
+                    <h3 class="text-base font-semibold mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardStep8')) ?></h3>
+                    <span class="text-sm" style="color: #6B7280;"><?= esc(lang('App.dashboardRefundDesc') ?? 'Check refund status') ?></span>
+                    <span class="block mt-3 text-blue-600 font-semibold text-sm"><?= esc(lang('App.dashboardGo')) ?> →</span>
+                </div>
+            </a>
+        </div>
+        <!-- Row 3: Profile + View Status -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardProfile')) ?></h3>
+                <a href="<?= site_url('user/profile') ?>">
+                    <button class="px-4 py-2 rounded-md font-semibold border" style="border-color: #0747A6; color: #0747A6;">
+                        <?= esc(lang('App.dashboardEditProfile')) ?>
+                    </button>
+                </a>
+            </div>
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;"><?= esc(lang('App.dashboardViewStatus')) ?></h3>
+                <a href="<?= site_url('user/application/status') ?>">
+                    <button class="px-4 py-2 rounded-md font-semibold border" style="border-color: #0747A6; color: #0747A6;">
+                        <?= esc(lang('App.dashboardViewStatus')) ?>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+    <!-- Non-winners Dashboard Layout -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div class="bg-white shadow-md rounded-lg p-6">
             <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;">
@@ -59,53 +177,72 @@
                 <?php endif; ?>
             </div>
         </div>
-
         <div class="bg-white shadow-md rounded-lg p-6">
             <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;">
                 <?= esc(lang('App.dashboardQuickActions')) ?>
             </h3>
             <div class="space-y-2">
-                <a href="/user/eligibility">
-                    <button class="w-full px-4 py-2 rounded-md font-semibold text-white"
-                            style="background-color: #0747A6;">
+                <a href="<?= site_url('user/eligibility') ?>">
+                    <button class="w-full px-4 py-2 rounded-md font-semibold text-white" style="background-color: #0747A6;">
                         <?= esc(lang('App.dashboardCheckEligibility')) ?>
                     </button>
                 </a>
-                <a href="/user/application">
-                    <button class="w-full px-4 py-2 rounded-md font-semibold text-white"
-                            style="background-color: #2563EB;">
+                <a href="<?= site_url('user/application') ?>">
+                    <button class="w-full px-4 py-2 rounded-md font-semibold text-white" style="background-color: #2563EB;">
                         <?= esc(lang('App.dashboardStartApplication')) ?>
                     </button>
                 </a>
-                <a href="/user/application/status">
-                    <button class="w-full px-4 py-2 rounded-md font-semibold border"
-                            style="border-color: #0747A6; color: #0747A6;">
+                <a href="<?= site_url('user/application/status') ?>">
+                    <button class="w-full px-4 py-2 rounded-md font-semibold border" style="border-color: #0747A6; color: #0747A6;">
                         <?= esc(lang('App.dashboardViewStatus')) ?>
                     </button>
                 </a>
             </div>
         </div>
-
+        <?php if ($showChalanCard): ?>
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;">
+                <?= esc(lang('App.chalanFinalPayment') ?? 'Final Payment Chalan') ?>
+            </h3>
+            <?php $chalansToShow = $pendingChalans; ?>
+            <?php foreach ($chalansToShow as $ch): ?>
+            <div class="mb-3 p-3 rounded-lg" style="background-color: <?= ($ch['status'] ?? '') === 'paid' ? '#D1FAE5' : '#FEF3C7' ?>; border: 1px solid <?= ($ch['status'] ?? '') === 'paid' ? '#10B981' : '#F59E0B' ?>;">
+                <p class="text-sm mb-2" style="color: #374151;">
+                    <strong><?= esc(lang('App.chalanNumber') ?? 'Chalan') ?>:</strong> <?= esc($ch['chalan_number']) ?><br>
+                    <strong><?= esc(lang('App.amount') ?? 'Amount') ?>:</strong> ₹<?= number_format($ch['amount']) ?><br>
+                    <strong><?= esc(lang('App.adminStatus') ?? 'Status') ?>:</strong>
+                    <span class="px-2 py-0.5 rounded text-xs font-semibold <?= ($ch['status'] ?? '') === 'paid' ? 'bg-green-200 text-green-900' : 'bg-yellow-200 text-yellow-900' ?>">
+                        <?= esc(ucfirst($ch['status'] ?? 'pending')) ?>
+                    </span>
+                </p>
+                <?php if (($ch['status'] ?? '') === 'pending'): ?>
+                <a href="<?= site_url('user/chalan/' . $ch['id'] . '/pay') ?>"
+                   class="inline-block px-4 py-2 rounded-md font-semibold text-white" style="background-color: #10B981;">
+                    <?= esc(lang('App.chalanPayButton') ?? 'Pay Now') ?>
+                </a>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
         <div class="bg-white shadow-md rounded-lg p-6">
             <h3 class="text-lg font-semibold mb-2" style="color: #0F1F3F;">
                 <?= esc(lang('App.dashboardProfile')) ?>
             </h3>
-            <a href="/user/profile">
-                <button class="w-full px-4 py-2 rounded-md font-semibold border"
-                        style="border-color: #0747A6; color: #0747A6;">
+            <a href="<?= site_url('user/profile') ?>">
+                <button class="w-full px-4 py-2 rounded-md font-semibold border" style="border-color: #0747A6; color: #0747A6;">
                     <?= esc(lang('App.dashboardEditProfile')) ?>
                 </button>
             </a>
         </div>
     </div>
+    <?php endif; ?>
 
+    <?php if (empty($lotteryWon)): ?>
     <div class="bg-white shadow-md rounded-lg p-6">
         <h2 class="text-xl font-semibold mb-4" style="color: #0F1F3F;">
             <?= esc(lang('App.dashboardFlowTitle')) ?>
         </h2>
-        <?php
-        // Flags already computed above for status card
-        ?>
         <div class="space-y-4">
             <!-- Step 1: Eligibility -->
             <?php 
@@ -310,8 +447,9 @@
                     </div>
                 </div>
             <?php endif; ?>
-            <!-- Steps 5-8 in Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <!-- Steps 5-8 in Cards Grid (or just 6-8 when lottery won) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 <?= !empty($lotteryWon) ? 'lg:grid-cols-3' : 'lg:grid-cols-4' ?> gap-4 <?= empty($lotteryWon) ? 'mt-4' : '' ?>">
+                <?php if (empty($lotteryWon)): ?>
                 <a href="/user/application/status">
                     <div class="bg-white border rounded-lg p-4 hover:shadow-md transition h-full flex flex-col justify-between">
                         <div>
@@ -323,6 +461,7 @@
                         </button>
                     </div>
                 </a>
+                <?php endif; ?>
                 <a href="/user/lottery-results">
                     <div class="bg-white border rounded-lg p-4 hover:shadow-md transition h-full flex flex-col justify-between">
                         <div>
@@ -358,6 +497,7 @@
                 </a>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Application View Modal -->

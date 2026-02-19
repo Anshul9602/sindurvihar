@@ -1,3 +1,13 @@
+<?php if (session()->getFlashdata('success')): ?>
+    <div class="mb-4 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm" style="color:#166534;">
+        <?= esc(session()->getFlashdata('success')) ?>
+    </div>
+<?php endif; ?>
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm" style="color:#B91C1C;">
+        <?= esc(session()->getFlashdata('error')) ?>
+    </div>
+<?php endif; ?>
 <!-- Title Section -->
 <div class="mb-6">
     <h1 class="text-2xl font-bold mb-2" style="color: #0F1F3F;">
@@ -265,20 +275,81 @@
             </div>
         </div>
 
+        <!-- Generate Chalan for Final Payment -->
+        <div class="border-t pt-6 mt-6">
+            <h2 class="text-lg font-semibold mb-4" style="color: #0F1F3F;">
+                <?= esc(lang('App.adminGenerateChalan') ?? 'Generate Chalan for Final Payment') ?>
+            </h2>
+            <?php if (!empty($chalan)): ?>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm" style="color:#111827;">
+                        <strong><?= esc(lang('App.chalanNumber') ?? 'Chalan No') ?>:</strong> <?= esc($chalan['chalan_number']) ?><br>
+                        <strong><?= esc(lang('App.amount') ?? 'Amount') ?>:</strong> ₹<?= number_format($chalan['amount']) ?><br>
+                        <strong><?= esc(lang('App.adminStatus') ?? 'Status') ?>:</strong>
+                        <span class="px-2 py-0.5 rounded text-xs font-semibold <?= ($chalan['status'] === 'paid') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' ?>">
+                            <?= esc(ucfirst($chalan['status'])) ?>
+                        </span>
+                        <?php if (($chalan['status'] ?? '') === 'paid' && !empty($chalan['paid_at'])): ?>
+                            <br><strong><?= esc(lang('App.chalanPaidDate') ?? 'Paid Date') ?>:</strong> <?= esc(date('d M Y, h:i A', strtotime($chalan['paid_at']))) ?>
+                        <?php endif; ?>
+                    </p>
+                </div>
+            <?php else: ?>
+                <form action="<?= site_url('admin/allotments/' . $allotment['id'] . '/generate-chalan') ?>" method="post" class="flex flex-wrap items-end gap-3">
+                    <?= csrf_field() ?>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" style="color: #6B7280;"><?= esc(lang('App.chalanAmount') ?? 'Chalan Amount (₹)') ?></label>
+                        <input type="number" name="amount" min="1" required
+                               class="border border-gray-300 rounded-md px-3 py-2 w-40"
+                               placeholder="e.g. 50000">
+                    </div>
+                    <button type="submit" class="px-4 py-2 rounded-md font-semibold text-white" style="background-color:#10B981;">
+                        <?= esc(lang('App.adminGenerateChalan') ?? 'Generate Chalan') ?>
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
+
         <!-- Actions Section -->
         <div class="border-t pt-6 mt-6">
             <h3 class="text-lg font-semibold mb-4" style="color: #0F1F3F;">
                 <?= esc(lang('App.adminActions') ?? 'Actions') ?>
             </h3>
-            <div class="flex flex-wrap gap-3">
-                <a href="/admin/allotments" 
+            <div class="flex flex-wrap gap-3 items-center">
+                <a href="<?= site_url('admin/allotments') ?>" 
                    class="px-6 py-2 rounded-md font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition">
                     <?= esc(lang('App.adminBackToList') ?? 'Back to List') ?>
                 </a>
-                <a href="/admin/applications/<?= esc($allotment['application_id']) ?>" 
+                <a href="<?= site_url('admin/applications/' . $allotment['application_id']) ?>" 
                    class="px-6 py-2 rounded-md font-semibold bg-cyan-600 text-white hover:bg-cyan-700 transition">
                     <?= esc(lang('App.adminViewApplication') ?? 'View Application') ?>
                 </a>
+                <?php
+                $chalanPaid = !empty($chalan) && ($chalan['status'] ?? '') === 'paid';
+                $chalanVerified = !empty($chalan) && !empty($chalan['verified_at']);
+                $allotmentStatus = strtolower((string)($allotment['status'] ?? 'provisional'));
+                $canMarkAllotted = $chalanPaid && $chalanVerified && in_array($allotmentStatus, ['provisional', 'final'], true);
+                $needsVerification = $chalanPaid && !$chalanVerified && in_array($allotmentStatus, ['provisional', 'final'], true);
+                ?>
+                <?php if ($needsVerification): ?>
+                    <a href="<?= site_url('admin/chalans/' . ($chalan['id'] ?? '')) ?>" class="px-6 py-2 rounded-md font-semibold bg-amber-600 text-white hover:bg-amber-700 transition shadow-sm inline-flex items-center gap-2">
+                        <?= esc(lang('App.adminVerifyChalan') ?? 'Verify Chalan') ?> →
+                    </a>
+                <?php elseif ($canMarkAllotted): ?>
+                    <form action="<?= site_url('admin/allotments/' . $allotment['id'] . '/mark-allotted') ?>" method="post" class="inline" onsubmit="return confirm('<?= esc(lang('App.adminConfirmMarkAllotted') ?? 'Mark this allotment as Allotted?') ?>');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="px-6 py-2 rounded-md font-semibold bg-green-600 text-white hover:bg-green-700 transition shadow-sm inline-flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <?= esc(lang('App.adminMarkAllotted') ?? 'Mark as Allotted') ?>
+                        </button>
+                    </form>
+                <?php elseif (in_array($allotmentStatus, ['allotted', 'alloted'], true)): ?>
+                    <span class="px-4 py-2 rounded-md font-semibold bg-green-100 text-green-800 border border-green-200">
+                        <?= esc(lang('App.adminAllottedStatus') ?? 'Allotted') ?>
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
     </div>

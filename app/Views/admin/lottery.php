@@ -20,44 +20,32 @@
     <?php endif; ?>
 
     <!-- Category-specific Run Lottery Buttons -->
+    <?php
+    $categoriesAlreadyRun = $categoriesAlreadyRun ?? [];
+    $lotteryCategories = [
+        'General'     => '#3B82F6',
+        'Govt'        => '#10B981',
+        'ST'          => '#F59E0B',
+        'SC'          => '#EF4444',
+        'Media'       => '#8B5CF6',
+        'Transgender' => '#EC4899',
+        'Army'        => '#6366F1',
+    ];
+    ?>
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
         <h2 class="text-lg font-semibold mb-4" style="color: #0F1F3F;">Run Lottery by Category</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            <button onclick="runCategoryLottery('General')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #3B82F6;">
-                General
+            <?php foreach ($lotteryCategories as $cat => $color): ?>
+            <?php $alreadyRun = !empty($categoriesAlreadyRun[$cat]); ?>
+            <button type="button"
+                    onclick="<?= $alreadyRun ? '' : "runCategoryLottery('" . esc($cat) . "')" ?>"
+                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition <?= $alreadyRun ? 'opacity-50 cursor-not-allowed' : '' ?>"
+                    style="background-color: <?= $color ?>;"
+                    <?= $alreadyRun ? 'disabled' : '' ?>
+                    title="<?= $alreadyRun ? 'Lottery already run for this category' : 'Run ' . esc($cat) . ' lottery' ?>">
+                <?= esc($cat) ?><?= $alreadyRun ? ' ✓' : '' ?>
             </button>
-            <button onclick="runCategoryLottery('Govt')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #10B981;">
-                Govt
-            </button>
-            <button onclick="runCategoryLottery('ST')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #F59E0B;">
-                ST
-            </button>
-            <button onclick="runCategoryLottery('SC')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #EF4444;">
-                SC
-            </button>
-            <button onclick="runCategoryLottery('Media')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #8B5CF6;">
-                Media
-            </button>
-            <button onclick="runCategoryLottery('Transgender')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #EC4899;">
-                Transgender
-            </button>
-            <button onclick="runCategoryLottery('Army')"
-                    class="category-lottery-btn px-4 py-2 rounded-full font-semibold text-white text-sm shadow transition"
-                    style="background-color: #6366F1;">
-                Army
-            </button>
+            <?php endforeach; ?>
         </div>
     </div>
 
@@ -119,77 +107,93 @@
         </div>
     <?php endif; ?>
 
-    <!-- Win Plots Section -->
-    <?php if (!empty($allottedPlots)): ?>
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="font-semibold text-sm" style="color:#374151;">
+    <!-- Win Plots (Allotted Plots) – grouped by lottery round -->
+    <?php 
+    $allottedPlotsByRound = $allottedPlotsByRound ?? [];
+    if (!empty($allottedPlotsByRound)): 
+    ?>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold" style="color: #0F1F3F;">
                 <?= esc(lang('App.adminWinPlotsTitle') ?? 'Win Plots (Allotted Plots)') ?>
             </h2>
             <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                <?= count($allottedPlots) ?> <?= esc(lang('App.adminTotal')) ?>
+                <?= isset($allottedPlots) ? count($allottedPlots) : 0 ?> <?= esc(lang('App.adminTotal')) ?>
             </span>
         </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-gray-50 border-b">
-                    <tr>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminPlotNumber') ?? 'Plot Number') ?></th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminWinnerName') ?? 'Winner Name') ?></th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminApplicationMobile')) ?></th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminApplicationId') ?? 'Application ID') ?></th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminPlotCategory') ?? 'Category') ?></th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminAllottedDate') ?? 'Allotted Date') ?></th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase" style="color:#6B7280;"><?= esc(lang('App.adminStatus') ?? 'Status') ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($allottedPlots as $allotment): ?>
-                        <tr class="border-b hover:bg-gray-50 transition">
-                            <td class="px-4 py-3">
-                                <span class="font-semibold" style="color:#10B981;"><?= esc($allotment['plot_number'] ?? 'N/A') ?></span>
-                            </td>
-                            <td class="px-4 py-3" style="color:#111827;">
-                                <?= esc($allotment['full_name'] ?? $allotment['user_name'] ?? 'N/A') ?>
-                            </td>
-                            <td class="px-4 py-3" style="color:#111827;">
-                                <?= esc($allotment['application_mobile'] ?? $allotment['user_mobile'] ?? 'N/A') ?>
-                            </td>
-                            <td class="px-4 py-3" style="color:#111827;">
-                                #<?= esc($allotment['application_id'] ?? 'N/A') ?>
-                            </td>
-                            <td class="px-4 py-3">
-                                <?php if (!empty($allotment['plot_category'])): ?>
-                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                                        <?= esc($allotment['plot_category']) ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span class="text-xs" style="color:#9CA3AF;"><?= esc(lang('App.notProvided') ?? 'Not set') ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-4 py-3 text-xs" style="color:#6B7280;">
-                                <?= isset($allotment['created_at']) ? esc(date('d M Y', strtotime($allotment['created_at']))) : '—' ?>
-                            </td>
-                            <td class="px-4 py-3">
-                                <?php 
-                                $status = $allotment['status'] ?? 'provisional';
-                                $statusColors = [
-                                    'provisional' => ['bg-yellow-50', 'text-yellow-700'],
-                                    'confirmed' => ['bg-green-50', 'text-green-700'],
-                                    'cancelled' => ['bg-red-50', 'text-red-700'],
-                                ];
-                                $colors = $statusColors[$status] ?? ['bg-gray-50', 'text-gray-700'];
-                                ?>
-                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold <?= $colors[0] ?> <?= $colors[1] ?>">
-                                    <?= esc(ucfirst($status)) ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <?php foreach ($allottedPlotsByRound as $roundLabel => $roundPlots): ?>
+        <div class="mb-6 last:mb-0">
+            <h3 class="text-sm font-semibold mb-3 flex items-center gap-2" style="color: #374151;">
+                <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800"><?= esc($roundLabel) ?></span>
+                <span class="text-xs font-normal" style="color: #6B7280;">(<?= count($roundPlots) ?> plot<?= count($roundPlots) !== 1 ? 's' : '' ?>)</span>
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <?php 
+            $allocCategoryColors = [
+                'EWS' => '#EF4444',
+                'LIG' => '#F59E0B',
+                'Residential' => '#10B981',
+                'General' => '#3B82F6',
+                'Govt' => '#10B981',
+                'ST' => '#F59E0B',
+                'SC' => '#EF4444',
+                'Media' => '#8B5CF6',
+                'Transgender' => '#EC4899',
+                'Army' => '#6366F1',
+                'MIG-A' => '#06B6D4',
+                'MIG-B' => '#14B8A6',
+                'HIG' => '#8B5CF6',
+            ];
+            foreach ($roundPlots as $allotment): 
+                $plotCat = $allotment['plot_category'] ?? 'General';
+                $allocColor = $allocCategoryColors[$plotCat] ?? '#10B981';
+                $plotNumber = $allotment['plot_number'] ?? 'N/A';
+                $area = $allotment['area'] ?? null;
+                $winnerName = $allotment['full_name'] ?? $allotment['user_name'] ?? 'N/A';
+                $mobile = $allotment['application_mobile'] ?? $allotment['user_mobile'] ?? '';
+                $allottedDate = isset($allotment['created_at']) ? date('d M Y', strtotime($allotment['created_at'])) : '';
+                $status = $allotment['status'] ?? 'provisional';
+            ?>
+                <div class="border rounded-lg p-3 shadow-sm hover:shadow-md transition"
+                     style="border-color: <?= $allocColor ?>; border-width: 2px;">
+                    <div class="text-center">
+                        <div class="text-xs font-semibold mb-1" style="color: #6B7280;"><?= esc($plotCat) ?></div>
+                        <div class="text-lg font-bold mb-1" style="color: <?= $allocColor ?>;"><?= esc($plotNumber) ?></div>
+                        <?php if ($area): ?>
+                            <div class="text-xs mb-2" style="color: #9CA3AF;"><?= esc(number_format($area, 2)) ?> sqm</div>
+                        <?php else: ?>
+                            <div class="text-xs mb-2" style="color: #9CA3AF;">Size: N/A</div>
+                        <?php endif; ?>
+                        <div class="text-xs font-semibold" style="color: #10B981;"><?= esc($winnerName) ?></div>
+                        <?php if ($mobile): ?>
+                            <div class="text-xs" style="color: #6B7280;"><?= esc($mobile) ?></div>
+                        <?php endif; ?>
+                        <?php if ($allottedDate): ?>
+                            <div class="text-xs mt-1" style="color: #9CA3AF;"><?= esc($allottedDate) ?></div>
+                        <?php endif; ?>
+                        <span class="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-semibold <?= ($status === 'confirmed') ? 'bg-green-50 text-green-700' : (($status === 'cancelled') ? 'bg-red-50 text-red-700' : 'bg-yellow-50 text-yellow-700') ?>">
+                            <?= esc(ucfirst($status)) ?>
+                        </span>
+                        <?php
+                        $isAllotted = in_array(strtolower((string)$status), ['allotted', 'alloted'], true);
+                        $hasChalan = !empty($allotment['chalan_id'] ?? null);
+                        $showGenerateChalan = !$isAllotted && !$hasChalan;
+                        ?>
+                        <?php if ($showGenerateChalan): ?>
+                        <a href="/admin/allotments/<?= esc($allotment['id'] ?? '') ?>" class="block mt-2 text-xs font-semibold" style="color:#0747A6;">
+                            <?= esc(lang('App.adminGenerateChalan') ?? 'Generate Chalan') ?>
+                        </a>
+                        <?php elseif ($hasChalan): ?>
+                        <a href="<?= site_url('admin/chalans/' . ($allotment['chalan_id'] ?? '')) ?>" class="block mt-2 text-xs font-semibold" style="color:#10B981;">
+                            <?= esc(lang('App.adminViewChalan') ?? 'View Chalan') ?>
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            </div>
         </div>
+        <?php endforeach; ?>
     </div>
     <?php endif; ?>
 

@@ -40,6 +40,12 @@
                     <p class="text-sm mb-1" style="color: #6B7280;"><?= esc(lang('App.lotteryPlotNumber') ?? 'Plot Number') ?></p>
                     <p class="font-semibold text-lg" style="color: #065F46;"><?= esc($userAllotment['plot_number']) ?></p>
                 </div>
+                <?php if (!empty($userAllotment['plot_area'])): ?>
+                <div>
+                    <p class="text-sm mb-1" style="color: #6B7280;"><?= esc(lang('App.lotteryPlotSize') ?? 'Plot Size') ?></p>
+                    <p class="font-semibold" style="color: #111827;"><?= esc($userAllotment['plot_area']) ?> <?= esc(lang('App.lotterySqFt') ?? 'sq ft') ?></p>
+                </div>
+                <?php endif; ?>
                 <div>
                     <p class="text-sm mb-1" style="color: #6B7280;"><?= esc(lang('App.lotteryBlockName') ?? 'Block Name') ?></p>
                     <p class="font-semibold" style="color: #111827;"><?= esc($userAllotment['block_name'] ?? 'N/A') ?></p>
@@ -83,9 +89,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryRank') ?? 'Rank') ?></th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryAllotmentId') ?? 'Allotment ID') ?></th>
                         <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryWinnerName') ?? 'Winner Name') ?></th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryApplicationId') ?? 'Application ID') ?></th>
                         <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryPlotNumber') ?? 'Plot Number') ?></th>
                         <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryBlockName') ?? 'Block') ?></th>
                         <th class="px-6 py-3 text-xs font-semibold uppercase" style="color: #6B7280;"><?= esc(lang('App.lotteryStatus') ?? 'Status') ?></th>
@@ -99,16 +103,10 @@
                             <span class="font-semibold" style="color: #111827;">#<?= esc($index + 1) ?></span>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="font-semibold" style="color: #111827;">#<?= esc($allotment['id']) ?></span>
-                        </td>
-                        <td class="px-6 py-4">
                             <span style="color: #111827;"><?= esc($allotment['full_name'] ?? 'N/A') ?></span>
                             <?php if ($userWon && $userAllotment && $userAllotment['id'] == $allotment['id']): ?>
                             <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-semibold">You</span>
                             <?php endif; ?>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span style="color: #111827;">#<?= esc($allotment['application_id']) ?></span>
                         </td>
                         <td class="px-6 py-4">
                             <span class="font-semibold" style="color: #065F46;"><?= esc($allotment['plot_number']) ?></span>
