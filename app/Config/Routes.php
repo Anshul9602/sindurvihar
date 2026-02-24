@@ -10,10 +10,14 @@ use CodeIgniter\Router\RouteCollection;
 // Landing page (equivalent to Next.js src/app/page.tsx)
 $routes->get('/', 'Portal::index');
 
+// TruthScreen proxy for standalone Aadhaar verification (avoids browser CORS issues)
+$routes->post('truthscreen/eaadhaar-proxy', 'TruthscreenProxy::eaadhaar');
+
 // Authentication routes (equivalent to /auth/login, /auth/register)
 $routes->group('auth', static function ($routes) {
     $routes->match(['get', 'post'], 'login', 'AuthPortal::login');
     $routes->match(['get', 'post'], 'register', 'AuthPortal::register');
+    $routes->post('aadhaar/save-kyc-standalone', 'AuthPortal::saveAadhaarKycFromStandalone');
     $routes->match(['get', 'post'], 'forgot-password', 'AuthPortal::forgotPassword');
     $routes->get('logout', 'AuthPortal::logout');
 });
@@ -34,6 +38,10 @@ $routes->group('user', static function ($routes) {
     $routes->post('application/aadhaar/generate-otp', 'UserPortal::generateAadhaarOtp');
     $routes->post('application/aadhaar/verify-otp', 'UserPortal::verifyAadhaarOtp');
     $routes->post('application/aadhaar/check-verification', 'UserPortal::checkAadhaarVerification');
+    // Aadhaar DigiLocker (single-click verification)
+    $routes->post('aadhaar/digilocker/initiate', 'UserPortal::initiateAadhaarDigiLocker');
+    $routes->post('aadhaar/digilocker/status', 'UserPortal::checkAadhaarDigiLockerStatus');
+    $routes->post('aadhaar/save-kyc-standalone', 'UserPortal::saveAadhaarKycFromStandalone');
     $routes->match(['get', 'post'], 'documents', 'UserPortal::documents');
     // Payment: allow GET (summary) + POST (record payment)
     $routes->match(['get', 'post'], 'payment', 'UserPortal::payment');

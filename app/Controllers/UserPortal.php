@@ -29,6 +29,41 @@ class UserPortal extends BaseController
     }
 
     /**
+     * TruthScreen DigiLocker AES-128-CBC (matches API_AADHAAR_VERIFY_INITIATE.md: first 16 chars of SHA-512 hex as key)
+     */
+    private function tsEncrypt(string $plainText, string $password): string
+    {
+        $hash = hash('sha512', $password);
+        $key  = substr($hash, 0, 16); // first 16 chars = 16 bytes (same as Node Buffer.from(key))
+        $iv   = random_bytes(16);
+
+        $cipher = openssl_encrypt($plainText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
+        return base64_encode($cipher) . ':' . base64_encode($iv);
+    }
+
+    private function tsDecrypt(string $encText, string $password): string
+    {
+        $parts = explode(':', $encText, 2);
+        if (count($parts) !== 2) {
+            throw new \RuntimeException('Invalid encrypted data format');
+        }
+
+        [$cipherB64, $ivB64] = $parts;
+        $hash   = hash('sha512', $password);
+        $key    = substr($hash, 0, 16);
+        $iv     = base64_decode($ivB64);
+        $cipher = base64_decode($cipherB64);
+
+        $plain = openssl_decrypt($cipher, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
+        if ($plain === false) {
+            throw new \RuntimeException('Decryption failed');
+        }
+
+        return $plain;
+    }
+
+    /**
      * Return list of required annexure forms (JPGs) based on applicant category, caste category, and reservation categories.
      * This mirrors the summary table from the Sindoor Vihar booklet.
      */
@@ -242,6 +277,39 @@ class UserPortal extends BaseController
             ->orderBy('created_at', 'DESC')
             ->first();
 
+        // If no saved eligibility age, try to auto-fill from verified Aadhaar KYC DOB
+        if (empty($existing['age'])) {
+            $verifiedAadhaar = $this->aadhaarOtpModel
+                ->where('user_id', $userId)
+                ->where('verified', 1)
+                ->orderBy('updated_at', 'DESC')
+                ->first();
+
+            if ($verifiedAadhaar && !empty($verifiedAadhaar['kyc_dob'])) {
+                $dobStr = trim((string) $verifiedAadhaar['kyc_dob']);
+                $dob    = null;
+
+                // Try common date formats from Aadhaar KYC (e.g. 27-01-2001)
+                $formats = ['d-m-Y', 'd/m/Y', 'Y-m-d'];
+                foreach ($formats as $fmt) {
+                    $tmp = \DateTimeImmutable::createFromFormat($fmt, $dobStr);
+                    if ($tmp instanceof \DateTimeImmutable) {
+                        $dob = $tmp;
+                        break;
+                    }
+                }
+
+                if ($dob) {
+                    $today = new \DateTimeImmutable('today');
+                    $age   = $dob->diff($today)->y;
+                    if (!isset($existing) || !is_array($existing)) {
+                        $existing = [];
+                    }
+                    $existing['age'] = $age;
+                }
+            }
+        }
+
         $data = [
             'eligibility' => $existing,
         ];
@@ -421,6 +489,26 @@ class UserPortal extends BaseController
             'declaration_truth'        => $this->request->getPost('declaration_truth') ? 1 : 0,
             'declaration_cancellation' => $this->request->getPost('declaration_cancellation') ? 1 : 0,
         ];
+
+        // If Aadhaar KYC data exists, prefer those values for immutable identity fields
+        if (!empty($aadhaar)) {
+            $verifiedKyc = $this->aadhaarOtpModel
+                ->where('user_id', $userId)
+                ->where('aadhaar_number', $aadhaar)
+                ->where('verified', 1)
+                ->orderBy('updated_at', 'DESC')
+                ->first();
+
+            if ($verifiedKyc) {
+                if (!empty($verifiedKyc['kyc_name'])) {
+                    $data['full_name'] = $verifiedKyc['kyc_name'];
+                }
+                // If address from Aadhaar exists and user left address empty, auto-fill it
+                if (!empty($verifiedKyc['kyc_address']) && empty($data['address'])) {
+                    $data['address'] = $verifiedKyc['kyc_address'];
+                }
+            }
+        }
 
         // If application_id is provided, this is an update
         if (!empty($applicationId)) {
@@ -1218,6 +1306,303 @@ class UserPortal extends BaseController
         return view('layout/header')
             . view('user/refund_status')
             . view('layout/footer');
+    }
+
+    /**
+     * Start Aadhaar verification via TruthScreen DigiLocker (eaadhaardigilocker)
+     * Using encrypted requestData / responseData as per TruthScreen spec.
+     */
+    public function initiateAadhaarDigiLocker()
+    {
+        $json    = $this->request->getJSON(true) ?? [];
+        $aadhaar = trim((string) ($this->request->getPost('aadhaar') ?? ($json['aadhaar'] ?? '')));
+        $aadhaar = preg_replace('/\D/', '', $aadhaar);
+
+        // Aadhaar is now required for DigiLocker flow from our forms
+        if ($aadhaar === '' || !preg_match('/^[0-9]{12}$/', $aadhaar)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please enter a valid 12-digit Aadhaar number.',
+            ]);
+        }
+
+        // Before starting verification, ensure this Aadhaar is not already verified/linked
+        $existingVerified = $this->aadhaarOtpModel
+            ->where('aadhaar_number', $aadhaar)
+            ->where('verified', 1)
+            ->first();
+
+        if ($existingVerified) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'This Aadhaar number is already verified and linked. Please use a different Aadhaar.',
+            ]);
+        }
+
+        // Load TruthScreen config from .env, with sensible fallbacks
+        $baseUrl  = getenv('TRUTHSCREEN_BASE_URL') ?: 'https://www.truthscreen.com';
+        $endpoint = '/api/v1.0/eaadhaardigilocker/';
+        $docType  = '472';
+        $username = getenv('TRUTHSCREEN_CLIENT_ID') ?: 'test@theodin.in';
+        $password = getenv('TRUTHSCREEN_CLIENT_SECRET') ?: 'India@2608';
+
+        // Allow both logged-in users and registration flow (user_id = 0)
+        $userId  = session()->has('user_id') ? (int) session()->get('user_id') : 0;
+        $transId = 'TS' . time() . '_' . $userId;
+
+        $requestData = [
+            'trans_id' => $transId,
+            'doc_type' => $docType,
+            'action'   => 'LINK',
+        ];
+
+        try {
+            // Encrypt as requestData (same as standalone HTML)
+            $encrypted = $this->tsEncrypt(json_encode($requestData), $password);
+            $payload   = json_encode(['requestData' => $encrypted]);
+
+            $ch = curl_init($baseUrl . $endpoint);
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json',
+                    'username: ' . $username,
+                ],
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_RETURNTRANSFER => true,
+            ]);
+
+            $response  = curl_exec($ch);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlError) {
+                log_message('error', 'initiateAadhaarDigiLocker cURL error: ' . $curlError);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to contact Aadhaar verification service. Please try again later. (cURL: ' . $curlError . ')',
+                ]);
+            }
+
+            $jsonResponse = json_decode($response, true) ?? [];
+
+            // TruthScreen may respond either with encrypted responseData or plain JSON
+            if (!empty($jsonResponse['responseData'])) {
+                // Encrypted mode
+                $decrypted = $this->tsDecrypt($jsonResponse['responseData'], $password);
+                $parsed    = json_decode($decrypted, true) ?? [];
+            } else {
+                // Plain JSON mode
+                $parsed = $jsonResponse;
+            }
+
+            if (($parsed['status'] ?? 0) !== 1 || empty($parsed['data']['url']) || empty($parsed['ts_trans_id'])) {
+                log_message('error', 'DigiLocker initiate response (parsed): ' . json_encode($parsed));
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => $parsed['msg'] ?? 'Unable to start Aadhaar verification.',
+                ]);
+            }
+
+            // Store ts_trans_id in aadhaar_otps table as request_id for this user/registration
+            $this->aadhaarOtpModel->insert([
+                'user_id'        => $userId,
+                'aadhaar_number' => $aadhaar ?: null,
+                'otp'            => null,
+                'verified'       => 0,
+                'request_id'     => $parsed['ts_trans_id'],
+                'api_response'   => json_encode($parsed),
+            ]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'url'     => $parsed['data']['url'],
+                'transId' => $parsed['ts_trans_id'],
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'initiateAadhaarDigiLocker error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Poll TruthScreen DigiLocker status and store Aadhaar KYC
+     */
+    public function checkAadhaarDigiLockerStatus()
+    {
+        // Allow both logged-in users and registration flow (user_id = 0)
+        $userId = session()->has('user_id') ? (int) session()->get('user_id') : 0;
+
+        // Get latest unverified DigiLocker transaction for this user
+        $record = $this->aadhaarOtpModel
+            ->where('user_id', $userId)
+            ->where('verified', 0)
+            ->orderBy('updated_at', 'DESC')
+            ->first();
+
+        if (!$record || empty($record['request_id'])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No pending Aadhaar verification found.',
+            ]);
+        }
+
+        $baseUrl  = getenv('TRUTHSCREEN_BASE_URL') ?: 'https://www.truthscreen.com';
+        $username = getenv('TRUTHSCREEN_CLIENT_ID') ?: 'test@theodin.in';
+        $endpoint = '/api/v1.0/eaadhaardigilocker/';
+        $docType  = '472';
+        $password = getenv('TRUTHSCREEN_CLIENT_SECRET') ?: 'India@2608';
+
+        $statusRequest = [
+            'ts_trans_id' => $record['request_id'],
+            'doc_type'    => $docType,
+            'action'      => 'STATUS',
+        ];
+
+        try {
+            // Encrypt status request the same way
+            $encrypted = $this->tsEncrypt(json_encode($statusRequest), $password);
+            $payload   = json_encode(['requestData' => $encrypted]);
+
+            $ch = curl_init($baseUrl . $endpoint);
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json',
+                    'username: ' . $username,
+                ],
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_RETURNTRANSFER => true,
+            ]);
+
+            $response  = curl_exec($ch);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlError) {
+                log_message('error', 'checkAadhaarDigiLockerStatus cURL error: ' . $curlError);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to contact Aadhaar verification service. Please try again later. (cURL: ' . $curlError . ')',
+                ]);
+            }
+
+            $jsonResponse = json_decode($response, true) ?? [];
+
+            // Again support both encrypted and plain JSON response styles
+            if (!empty($jsonResponse['responseData'])) {
+                $decrypted = $this->tsDecrypt($jsonResponse['responseData'], $password);
+                $parsed    = json_decode($decrypted, true) ?? [];
+            } else {
+                $parsed = $jsonResponse;
+            }
+
+            $statusData  = $parsed['data'][$record['request_id']] ?? null;
+            $finalStatus = $statusData['final_status'] ?? 'Pending';
+
+            if ($finalStatus !== 'Completed') {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'status'  => $finalStatus,
+                ]);
+            }
+
+            // Locate Aadhaar document within msg array
+            $aadhaarKyc = null;
+            if (!empty($statusData['msg']) && is_array($statusData['msg'])) {
+                foreach ($statusData['msg'] as $doc) {
+                    if (($doc['doc_type'] ?? '') === 'ADHAR' && !empty($doc['data'])) {
+                        $aadhaarKyc = $doc['data'];
+                        break;
+                    }
+                }
+            }
+
+            if ($aadhaarKyc) {
+                $number = $aadhaarKyc['aadhar_number'] ?? ($aadhaarKyc['aadhaar_number'] ?? null);
+                $this->aadhaarOtpModel->update($record['id'], [
+                    'verified'         => 1,
+                    'aadhaar_number'   => $number,
+                    'aadhaar_last4'    => $number ? substr($number, -4) : null,
+                    'kyc_name'         => $aadhaarKyc['name'] ?? null,
+                    'kyc_father_name'  => $aadhaarKyc['Father Name'] ?? null,
+                    'kyc_dob'          => $aadhaarKyc['dob'] ?? null,
+                    'kyc_gender'       => $aadhaarKyc['gender'] ?? null,
+                    'kyc_address'      => $aadhaarKyc['address'] ?? null,
+                    'kyc_verified_at'  => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'status'  => 'Completed',
+                'kyc'     => $aadhaarKyc,
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'checkAadhaarDigiLockerStatus error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Save Aadhaar KYC from standalone verification (localStorage) for logged-in user.
+     */
+    public function saveAadhaarKycFromStandalone()
+    {
+        if (!session()->has('user_id')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Please login first.']);
+        }
+
+        $userId = (int) session()->get('user_id');
+        $json   = $this->request->getJSON(true) ?? [];
+        $aadhaar = trim((string) ($json['aadhaarNumber'] ?? $json['aadhaar'] ?? ''));
+        $aadhaar = preg_replace('/\D/', '', $aadhaar);
+
+        if ($aadhaar === '' || !preg_match('/^[0-9]{12}$/', $aadhaar)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Valid 12-digit Aadhaar number is required.']);
+        }
+
+        $name = trim((string) ($json['name'] ?? ''));
+        $fatherName = trim((string) ($json['fatherName'] ?? ''));
+        $address = trim((string) ($json['address'] ?? ''));
+
+        if ($name === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Name from Aadhaar is required.']);
+        }
+
+        $existing = $this->aadhaarOtpModel
+            ->where('aadhaar_number', $aadhaar)
+            ->where('verified', 1)
+            ->first();
+
+        if ($existing && $existing['user_id'] > 0 && (int) $existing['user_id'] !== $userId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'This Aadhaar is already linked to another account.']);
+        }
+
+        $this->aadhaarOtpModel->skipValidation(true);
+
+        $data = [
+            'user_id'        => $userId,
+            'aadhaar_number' => $aadhaar,
+            'verified'       => 1,
+            'aadhaar_last4'  => substr($aadhaar, -4),
+            'kyc_name'       => $name ?: null,
+            'kyc_address'    => $address ?: null,
+        ];
+
+        if ($existing) {
+            $this->aadhaarOtpModel->update($existing['id'], $data);
+        } else {
+            $this->aadhaarOtpModel->insert($data);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Aadhaar details saved.']);
     }
 
     /**

@@ -209,6 +209,69 @@ class AuthPortal extends BaseController
             . view('layout/footer');
     }
 
+    /**
+     * Save Aadhaar KYC from standalone verification (localStorage) so registration can proceed.
+     */
+    public function saveAadhaarKycFromStandalone()
+    {
+        $json = $this->request->getJSON(true) ?? [];
+        $aadhaar = trim((string) ($json['aadhaarNumber'] ?? $json['aadhaar'] ?? ''));
+        $aadhaar = preg_replace('/\D/', '', $aadhaar);
+
+        if ($aadhaar === '' || !preg_match('/^[0-9]{12}$/', $aadhaar)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Valid 12-digit Aadhaar number is required.']);
+        }
+
+        $name       = trim((string) ($json['name'] ?? ''));
+        $fatherName = trim((string) ($json['fatherName'] ?? ''));
+        $dob        = trim((string) ($json['dob'] ?? ''));
+        $gender     = trim((string) ($json['gender'] ?? ''));
+        $address    = trim((string) ($json['address'] ?? ''));
+        $pincode    = trim((string) ($json['pincode'] ?? ''));
+        $verifiedAt = trim((string) ($json['verifiedAt'] ?? ''));
+
+        if ($name === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Name from Aadhaar is required.']);
+        }
+
+        // If already verified and linked to another user, reject
+        $existing = $this->aadhaarOtpModel
+            ->where('aadhaar_number', $aadhaar)
+            ->where('verified', 1)
+            ->first();
+
+        if ($existing && $existing['user_id'] > 0) {
+            $user = $this->userModel->find($existing['user_id']);
+            if ($user) {
+                return $this->response->setJSON(['success' => false, 'message' => 'This Aadhaar is already registered.']);
+            }
+        }
+
+        $this->aadhaarOtpModel->skipValidation(true);
+
+        $data = [
+            'user_id'         => 0,
+            'aadhaar_number'  => $aadhaar,
+            'verified'        => 1,
+            'aadhaar_last4'   => substr($aadhaar, -4),
+            'kyc_name'        => $name ?: null,
+            'kyc_father_name' => $fatherName ?: null,
+            'kyc_dob'         => $dob ?: null,
+            'kyc_gender'      => $gender ?: null,
+            'kyc_address'     => $address ?: null,
+            'kyc_pincode'     => $pincode ?: null,
+            'kyc_verified_at' => $verifiedAt ?: null,
+        ];
+
+        if ($existing) {
+            $this->aadhaarOtpModel->update($existing['id'], $data);
+        } else {
+            $this->aadhaarOtpModel->insert($data);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Aadhaar details saved. You can now complete registration.']);
+    }
+
     public function forgotPassword()
     {
         $session = session();

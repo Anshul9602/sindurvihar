@@ -60,6 +60,7 @@
                 <label for="app-name" class="block text-sm font-medium mb-1"><?= esc(lang('App.appFullNameLabel')) ?></label>
                 <input id="app-name" name="full_name" type="text" required
                        value="<?= esc($autoFullName) ?>"
+                       <?= !empty($verifiedAadhaar) && ($verifiedAadhaar['verified'] ?? 0) == 1 ? 'readonly' : '' ?>
                        class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
             </div>
             <div>
@@ -80,7 +81,20 @@
                     </div>
                 </div>
                 <p class="mt-1 text-xs text-gray-500"><?= esc(lang('App.appAadhaarVerificationMandatory')) ?></p>
+                
+                
             </div>
+        </div>
+
+        <!-- DigiLocker success box (shown after initiate) -->
+        <div id="app-digilocker-success-box" class="hidden mt-4 p-4 rounded-md" style="background-color: #D1FAE5; border: 1px solid #10B981;">
+            <p class="font-semibold text-green-800 mb-2">Aadhaar verification initiated successfully!</p>
+            <p class="text-sm text-green-800 mb-2">Complete your Aadhaar verification:</p>
+            <a id="app-digilocker-link" href="#" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium text-white mb-3" style="background: linear-gradient(135deg, #059669, #047857);">
+                Open DigiLocker Verification
+            </a>
+            <div id="app-digilocker-transid" class="text-sm text-green-800 mb-1"></div>
+            <p class="text-sm text-green-700 mt-2">After completing verification in the new tab, click <strong>Check Aadhaar Status</strong> below.</p>
         </div>
 
         <!-- Aadhaar OTP Verification Section -->
@@ -303,6 +317,24 @@
         var isTransgenderCheckbox = document.querySelector('input[name="is_transgender"]');
         var isMediaCheckbox = document.querySelector('input[name="is_media"]');
 
+        // Hide/show reservation options based on verified Aadhaar gender (from PHP)
+        var verifiedGender = '<?= isset($verifiedAadhaar['kyc_gender']) ? addslashes((string)$verifiedAadhaar['kyc_gender']) : '' ?>';
+        verifiedGender = verifiedGender ? verifiedGender.trim().toUpperCase() : '';
+
+        if (verifiedGender === 'M') {
+            // Male: hide Single Woman option
+            if (isSingleWomanCheckbox && isSingleWomanCheckbox.closest('label')) {
+                isSingleWomanCheckbox.closest('label').style.display = 'none';
+                isSingleWomanCheckbox.checked = false;
+            }
+        } else if (verifiedGender && verifiedGender !== 'OTHER') {
+            // Female (or anything not M/OTHER): hide Transgender option
+            if (isTransgenderCheckbox && isTransgenderCheckbox.closest('label')) {
+                isTransgenderCheckbox.closest('label').style.display = 'none';
+                isTransgenderCheckbox.checked = false;
+            }
+        }
+
         function getFormsForCategory(cat, casteCat, reservationCategories) {
             // Map categories to scanned JPG forms under /assets/documentform
             var forms = [];
@@ -439,209 +471,139 @@
         renderForms();
     })();
 
-    // Aadhaar OTP Verification
+    // Aadhaar Verification (DigiLocker via TruthScreen)
     (function() {
         var aadhaarInput = document.getElementById('app-aadhaar');
         var generateOtpBtn = document.getElementById('generate-otp-btn');
         var otpSection = document.getElementById('aadhaar-otp-section');
-        var otpInputSection = document.getElementById('otp-input-section');
         var otpGenerateStatus = document.getElementById('otp-generate-status');
-        var otpInput = document.getElementById('aadhaar-otp');
-        var verifyOtpBtn = document.getElementById('verify-otp-btn');
-        var resendOtpBtn = document.getElementById('resend-otp-btn');
-        var verifiedStatus = document.getElementById('aadhaar-verified-status');
         var submitBtn = document.getElementById('submit-application-btn');
         var verificationRequiredMsg = document.getElementById('aadhaar-verification-required');
         var verifiedIcon = document.getElementById('aadhaar-verified-icon');
         var isAadhaarVerified = false;
+        var digiStarted = false;
 
-        // Check if Aadhaar is already verified (on input change or page load)
-        function checkExistingVerification() {
-            var aadhaar = aadhaarInput.value.trim().replace(/[\s\-]/g, '');
-            if (aadhaar.length === 12 && /^[0-9]{12}$/.test(aadhaar)) {
-                fetch('<?= site_url("user/application/aadhaar/check-verification") ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ aadhaar: aadhaar })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.verified) {
-                        // Already verified - show tick directly and hide verification section
-                        isAadhaarVerified = true;
-                        otpSection.classList.add('hidden'); // Hide entire verification section
-                        if (submitBtn) submitBtn.disabled = false;
-                        if (verificationRequiredMsg) verificationRequiredMsg.classList.add('hidden');
-                        
-                        // Replace verify button with green checkmark
-                        if (generateOtpBtn) {
-                            generateOtpBtn.classList.add('hidden');
-                        }
-                        if (verifiedIcon) {
-                            verifiedIcon.classList.remove('hidden');
-                        }
-                    }
-                })
-                .catch(err => console.error('Error checking verification:', err));
-            }
-        }
+        if (otpSection) otpSection.classList.add('hidden');
 
         // Check on page load if Aadhaar is already filled and verified
         <?php if (!empty($verifiedAadhaar) && $verifiedAadhaar['verified'] == 1): ?>
-        // Aadhaar already verified from registration - auto-show verified status
-        if (aadhaarInput && aadhaarInput.value.length === 12) {
-            isAadhaarVerified = true;
-            if (otpSection) otpSection.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-            if (verificationRequiredMsg) verificationRequiredMsg.classList.add('hidden');
-            if (generateOtpBtn) generateOtpBtn.classList.add('hidden');
-            if (verifiedIcon) verifiedIcon.classList.remove('hidden');
-        }
+        isAadhaarVerified = true;
+        if (submitBtn) submitBtn.disabled = false;
+        if (verificationRequiredMsg) verificationRequiredMsg.classList.add('hidden');
+        if (generateOtpBtn) generateOtpBtn.classList.add('hidden');
+        if (verifiedIcon) verifiedIcon.classList.remove('hidden');
         <?php endif; ?>
 
-        // Generate OTP
+        // Button: initiate / then check DigiLocker status via backend
         if (generateOtpBtn) {
             generateOtpBtn.addEventListener('click', function() {
-                var aadhaar = aadhaarInput.value.trim();
-                
+                var aadhaar = aadhaarInput.value.trim().replace(/\D/g, '');
                 if (aadhaar.length !== 12 || !/^[0-9]{12}$/.test(aadhaar)) {
                     alert('Please enter a valid 12-digit Aadhaar number');
                     return;
                 }
+                if (!digiStarted) {
+                    // First click: initiate DigiLocker
+                    generateOtpBtn.disabled = true;
+                    generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarOtpSending')) ?>';
+                    if (otpGenerateStatus) otpGenerateStatus.innerHTML = '';
 
-                generateOtpBtn.disabled = true;
-                generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarOtpSending')) ?>';
-                otpGenerateStatus.innerHTML = '<span class="text-blue-600"><?= esc(lang('App.appAadhaarOtpSending')) ?></span>';
-
-                fetch('<?= site_url("user/application/aadhaar/generate-otp") ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ aadhaar: aadhaar })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Network error');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    generateOtpBtn.disabled = false;
-                    generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyButton')) ?>';
-                    
-                    if (data.success) {
-                        // Check if already verified by same user
-                        if (data.verified && data.same_user) {
-                            // Already verified by same user - show tick directly and hide verification section
-                            isAadhaarVerified = true;
-                            otpSection.classList.add('hidden'); // Hide entire verification section
-                            submitBtn.disabled = false;
-                            verificationRequiredMsg.classList.add('hidden');
-                            
-                            // Replace verify button with green checkmark
-                            if (generateOtpBtn) {
-                                generateOtpBtn.classList.add('hidden');
-                            }
-                            if (verifiedIcon) {
-                                verifiedIcon.classList.remove('hidden');
-                            }
-                        } else {
-                            // Generate new OTP
-                            otpSection.classList.remove('hidden');
-                            otpInputSection.classList.remove('hidden');
-                            otpGenerateStatus.innerHTML = '<span class="text-green-600">✓ ' + data.message + '</span>';
-                            if (data.otp) {
-                                otpGenerateStatus.innerHTML += '<br><span class="text-xs text-gray-600">Demo OTP: ' + data.otp + '</span>';
-                            }
-                            if (otpInput) otpInput.focus();
+                    fetch('<?= site_url("user/aadhaar/digilocker/initiate") ?>', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ aadhaar: aadhaar })
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        generateOtpBtn.disabled = false;
+                        if (!data.success) {
+                            throw new Error(data.message || 'Unable to start Aadhaar verification');
                         }
-                    } else {
-                        // Check if Aadhaar is already used by different user
-                        if (data.already_used) {
-                            alert(data.message);
-                            // Clear the Aadhaar input
-                            aadhaarInput.value = '';
-                            aadhaarInput.focus();
-                        } else {
-                            otpSection.classList.remove('hidden');
-                            otpGenerateStatus.innerHTML = '<span class="text-red-600">✗ ' + (data.message || 'Failed to generate OTP') + '</span>';
-                            if (data.debug) {
-                                console.error('Debug info:', data.debug);
-                            }
+                        digiStarted = true;
+                        generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarCheckStatus') ?? 'Check Aadhaar Status') ?>';
+                        if (otpGenerateStatus) {
+                            otpGenerateStatus.innerHTML = '<span class="text-green-600">Verification started. Complete steps in the new tab, then click \"Check Aadhaar Status\".</span>';
                         }
-                    }
-                })
-                .catch(err => {
-                    generateOtpBtn.disabled = false;
-                    generateOtpBtn.textContent = 'Verify';
-                    otpSection.classList.remove('hidden');
-                    otpGenerateStatus.innerHTML = '<span class="text-red-600">✗ Error: ' + err.message + '</span>';
-                    console.error('Error generating OTP:', err);
-                });
-            });
-        }
+                        var successBox = document.getElementById('app-digilocker-success-box');
+                        var digiLink = document.getElementById('app-digilocker-link');
+                        var transIdEl = document.getElementById('app-digilocker-transid');
+                        if (successBox && data.url) {
+                            if (digiLink) digiLink.href = data.url;
+                            if (transIdEl && data.transId) transIdEl.innerHTML = '<strong>Transaction ID:</strong> ' + data.transId;
+                            successBox.classList.remove('hidden');
+                        }
+                        if (otpSection) otpSection.classList.remove('hidden');
+                        if (data.url) {
+                            window.open(data.url, '_blank', 'noopener');
+                        }
+                    })
+                    .catch(function (err) {
+                        generateOtpBtn.disabled = false;
+                        generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyButton')) ?>';
+                        if (otpGenerateStatus) {
+                            otpGenerateStatus.innerHTML = '<span class="text-red-600">✗ Error: ' + err.message + '</span>';
+                        } else {
+                            alert('Error: ' + err.message);
+                        }
+                    });
+                } else {
+                    // Subsequent clicks: check DigiLocker status
+                    generateOtpBtn.disabled = true;
+                    generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarCheckingStatus') ?? 'Checking status...') ?>';
 
-        // Verify OTP
-        if (verifyOtpBtn) {
-            verifyOtpBtn.addEventListener('click', function() {
-                var aadhaar = aadhaarInput.value.trim();
-                var otp = otpInput.value.trim();
+                    fetch('<?= site_url("user/aadhaar/digilocker/status") ?>', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (status) {
+                        generateOtpBtn.disabled = false;
+                        generateOtpBtn.textContent = '<?= esc(lang('App.appAadhaarCheckStatus') ?? 'Check Aadhaar Status') ?>';
 
-                if (otp.length !== 6 || !/^[0-9]{6}$/.test(otp)) {
-                    alert('Please enter a valid 6-digit OTP');
-                    return;
-                }
+                        if (!status.success) {
+                            throw new Error(status.message || 'Unable to check Aadhaar status');
+                        }
 
-                verifyOtpBtn.disabled = true;
-                verifyOtpBtn.textContent = '<?= esc(lang('App.appAadhaarOtpVerifying')) ?>';
+                        if (status.status !== 'Completed') {
+                            alert('Aadhaar verification status: ' + status.status);
+                            return;
+                        }
 
-                fetch('<?= site_url("user/application/aadhaar/verify-otp") ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ aadhaar: aadhaar, otp: otp })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    verifyOtpBtn.disabled = false;
-                    verifyOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyOtp')) ?>';
-
-                    if (data.success && data.verified) {
                         isAadhaarVerified = true;
-                        otpSection.classList.add('hidden'); // Hide entire verification section after successful verification
-                        submitBtn.disabled = false;
-                        verificationRequiredMsg.classList.add('hidden');
-                        
-                        // Replace verify button with green checkmark
-                        if (generateOtpBtn) {
-                            generateOtpBtn.classList.add('hidden');
-                        }
-                        if (verifiedIcon) {
-                            verifiedIcon.classList.remove('hidden');
-                        }
-                    } else {
-                        alert(data.message || 'Invalid OTP. Please try again.');
-                    }
-                })
-                .catch(err => {
-                    verifyOtpBtn.disabled = false;
-                    verifyOtpBtn.textContent = '<?= esc(lang('App.appAadhaarVerifyOtp')) ?>';
-                    alert('Error verifying OTP. Please try again.');
-                    console.error('Error verifying OTP:', err);
-                });
-            });
-        }
+                        if (submitBtn) submitBtn.disabled = false;
+                        if (verificationRequiredMsg) verificationRequiredMsg.classList.add('hidden');
+                        if (generateOtpBtn) generateOtpBtn.classList.add('hidden');
+                        if (verifiedIcon) verifiedIcon.classList.remove('hidden');
 
-        // Resend OTP
-        if (resendOtpBtn) {
-            resendOtpBtn.addEventListener('click', function() {
-                if (generateOtpBtn) generateOtpBtn.click();
+                        if (status.kyc) {
+                            if (status.kyc.name) {
+                                var nameEl = document.getElementById('app-name');
+                                if (nameEl) {
+                                    nameEl.value = status.kyc.name;
+                                    nameEl.readOnly = true;
+                                }
+                            }
+                            var fatherName = status.kyc['Father Name'] || status.kyc.fatherName;
+                            if (fatherName) {
+                                var fhEl = document.getElementById('app-fh-name');
+                                if (fhEl) fhEl.value = fatherName;
+                            }
+                            if (status.kyc.address) {
+                                var addrEl = document.getElementById('app-address');
+                                if (addrEl) addrEl.value = status.kyc.address;
+                            }
+                        }
+                    })
+                    .catch(function (err) {
+                        generateOtpBtn.disabled = false;
+                        if (otpGenerateStatus) {
+                            otpGenerateStatus.innerHTML = '<span class="text-red-600">✗ Error: ' + err.message + '</span>';
+                        } else {
+                            alert('Error: ' + err.message);
+                        }
+                    });
+                }
             });
         }
 
@@ -658,28 +620,5 @@
             });
         }
 
-        // Check existing verification on page load
-        if (aadhaarInput && aadhaarInput.value.trim().length === 12) {
-            checkExistingVerification();
-        }
-
-        // Check when Aadhaar input changes (on blur)
-        if (aadhaarInput) {
-            aadhaarInput.addEventListener('blur', function() {
-                var aadhaar = this.value.trim().replace(/[\s\-]/g, '');
-                if (aadhaar.length === 12 && /^[0-9]{12}$/.test(aadhaar)) {
-                    checkExistingVerification();
-                }
-            });
-        }
-
-        // Allow Enter key to submit OTP
-        if (otpInput) {
-            otpInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && verifyOtpBtn) {
-                    verifyOtpBtn.click();
-                }
-            });
-        }
     })();
 </script>

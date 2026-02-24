@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aadhaar DigiLocker Verification - Standalone Complete</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+
+
+
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+
+        .credentials-section h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .credential-item {
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #004085;
+        }
+
+        .info-box h5 {
+            margin-bottom: 10px;
+            color: #003d82;
+            font-size: 1.1rem;
+        }
+
+        .info-box ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 5px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .digilocker-link {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .digilocker-link:hover {
+            background: #218838;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .aadhaar-data {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .aadhaar-data h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 150px;
+        }
+
+        .data-value {
+            color: #333;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-denied {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        .warning-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #721c24;
+        }
+
+        .warning-box h5 {
+            margin-bottom: 10px;
+            color: #721c24;
+            font-size: 1.1rem;
+        }
+
+        .cors-info {
+            background: #e2e3e5;
+            border: 1px solid #d6d8db;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #383d41;
+        }
+
+        .cors-info h5 {
+            margin-bottom: 10px;
+            color: #383d41;
+            font-size: 1.1rem;
+        }
+
+        .cors-info code {
+            background: #f8f9fa;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Minimal user view: hide extra sections */
+        .header,
+        .warning-box,
+        .cors-info,
+        .credentials-section,
+        .info-box,
+        .footer,
+        #fileProtocolBanner {
+            display: none;
+        }
+
+        /* Tighter layout since we only show the form */
+
+
+        .form-section {
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🆔 Aadhaar DigiLocker Verification</h1>
+            <p>Complete Standalone Implementation - No Backend Required</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- CORS Warning -->
+            <div class="warning-box">
+                <h5>⚠️ Important CORS Notice</h5>
+                <p><strong>This standalone version directly calls TruthScreen API from the browser.</strong></p>
+                <p>Due to CORS (Cross-Origin Resource Sharing) restrictions, this may not work in all browsers when accessing TruthScreen's API directly from a web page.</p>
+                <p><strong>Recommended Solutions:</strong></p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Use a CORS proxy service</li>
+                    <li>Run a simple backend server (recommended for production)</li>
+                    <li>Use browser extensions to disable CORS (development only)</li>
+                </ul>
+            </div>
+
+            <!-- CORS Proxy Information -->
+            <div class="cors-info">
+                <h5>🔧 CORS Proxy Configuration</h5>
+                <p>If direct API calls fail due to CORS, you can use a CORS proxy:</p>
+                <p><strong>Example:</strong> <code>https://cors-anywhere.herokuapp.com/</code></p>
+                <p><strong>Usage:</strong> Prefix the TruthScreen API URL with the proxy URL</p>
+                <p><em>Note: For production use, set up your own CORS proxy or backend server.</em></p>
+            </div>
+
+            <!-- Credentials Section -->
+            <div class="credentials-section">
+                <h4>🔐 TruthScreen API Credentials (Built-in)</h4>
+                <div class="credential-item">
+                    <strong>Base URL:</strong> https://www.truthscreen.com
+                </div>
+                <div class="credential-item">
+                    <strong>Username:</strong> test@theodin.in
+                </div>
+                <div class="credential-item">
+                    <strong>Password:</strong> India@2608
+                </div>
+                <div class="credential-item">
+                    <strong>Document Type:</strong> 472 (Aadhaar DigiLocker)
+                </div>
+                <div class="credential-item">
+                    <strong>API Endpoint:</strong> /api/v1.0/eaadhaardigilocker/
+                </div>
+            </div>
+
+            <!-- How it Works -->
+            <div class="info-box">
+                <h5>📋 How This Standalone Version Works:</h5>
+                <ol>
+                    <li>All TruthScreen credentials are embedded in this HTML file</li>
+                    <li>Encryption/decryption functions are built-in (JavaScript implementation)</li>
+                    <li>Direct API calls to TruthScreen from the browser</li>
+                    <li>No backend server required - everything runs in the browser</li>
+                    <li>Complete DigiLocker verification process handled client-side</li>
+                </ol>
+            </div>
+
+            <!-- Verification Form -->
+            <div class="form-section">
+
+                <!-- Shown when opened from file:// - CORS proxies block origin null -->
+                <div id="fileProtocolBanner" style="display: none; margin: 0 0 1rem 0; padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; font-size: 0.95rem;">
+                    <strong>⚠️ Opened from file</strong> – CORS proxies block <code>file://</code>. Serve this page over HTTP:<br>
+                    <span style="margin: 0.5rem 0 0 0; display: inline-block;">In this folder run:</span>
+                    <code id="serveCommand" style="display: block; margin: 0.25rem 0 0.5rem 0; padding: 0.5rem; background: #f8f9fa; border-radius: 4px;">npx serve .</code>
+                    <button type="button" id="copyServeBtn" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; cursor: pointer;">Copy command</button><br>
+                    Then open: <code id="openUrl">http://localhost:3000/aadhaar-standalone-complete.html</code>
+                    <button type="button" id="copyUrlBtn" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; cursor: pointer;">Copy URL</button>
+                </div>
+
+                <div class="form-group ">
+                    <label for="aadhaarNumber">Aadhaar Number</label>
+                    <input type="text" id="aadhaarNumber" name="aadhaarNumber" placeholder="Enter 12-digit Aadhaar number" maxlength="12" pattern="[0-9]{12}">
+                    <small style="color: #666; font-size: 0.9rem; display: block; margin-top: 5px;">
+                        Aadhaar number is required to start verification.
+                    </small>
+                </div>
+
+                <button type="button" class="btn" id="initiateBtn" disabled>
+                    🚀 Start Aadhaar Verification
+                </button>
+
+                <button type="button" class="btn btn-secondary" disabled id="statusBtn">
+                    📊 Check Verification Status
+                </button>
+
+                <!-- Loading Spinner -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your request...</p>
+                </div>
+
+                <!-- Results -->
+                <div class="result" id="result"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>🔒 Complete Standalone Aadhaar Verification</strong></p>
+            <p>No backend required - All functionality embedded in this single HTML file</p>
+            <p><small>Serve over HTTP (see notice above if opened from file) or set API_BASE to your backend.</small></p>
+        </div>
+
+        <script>
+            // Backend API – leave empty for pure standalone TruthScreen mode.
+            // If you want to proxy via your backend, set this to your backend base URL.
+            const API_BASE = '';
+
+            // TruthScreen API configuration (used when talking directly to TruthScreen)
+            const TRUTHSCREEN_CONFIG = {
+                baseUrl: 'https://www.truthscreen.com',
+                username: 'test@theodin.in',
+                password: 'India@2608',
+                endpoint: '/api/v1.0/eaadhaardigilocker/',
+                docType: '472',
+            };
+
+            // CORS proxy for standalone mode; disabled when using backend proxy.
+            let CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+
+            // When served from your app (http://localhost/...), use backend proxy instead of public CORS proxy.
+            if (window.location.protocol !== 'file:' && window.location.origin) {
+                TRUTHSCREEN_CONFIG.baseUrl = '';
+                TRUTHSCREEN_CONFIG.endpoint = '/truthscreen/eaadhaar-proxy';
+                CORS_PROXY = '';
+            }
+
+            const API_INITIATE = `${API_BASE}/v1/aadhaar/verify/initiate`;
+            const API_STATUS = `${API_BASE}/v1/aadhaar/verify/status`;
+            const USE_BACKEND = typeof API_BASE === 'string' && API_BASE.length > 0;
+
+            let currentTsTransId = null;
+
+            // Helpers
+            function arrayBufferToBase64(buffer) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            function base64ToArrayBuffer(base64) {
+                const binaryString = atob(base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            async function sha512(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-512', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            }
+
+            // AES-128-CBC Encryption – key derivation matches API_AADHAAR_VERIFY_INITIATE.md:
+            // first 16 characters of SHA-512 hex digest, UTF-8 encoded
+            async function encrypt(plainText, password) {
+                try {
+                    const iv = crypto.getRandomValues(new Uint8Array(16));
+
+                    const hash = await sha512(password);
+                    const keyStr = hash.substring(0, 16);
+                    const keyBuffer = new TextEncoder().encode(keyStr);
+
+                    const cryptoKey = await crypto.subtle.importKey(
+                        'raw',
+                        keyBuffer, {
+                            name: 'AES-CBC'
+                        },
+                        false,
+                        ['encrypt']
+                    );
+
+                    const encodedText = new TextEncoder().encode(plainText);
+                    const encryptedBuffer = await crypto.subtle.encrypt({
+                            name: 'AES-CBC',
+                            iv
+                        },
+                        cryptoKey,
+                        encodedText
+                    );
+
+                    const encryptedBase64 = arrayBufferToBase64(encryptedBuffer);
+                    const ivBase64 = arrayBufferToBase64(iv);
+                    return encryptedBase64 + ':' + ivBase64;
+                } catch (error) {
+                    console.error('Encryption error:', error);
+                    throw new Error('Encryption failed: ' + error.message);
+                }
+            }
+
+            // AES-128-CBC Decryption
+            async function decrypt(encText, password) {
+                try {
+                    const parts = encText.split(':');
+                    if (parts.length !== 2) {
+                        throw new Error('Invalid encrypted data format');
+                    }
+
+                    const encryptedData = base64ToArrayBuffer(parts[0]);
+                    const iv = base64ToArrayBuffer(parts[1]);
+
+                    const hash = await sha512(password);
+                    const keyStr = hash.substring(0, 16);
+                    const keyBuffer = new TextEncoder().encode(keyStr);
+
+                    const cryptoKey = await crypto.subtle.importKey(
+                        'raw',
+                        keyBuffer, {
+                            name: 'AES-CBC'
+                        },
+                        false,
+                        ['decrypt']
+                    );
+
+                    const decryptedBuffer = await crypto.subtle.decrypt({
+                            name: 'AES-CBC',
+                            iv
+                        },
+                        cryptoKey,
+                        encryptedData
+                    );
+
+                    return new TextDecoder().decode(decryptedBuffer);
+                } catch (error) {
+                    console.error('Decryption error:', error);
+                    throw new Error('Decryption failed: ' + error.message);
+                }
+            }
+
+            function showLoading(show = true) {
+                document.getElementById('loading').style.display = show ? 'block' : 'none';
+            }
+
+            function showResult(message, type = 'info', data = null) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.className = `result ${type}`;
+                resultDiv.style.display = 'block';
+
+                let html = `<p><strong>${message}</strong></p>`;
+
+                if (data) {
+                    if (data.digiLockerUrl) {
+                        html += `<p>Complete your Aadhaar verification:</p>`;
+                        html += `<a href="${data.digiLockerUrl}" target="_blank" class="digilocker-link">
+                        🔗 Open DigiLocker Verification
+                    </a>`;
+                        html += `<p><small><strong>Transaction ID:</strong> ${data.tsTransId || ''}</small></p>`;
+                        if (data.aadhaarNumber) {
+                            html += `<p><small><strong>Aadhaar:</strong> ${data.aadhaarNumber}</small></p>`;
+                        }
+                    }
+
+                    if (data.status) {
+                        const statusClass =
+                            data.status.toLowerCase() === 'completed' ?
+                            'status-completed' :
+                            data.status.toLowerCase() === 'denied' ?
+                            'status-denied' :
+                            'status-pending';
+                        html += `<span class="status-badge ${statusClass}">Status: ${data.status}</span>`;
+                    }
+
+                    if (data.verificationDetails) {
+                        const d = data.verificationDetails;
+                        html += `<div class="aadhaar-data">
+                        <h4>✅ Verified Aadhaar Details:</h4>
+                        <div class="data-row">
+                            <span class="data-label">Name:</span>
+                            <span class="data-value">${d.name || 'N/A'}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Father's Name:</span>
+                            <span class="data-value">${d.fatherName || 'N/A'}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Date of Birth:</span>
+                            <span class="data-value">${d.dateOfBirth || 'N/A'}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Gender:</span>
+                            <span class="data-value">${d.gender || 'N/A'}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Aadhaar Number:</span>
+                            <span class="data-value">${d.aadhaarNumber || 'N/A'}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Address:</span>
+                            <span class="data-value">${d.address || 'N/A'}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Verified At:</span>
+                            <span class="data-value">${d.verifiedAt ? new Date(d.verifiedAt).toLocaleString() : 'N/A'}</span>
+                        </div>
+                    </div>`;
+                    }
+                }
+
+                resultDiv.innerHTML = html;
+            }
+
+        async function initiateVerification() {
+                console.log('🚀 Starting standalone Aadhaar verification...');
+                const aadhaarNumber = document.getElementById('aadhaarNumber').value.trim();
+                console.log('📝 Aadhaar number entered:', aadhaarNumber ? '****-****-' + aadhaarNumber.slice(-4) : 'None');
+
+            if (!aadhaarNumber || aadhaarNumber.length !== 12 || !/^[0-9]{12}$/.test(aadhaarNumber)) {
+                showResult('Please enter a valid 12-digit Aadhaar number', 'error');
+                    return;
+                }
+
+                showLoading(true);
+
+            try {
+                // Remember the full Aadhaar entered by the user for later matching in the main app
+                try {
+                    localStorage.setItem('aadhaar_input', aadhaarNumber);
+                } catch (e) {
+                    console.warn('Unable to store aadhaar_input in localStorage:', e);
+                }
+
+                if (USE_BACKEND) {
+                        const transId = `TS${Date.now()}`;
+                        const payload = {
+                            transId,
+                            ...(aadhaarNumber ? {
+                                aadhaarNumber
+                            } : {}),
+                        };
+                        const response = await fetch(API_INITIATE, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload),
+                        });
+                        const result = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(result.message || (result.error && result.error.message) || `HTTP ${response.status}`);
+                        }
+                    if (result.success && result.tsTransId) {
+                            currentTsTransId = result.tsTransId;
+                            document.getElementById('statusBtn').disabled = false;
+                        showResult('Aadhaar verification initiated successfully!', 'success', {
+                                digiLockerUrl: result.digiLockerUrl,
+                                tsTransId: result.tsTransId,
+                                aadhaarNumber: result.aadhaarNumber || (aadhaarNumber ? `****-****-${aadhaarNumber.slice(-4)}` : null),
+                            });
+                        if (result.digiLockerUrl) {
+                            // Auto-open DigiLocker once in a new tab/window
+                            window.open(result.digiLockerUrl, '_blank', 'noopener');
+                        }
+                        } else {
+                            showResult(result.message || 'Failed to initiate verification', 'error');
+                        }
+                        return;
+                    }
+
+                    const transId = `TS${Date.now()}`;
+                    const requestData = {
+                        trans_id: transId,
+                        doc_type: TRUTHSCREEN_CONFIG.docType,
+                        action: 'LINK',
+                    };
+                    const encryptedRequest = await encrypt(JSON.stringify(requestData), TRUTHSCREEN_CONFIG.password);
+                    const payload = {
+                        requestData: encryptedRequest
+                    };
+                    const apiUrl = CORS_PROXY + TRUTHSCREEN_CONFIG.baseUrl + TRUTHSCREEN_CONFIG.endpoint;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            username: TRUTHSCREEN_CONFIG.username,
+                        },
+                        body: JSON.stringify(payload),
+                    });
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(result.message || result.msg || `HTTP ${response.status}`);
+                    }
+                    if (result.responseData) {
+                        const decryptedData = await decrypt(result.responseData, TRUTHSCREEN_CONFIG.password);
+                        const parsed = JSON.parse(decryptedData);
+                    if (parsed.status === 1) {
+                            currentTsTransId = parsed.ts_trans_id;
+                            document.getElementById('statusBtn').disabled = false;
+                        showResult('Aadhaar verification initiated successfully!', 'success', {
+                                digiLockerUrl: parsed.data && parsed.data.url,
+                                tsTransId: parsed.ts_trans_id,
+                                aadhaarNumber: aadhaarNumber ? `****-****-${aadhaarNumber.slice(-4)}` : null,
+                            });
+                        if (parsed.data && parsed.data.url) {
+                            // Auto-open DigiLocker once in a new tab/window
+                            window.open(parsed.data.url, '_blank', 'noopener');
+                        }
+                        } else {
+                            showResult(parsed.msg || 'Failed to initiate verification', 'error');
+                        }
+                    } else {
+                        showResult('No response data from TruthScreen', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ API Error:', error);
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        showResult('Network error. If using standalone mode, try another CORS proxy or set API_BASE to your backend URL.', 'error');
+                    } else {
+                        showResult(`Error: ${error.message}`, 'error');
+                    }
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            async function checkStatus() {
+                if (!currentTsTransId) {
+                    showResult('Please initiate verification first', 'error');
+                    return;
+                }
+
+                showLoading(true);
+
+                try {
+                    if (USE_BACKEND) {
+                        const payload = {
+                            tsTransId: currentTsTransId
+                        };
+                        const response = await fetch(API_STATUS, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload),
+                        });
+                        const result = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(result.message || (result.error && result.error.message) || `HTTP ${response.status}`);
+                        }
+                        const statusType = result.completed ? 'success' : result.denied ? 'error' : 'info';
+                        showResult(result.message || 'Status check completed', statusType, {
+                            status: result.status,
+                            verificationDetails: result.verificationDetails || null,
+                        });
+                        return;
+                    }
+
+                    const requestData = {
+                        ts_trans_id: currentTsTransId,
+                        doc_type: TRUTHSCREEN_CONFIG.docType,
+                        action: 'STATUS',
+                    };
+                    const encryptedRequest = await encrypt(JSON.stringify(requestData), TRUTHSCREEN_CONFIG.password);
+                    const apiUrl = CORS_PROXY + TRUTHSCREEN_CONFIG.baseUrl + TRUTHSCREEN_CONFIG.endpoint;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            username: TRUTHSCREEN_CONFIG.username,
+                        },
+                        body: JSON.stringify({
+                            requestData: encryptedRequest
+                        }),
+                    });
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(result.msg || `HTTP ${response.status}`);
+                    }
+                    if (!result.responseData) {
+                        showResult('No response data from status check', 'error');
+                        return;
+                    }
+                    const decryptedData = await decrypt(result.responseData, TRUTHSCREEN_CONFIG.password);
+                    const parsed = JSON.parse(decryptedData);
+
+                    let finalStatus = 'Pending';
+                    let aadhaarData = null;
+                    if (parsed.data && parsed.data[currentTsTransId]) {
+                        const statusData = parsed.data[currentTsTransId];
+                        finalStatus = statusData.final_status || 'Pending';
+                        if (finalStatus === 'Completed' && Array.isArray(statusData.msg)) {
+                            const doc = statusData.msg.find((d) => d.doc_type === 'ADHAR');
+                            if (doc && doc.data) aadhaarData = doc.data;
+                        }
+                    }
+
+                    let kyc = null;
+                    if (finalStatus === 'Completed' && aadhaarData) {
+                        kyc = {
+                            name: aadhaarData.name || '',
+                            fatherName: aadhaarData['Father Name'] || '',
+                            dateOfBirth: aadhaarData.dob || '',
+                            gender: aadhaarData.gender || '',
+                            aadhaarNumber: aadhaarData.aadhar_number || aadhaarData.aadhaar_number || '',
+                            address: aadhaarData.address || '',
+                            verifiedAt: new Date().toISOString(),
+                        };
+                        try {
+                            localStorage.setItem('aadhaar_kyc', JSON.stringify(kyc));
+                        } catch (e) {
+                            console.warn('Unable to store Aadhaar KYC in localStorage:', e);
+                        }
+                    }
+
+                    const statusType =
+                        finalStatus === 'Completed' ? 'success' : finalStatus === 'Denied' ? 'error' : 'info';
+                    showResult(parsed.msg || 'Status check completed', statusType, {
+                        status: finalStatus,
+                        verificationDetails: kyc,
+                    });
+                } catch (error) {
+                    console.error('❌ Status check error:', error);
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        showResult('Network error. Try another CORS proxy or set API_BASE to your backend.', 'error');
+                    } else {
+                        showResult(`Status check error: ${error.message}`, 'error');
+                    }
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            // Auto-check status every 30 seconds if verification is initiated
+            setInterval(() => {
+                if (currentTsTransId) {
+                    console.log('🔄 Auto-checking status...');
+                    checkStatus();
+                }
+            }, 30000);
+
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🔄 Standalone Aadhaar verification loaded');
+
+                if (window.location.protocol === 'file:') {
+                    const banner = document.getElementById('fileProtocolBanner');
+                    const openUrlEl = document.getElementById('openUrl');
+                    if (banner) banner.style.display = 'block';
+                    if (openUrlEl) openUrlEl.textContent = 'http://localhost:3000/aadhaar-standalone-complete.html';
+                    document.getElementById('copyServeBtn').onclick = function() {
+                        navigator.clipboard.writeText('npx serve .').then(
+                            function() {
+                                this.textContent = 'Copied!';
+                            }.bind(this)
+                        );
+                    };
+                    document.getElementById('copyUrlBtn').onclick = function() {
+                        const url = document.getElementById('openUrl').textContent;
+                        navigator.clipboard.writeText(url).then(
+                            function() {
+                                this.textContent = 'Copied!';
+                            }.bind(this)
+                        );
+                    };
+                }
+
+                const aadhaarInput = document.getElementById('aadhaarNumber');
+                const initiateBtn = document.getElementById('initiateBtn');
+
+                document.getElementById('initiateBtn').addEventListener('click', initiateVerification);
+                document.getElementById('statusBtn').addEventListener('click', checkStatus);
+
+                aadhaarInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 12) value = value.substring(0, 12);
+                    e.target.value = value;
+
+                    initiateBtn.disabled = value.length !== 12;
+                });
+            });
+        </script>
+</body>
+
+</html>
