@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 18, 2026 at 01:25 PM
+-- Generation Time: Feb 24, 2026 at 10:13 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -30,17 +30,17 @@ SET time_zone = "+00:00";
 CREATE TABLE `aadhaar_otps` (
   `id` int(11) UNSIGNED NOT NULL,
   `user_id` int(11) UNSIGNED NOT NULL,
-  `aadhaar_number` varchar(12) NOT NULL,
-  `otp` varchar(10) DEFAULT NULL,
-  `verified` tinyint(1) DEFAULT 0,
-  `api_response` text DEFAULT NULL,
-  `request_id` varchar(100) DEFAULT NULL COMMENT 'TruthScreen API request ID',
-  `aadhaar_last4` varchar(4) DEFAULT NULL COMMENT 'Last 4 digits of Aadhaar (for compliance)',
-  `kyc_name` varchar(191) DEFAULT NULL COMMENT 'Name from Aadhaar KYC',
-  `kyc_dob` varchar(20) DEFAULT NULL COMMENT 'Date of Birth from Aadhaar KYC',
-  `kyc_gender` varchar(10) DEFAULT NULL COMMENT 'Gender from Aadhaar KYC',
-  `kyc_address` text DEFAULT NULL COMMENT 'Address from Aadhaar KYC',
-  `kyc_pincode` varchar(20) DEFAULT NULL COMMENT 'Pincode from Aadhaar KYC',
+  `aadhaar_number` varchar(12) DEFAULT NULL,
+  `verified` tinyint(1) NOT NULL DEFAULT 0,
+  `request_id` varchar(100) DEFAULT NULL,
+  `aadhaar_last4` varchar(4) DEFAULT NULL,
+  `kyc_name` varchar(191) DEFAULT NULL,
+  `kyc_father_name` varchar(255) DEFAULT NULL,
+  `kyc_dob` varchar(20) DEFAULT NULL,
+  `kyc_gender` varchar(10) DEFAULT NULL,
+  `kyc_address` text DEFAULT NULL,
+  `kyc_pincode` varchar(20) DEFAULT NULL,
+  `kyc_verified_at` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -49,11 +49,8 @@ CREATE TABLE `aadhaar_otps` (
 -- Dumping data for table `aadhaar_otps`
 --
 
-INSERT INTO `aadhaar_otps` (`id`, `user_id`, `aadhaar_number`, `otp`, `verified`, `api_response`, `request_id`, `aadhaar_last4`, `kyc_name`, `kyc_dob`, `kyc_gender`, `kyc_address`, `kyc_pincode`, `created_at`, `updated_at`) VALUES
-(1, 9, '641107520610', '123456', 1, '{\"status\":\"success\",\"message\":\"Demo mode: OTP generated locally.\"}', NULL, '0610', NULL, NULL, NULL, NULL, NULL, '2026-02-18 07:35:52', '2026-02-18 07:36:55'),
-(2, 10, '521942338382', '123456', 1, '{\"status\":\"success\",\"message\":\"Demo mode: OTP generated locally.\"}', NULL, '8382', NULL, NULL, NULL, NULL, NULL, '2026-02-18 08:37:57', '2026-02-18 08:38:21'),
-(3, 11, '753471037775', '123456', 1, '{\"status\":\"success\",\"message\":\"Demo mode: OTP generated locally.\"}', NULL, '7775', NULL, NULL, NULL, NULL, NULL, '2026-02-18 08:41:53', '2026-02-18 08:42:03'),
-(4, 12, '123456789123', '123456', 1, '{\"status\":\"success\",\"message\":\"Demo mode: OTP generated locally.\"}', NULL, '9123', NULL, NULL, NULL, NULL, NULL, '2026-02-18 10:48:49', '2026-02-18 10:48:59');
+INSERT INTO `aadhaar_otps` (`id`, `user_id`, `aadhaar_number`, `verified`, `request_id`, `aadhaar_last4`, `kyc_name`, `kyc_father_name`, `kyc_dob`, `kyc_gender`, `kyc_address`, `kyc_pincode`, `kyc_verified_at`, `created_at`, `updated_at`) VALUES
+(3, 15, '641107520610', 1, NULL, '0610', 'Anshul Kumar Bijarnia', NULL, '27-01-2001', 'M', 'vill - roopura,,Rooppura,Sikar,Rajasthan,India,332406', NULL, NULL, '2026-02-24 09:00:37', '2026-02-24 09:01:00');
 
 -- --------------------------------------------------------
 
@@ -108,7 +105,8 @@ INSERT INTO `admin_actions` (`id`, `application_id`, `admin_id`, `action_type`, 
 (3, 6, NULL, 'verified', NULL, NULL, 1, '2026-02-16 07:34:06', '2026-02-16 07:34:06'),
 (4, 7, NULL, 'verified', NULL, NULL, 1, '2026-02-16 09:44:42', '2026-02-16 09:44:42'),
 (5, 9, NULL, 'verified', NULL, NULL, 1, '2026-02-18 07:38:11', '2026-02-18 07:38:11'),
-(6, 10, NULL, 'verified', NULL, NULL, 1, '2026-02-18 08:39:58', '2026-02-18 08:39:58');
+(6, 10, NULL, 'verified', NULL, NULL, 1, '2026-02-18 08:39:58', '2026-02-18 08:39:58'),
+(7, 11, NULL, 'verified', NULL, NULL, 1, '2026-02-24 09:06:14', '2026-02-24 09:06:14');
 
 -- --------------------------------------------------------
 
@@ -132,8 +130,7 @@ CREATE TABLE `allotments` (
 --
 
 INSERT INTO `allotments` (`id`, `application_id`, `plot_number`, `block_name`, `status`, `lottery_round`, `lottery_category`, `created_at`) VALUES
-(6, 9, 'E2', 'Housing Scheme', 'allotted', NULL, NULL, '2026-02-18 09:52:59'),
-(7, 10, 'E36', 'Housing Scheme', 'provisional', NULL, NULL, '2026-02-18 09:52:59');
+(8, 11, 'E8', 'Housing Scheme', 'final', 'General-1', 'General', '2026-02-24 09:07:08');
 
 -- --------------------------------------------------------
 
@@ -176,8 +173,7 @@ CREATE TABLE `applications` (
 --
 
 INSERT INTO `applications` (`id`, `user_id`, `scheme_id`, `status`, `full_name`, `aadhaar`, `father_husband_name`, `age`, `mobile`, `address`, `tehsil`, `district`, `city`, `state`, `income`, `income_category`, `caste_category`, `is_disabled`, `is_single_woman`, `is_transgender`, `is_army`, `is_media`, `is_govt_employee`, `declaration_truth`, `declaration_cancellation`, `created_at`, `updated_at`) VALUES
-(9, 9, NULL, 'selected', 'anshul kumar', '641107520610', 'bhanwar', 25, '9602964437', 'Forum Pravesh, 212 Girish Ghosh Road Block D 7th Floor', 'danta', 'sikr', NULL, 'Rajasthan', 60000.00, 'EWS', 'OBC', 1, 0, 0, 0, 0, 0, 1, 1, '2026-02-18 07:37:22', '2026-02-18 09:52:59'),
-(10, 10, NULL, 'selected', 'priyanshu', '521942338382', 'Chandra Prakash Sharma', 24, '8209551448', '894, SANTINAGR DURGAPRA', 'ajmer', 'ajmer', NULL, 'Rajasthan', 100000.00, 'EWS', 'GENERAL', 0, 0, 1, 0, 0, 0, 1, 1, '2026-02-18 08:39:13', '2026-02-18 09:52:59');
+(11, 15, NULL, 'selected', 'Anshul Kumar Bijarnia', '641107520610', 'bhanwar', 25, '9602964437', 'vill - roopura,,Rooppura,Sikar,Rajasthan,India,332406', 'danta', 'sikr', NULL, 'Rajasthan', 60000.00, 'EWS', 'OBC', 0, 0, 0, 0, 0, 0, 1, 1, '2026-02-24 09:04:58', '2026-02-24 09:07:08');
 
 -- --------------------------------------------------------
 
@@ -206,8 +202,7 @@ CREATE TABLE `application_documents` (
 --
 
 INSERT INTO `application_documents` (`id`, `user_id`, `application_id`, `has_identity_proof`, `has_income_proof`, `has_residence_proof`, `identity_files`, `income_files`, `residence_files`, `annexure_files`, `notes`, `created_at`, `updated_at`) VALUES
-(6, 9, 9, 1, 1, 1, '[\"uploads\\/documents\\/9\\/1771400272_0297831b462043c38c0e.png\"]', '[\"uploads\\/documents\\/9\\/1771400272_7a7c118d5141f0459967.jpg\"]', '[\"uploads\\/documents\\/9\\/1771400272_747be539082558253e37.jpg\"]', NULL, '', '2026-02-18 07:37:52', '2026-02-18 07:37:52'),
-(7, 10, 10, 1, 1, 1, '[\"uploads\\/documents\\/10\\/1771403977_bd9ee3a59d0e97a80a49.png\",\"uploads\\/documents\\/10\\/1771403977_778530ff729124d487ef.png\"]', '[\"uploads\\/documents\\/10\\/1771403977_35fd01cf8c641861906f.jpg\",\"uploads\\/documents\\/10\\/1771403977_97cc88475d2fb05f5240.jpg\"]', '[\"uploads\\/documents\\/10\\/1771403977_93668fc178c12f679beb.jpg\",\"uploads\\/documents\\/10\\/1771403977_394e8e7330dec9dfa6a7.jpg\"]', NULL, '', '2026-02-18 08:39:37', '2026-02-18 08:39:37');
+(8, 15, 11, 1, 1, 1, '[\"uploads\\/documents\\/15\\/1771923920_7c1b3f98780a29cef454.png\"]', '[\"uploads\\/documents\\/15\\/1771923920_5af35a4585c5eae016ff.png\"]', '[\"uploads\\/documents\\/15\\/1771923920_e0938d3d6821720d2bf7.png\"]', NULL, '', '2026-02-24 09:05:20', '2026-02-24 09:05:20');
 
 -- --------------------------------------------------------
 
@@ -237,8 +232,7 @@ CREATE TABLE `chalans` (
 --
 
 INSERT INTO `chalans` (`id`, `allotment_id`, `application_id`, `user_id`, `chalan_number`, `amount`, `status`, `payment_id`, `paid_at`, `payment_account_id`, `payment_proof`, `verified_at`, `created_at`, `updated_at`) VALUES
-(1, 6, 9, 9, 'CHAL-20260218-00001', 1500000, 'paid', 8, '2026-02-18 11:42:39', 2, 'uploads/chalan_proofs/1_9_36e4aa09.jpg', '2026-02-18 11:53:21', '2026-02-18 10:19:55', '2026-02-18 11:53:21'),
-(2, 7, 10, 10, 'CHAL-20260218-00002', 150000, 'pending', NULL, NULL, NULL, NULL, NULL, '2026-02-18 12:22:23', '2026-02-18 12:22:23');
+(3, 8, 11, 15, 'CHAL-20260224-00001', 100000, 'paid', 10, '2026-02-24 09:09:07', 2, 'uploads/chalan_proofs/3_15_0c704e8c.png', NULL, '2026-02-24 09:08:45', '2026-02-24 09:09:07');
 
 -- --------------------------------------------------------
 
@@ -263,9 +257,8 @@ CREATE TABLE `eligibilities` (
 --
 
 INSERT INTO `eligibilities` (`id`, `user_id`, `age`, `income`, `residency`, `property_status`, `is_eligible`, `created_at`, `updated_at`) VALUES
-(10, 9, 25, 60000, 'state', 'none', 1, '2026-02-18 07:37:06', '2026-02-18 07:37:06'),
-(11, 10, 24, 100000, 'state', 'none', 1, '2026-02-18 08:38:31', '2026-02-18 08:38:31'),
-(12, 11, 24, 50000, 'state', 'none', 1, '2026-02-18 08:42:15', '2026-02-18 08:42:15');
+(13, 14, 25, 60000, 'state', 'none', 1, '2026-02-24 08:54:59', '2026-02-24 08:54:59'),
+(14, 15, 25, 60000, 'state', 'none', 1, '2026-02-24 09:01:21', '2026-02-24 09:01:21');
 
 -- --------------------------------------------------------
 
@@ -333,9 +326,8 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `user_id`, `application_id`, `amount`, `status`, `transaction_ref`, `created_at`, `updated_at`) VALUES
-(6, 9, 9, 1000, 'success', NULL, '2026-02-18 07:37:24', '2026-02-18 07:37:24'),
-(7, 10, 10, 1000, 'success', NULL, '2026-02-18 08:39:15', '2026-02-18 08:39:15'),
-(8, 9, 9, 1500000, 'success', '1234567890', '2026-02-18 11:42:39', '2026-02-18 11:42:39');
+(9, 15, 11, 1000, 'success', NULL, '2026-02-24 09:04:59', '2026-02-24 09:04:59'),
+(10, 15, 11, 100000, 'success', '1234567890', '2026-02-24 09:09:07', '2026-02-24 09:09:07');
 
 -- --------------------------------------------------------
 
@@ -401,7 +393,7 @@ INSERT INTO `plots` (`id`, `plot_name`, `plot_number`, `category`, `dimensions`,
 (8, 'EWS', 'E5', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
 (9, 'EWS', 'E6', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
 (10, 'EWS', 'E7', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
-(11, 'EWS', 'E8', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
+(11, 'EWS', 'E8', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'allotted', NULL, '2026-02-16 06:04:32', '2026-02-24 09:07:08'),
 (12, 'EWS', 'E9', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
 (13, 'EWS', 'E10', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
 (14, 'EWS', 'E11', 'EWS', NULL, 45.00, 'Housing Scheme', 'uploads/plots/1771222181_a97e776d724c70dce040.jpg', 1, 1, NULL, 'available', NULL, '2026-02-16 06:04:32', '2026-02-16 11:44:04'),
@@ -586,10 +578,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `mobile`, `email`, `password_hash`, `name`, `language`, `category`, `created_at`, `updated_at`) VALUES
-(9, '9602964437', 'anshulkumar969602@gmail.com', '$2y$10$6Mgf.NfvHb4ZmknHQ4qc0.lUxxU5iEBgGsWxWq7kSTi0uuEgM48Na', 'anshul kumar', 'en', 'OBC', '2026-02-18 07:36:55', '2026-02-18 07:36:55'),
-(10, '8209551448', 'anshulkumar96960211@gmail.com', '$2y$10$K.T13SoWHGeuVhuPFhn37.wMuthZOcC6SSYBWOHe.bBHAoBiTBMkS', 'priyanshu', 'en', 'General', '2026-02-18 08:38:21', '2026-02-18 08:38:21'),
-(11, '9460183250', 'vayavedant2@gmail.com', '$2y$10$/6Fn6aMNk1wR11MnLybI5eMJbVUfbvn0eTFdOIfzY8/5x67Fsbq16', 'vedant', 'en', 'General', '2026-02-18 08:42:03', '2026-02-18 08:42:03'),
-(12, '1234567890', 'testrakesh@gmail.com', '$2y$10$wZdgC4KQD6fUE7qcJ1JTa.D9J9GLj6rxLpySiqz4DQpbJzyUn2Oqm', 'anshulA kumar', 'en', 'SC', '2026-02-18 10:48:59', '2026-02-18 10:48:59');
+(15, '9602964437', 'anshulkumar969602@gmail.com', '$2y$10$Rj9NroXJS4Vo3/dYhoFHU.fIpywYK40YgwOwWvX8E.ad2RZPr7fAS', 'Anshul Kumar Bijarnia', 'en', 'OBC', '2026-02-24 09:01:00', '2026-02-24 09:01:00');
 
 --
 -- Indexes for dumped tables
@@ -602,10 +591,7 @@ ALTER TABLE `aadhaar_otps`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `aadhaar_number` (`aadhaar_number`),
-  ADD KEY `request_id` (`request_id`),
-  ADD KEY `verified` (`verified`),
-  ADD KEY `idx_user_aadhaar_verified` (`user_id`,`aadhaar_number`,`verified`),
-  ADD KEY `idx_request_id` (`request_id`);
+  ADD KEY `request_id` (`request_id`);
 
 --
 -- Indexes for table `admins`
@@ -724,7 +710,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `aadhaar_otps`
 --
 ALTER TABLE `aadhaar_otps`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `admins`
@@ -736,37 +722,37 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_actions`
 --
 ALTER TABLE `admin_actions`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `allotments`
 --
 ALTER TABLE `allotments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `application_documents`
 --
 ALTER TABLE `application_documents`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `chalans`
 --
 ALTER TABLE `chalans`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `eligibilities`
 --
 ALTER TABLE `eligibilities`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `forgot_otps`
@@ -790,7 +776,7 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `payment_accounts`
@@ -814,7 +800,7 @@ ALTER TABLE `schemes`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Constraints for dumped tables
