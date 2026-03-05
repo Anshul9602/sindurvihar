@@ -70,9 +70,9 @@ display: none !important;
             <div class="border-t pt-6 text-center" style="border-top-color:rgba(255,255,255,0.3);">
                 <p class="text-sm" style="color:#E5E7EB;">
                     <?= str_replace('{year}', date('Y'), lang('App.footerCopyright')) ?>
-                    <a href="#" class="hover:underline ml-2" style="color:#E5E7EB;"><?= esc(lang('App.footerPrivacyPolicy')) ?></a>
+                    <a href="/privacy-policy" class="hover:underline ml-2" style="color:#E5E7EB;"><?= esc(lang('App.footerPrivacyPolicy')) ?></a>
                     |
-                    <a href="#" class="hover:underline ml-2" style="color:#E5E7EB;"><?= esc(lang('App.footerTermsOfUse')) ?></a>
+                    <a href="/terms-and-conditions" class="hover:underline ml-2" style="color:#E5E7EB;"><?= esc(lang('App.footerTermsOfUse')) ?></a>
                 </p>
             </div>
         </div>

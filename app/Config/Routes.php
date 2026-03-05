@@ -9,6 +9,9 @@ use CodeIgniter\Router\RouteCollection;
 
 // Landing page (equivalent to Next.js src/app/page.tsx)
 $routes->get('/', 'Portal::index');
+// Static informational pages
+$routes->get('privacy-policy', 'Portal::privacy');
+$routes->get('terms-and-conditions', 'Portal::terms');
 
 // TruthScreen proxy for standalone Aadhaar verification (avoids browser CORS issues)
 $routes->post('truthscreen/eaadhaar-proxy', 'TruthscreenProxy::eaadhaar');
